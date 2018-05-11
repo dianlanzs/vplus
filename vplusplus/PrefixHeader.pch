@@ -1,0 +1,67 @@
+//
+//  PrefixHeader.pch
+//  Kamu
+//
+//  Created by YGTech on 2017/11/24.
+//  Copyright © 2017年 com.Kamu.cme. All rights reserved.
+//
+
+
+
+
+#ifndef PrefixHeader_pch
+#define PrefixHeader_pch
+#ifdef __OBJC__
+
+
+//基础
+#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
+
+#import "RDVTabBarController.h"
+//数据库
+
+#import <Realm/Realm.h>
+
+
+//按钮
+#import "BButton.h"
+#import "MRoundedButton.h"
+
+#import "AMCommonDef.h"
+
+#import "Masonry.h" //设置约束
+#import "MBProgressHUD+ZLCategory.h" //HUD
+
+//视频P2P
+
+
+//Cell
+//#import "MGSwipeButton.h"
+
+
+//图像设置
+#import "UIImage+Common.h"
+#import "UIImage+Extension.h"
+#import "UIImage+CutRound.h"
+
+//文本
+#import "NSAttributedString+Attributes.h"
+#import "UILabel+RichText.h"
+
+//颜色
+#import "UIColor+Hexadecimal.h"
+
+//弹框 , HUD  Spin
+#import "Popup.h"
+//#import <SpinKit/RTSpinKitView.h>
+#import "RTSpinKitView.h"
+#import "UIScrollView+EmptyDataSet.h"
+
+
+#import "Device.h"
+#import "cloud.h"
+//#import "DeviceManager.h"
+
+#endif
+#endif

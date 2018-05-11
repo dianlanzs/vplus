@@ -1,0 +1,15 @@
+//
+//  ItemModel.h
+//  Kamu
+//
+//  Created by YGTech on 2018/5/11.
+//  Copyright © 2018年 com.Kamu.cme. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface ItemModel : NSObject
+@property (copy, nonatomic) NSString *itemId;
+@property (copy, nonatomic) NSString *itemName;
+@property (assign, nonatomic) BOOL selected;
+@end

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>tabIcons</key>
+	<array>
+		<string>device48</string>
+		<string>mediaLib</string>
+		<string>mine</string>
+	</array>
+	<key>tabTitles</key>
+	<array>
+		<string>设备</string>
+		<string>媒体库</string>
+		<string>我的</string>
+	</array>
+	<key>navTitles</key>
+	<array>
+		<string>我的设备</string>
+		<string>媒体库</string>
+		<string>我的</string>
+	</array>
+	<key>vcNames</key>
+	<array>
+		<string>MainViewController</string>
+		<string>LibraryController</string>
+		<string>MineViewController</string>
+	</array>
+	<key>bg_item_blue</key>
+	<string>tab_bg_selected</string>
+</dict>
+</plist>
