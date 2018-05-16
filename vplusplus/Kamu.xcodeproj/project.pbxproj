@@ -213,6 +213,8 @@
 		B87CEF60200499200083ACB6 /* device48_selected@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = B87CEF5E200499200083ACB6 /* device48_selected@2x.png */; };
 		B87CEF6620049B100083ACB6 /* device48_unselected@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = B87CEF6420049B100083ACB6 /* device48_unselected@2x.png */; };
 		B87CEF692004A9B80083ACB6 /* qr_spec@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = B87CEF672004A9B70083ACB6 /* qr_spec@2x.png */; };
+		B88218E120A936E5001C1223 /* button_selected@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = B88218E020A936E4001C1223 /* button_selected@2x.png */; };
+		B88218E320A93834001C1223 /* button_nonSelected@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = B88218E220A93834001C1223 /* button_nonSelected@2x.png */; };
 		B8825A431FCEED7C00531271 /* DeviceListCell.m in Sources */ = {isa = PBXBuildFile; fileRef = B8825A411FCEED7C00531271 /* DeviceListCell.m */; };
 		B8825A711FCFB10400531271 /* NSArray+JSON.m in Sources */ = {isa = PBXBuildFile; fileRef = B8825A4B1FCFB10400531271 /* NSArray+JSON.m */; };
 		B8825A731FCFB10400531271 /* NSData+Encode.m in Sources */ = {isa = PBXBuildFile; fileRef = B8825A4D1FCFB10400531271 /* NSData+Encode.m */; };
@@ -777,6 +779,8 @@
 		B87CEF5E200499200083ACB6 /* device48_selected@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "device48_selected@2x.png"; sourceTree = "<group>"; };
 		B87CEF6420049B100083ACB6 /* device48_unselected@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "device48_unselected@2x.png"; sourceTree = "<group>"; };
 		B87CEF672004A9B70083ACB6 /* qr_spec@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "qr_spec@2x.png"; sourceTree = "<group>"; };
+		B88218E020A936E4001C1223 /* button_selected@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "button_selected@2x.png"; sourceTree = "<group>"; };
+		B88218E220A93834001C1223 /* button_nonSelected@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "button_nonSelected@2x.png"; sourceTree = "<group>"; };
 		B8825A401FCEED7C00531271 /* DeviceListCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeviceListCell.h; sourceTree = "<group>"; };
 		B8825A411FCEED7C00531271 /* DeviceListCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeviceListCell.m; sourceTree = "<group>"; };
 		B8825A4A1FCFB10400531271 /* NSArray+JSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSArray+JSON.h"; sourceTree = "<group>"; };
@@ -2156,6 +2160,8 @@
 		B8B26C0A1FC467BD006D4061 /* Button */ = {
 			isa = PBXGroup;
 			children = (
+				B88218E220A93834001C1223 /* button_nonSelected@2x.png */,
+				B88218E020A936E4001C1223 /* button_selected@2x.png */,
 				B82146452060061400BF3CE2 /* button_settings@2x.png */,
 				B837C0C120189AC5003B993D /* btn_settings_normal.png */,
 				B81ABB6B200F72090023BCD2 /* button_battery_normal@2x.png */,
@@ -2453,6 +2459,12 @@
 							com.apple.BackgroundModes = {
 								enabled = 1;
 							};
+							com.apple.DataProtection = {
+								enabled = 0;
+							};
+							com.apple.NetworkExtensions.iOS = {
+								enabled = 0;
+							};
 							com.apple.Push = {
 								enabled = 1;
 							};
@@ -2534,6 +2546,7 @@
 				B837C0D32019976D003B993D /* button_micophone_normal@2x.png in Resources */,
 				B8B26C251FC5476F006D4061 /* Manual.xib in Resources */,
 				B81018752004CD52007B17C3 /* mediaLib_unselected@2x.png in Resources */,
+				B88218E120A936E5001C1223 /* button_selected@2x.png in Resources */,
 				B81018852004D667007B17C3 /* mine_unselected@2x.png in Resources */,
 				B810189420059BD8007B17C3 /* bgTab_selected@2x.png in Resources */,
 				B837C215201B33C4003B993D /* themes.json in Resources */,
@@ -2563,6 +2576,7 @@
 				B8C3B702206CDDB2007A1589 /* state_disconnect@2x.png in Resources */,
 				B8B26C131FC46809006D4061 /* button_sound@2x.png in Resources */,
 				B8D2A5A21FDF8ACB00BB33F3 /* icon_add@2x.png in Resources */,
+				B88218E320A93834001C1223 /* button_nonSelected@2x.png in Resources */,
 				B81ABB6A200F72000023BCD2 /* button_wifi_normal@2x.png in Resources */,
 				B850FAD61FE90427008CD509 /* trash@2x.png in Resources */,
 				B8E04ED51FCE6CA80086E456 /* button_cloud@2x.png in Resources */,

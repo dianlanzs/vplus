@@ -89,6 +89,10 @@
     
 //    [self.layer setCornerRadius:5.f];
 //    [self.layer setMasksToBounds:YES];
+    
+    self.layer.shadowOffset = CGSizeMake(0, -3);  //x 方向向右偏移0  ，y 方向向上偏移5 ，负为向上偏移
+    self.layer.shadowOpacity = 0.4f; ///阴影透明度
+    self.layer.shadowColor = [UIColor blackColor].CGColor;
     return self;
 }
 

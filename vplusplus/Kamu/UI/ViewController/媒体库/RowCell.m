@@ -24,10 +24,51 @@
     RowCell *cell = [[RowCell alloc] init];
     [cell setIndexPath:indexPath];
 //    [cell configureCell];
+    [cell setupCell];
     return cell;
+}
+- (UILabel *)regionTitle {
+    if (!_regionLb) {
+        _regionLb = [UILabel labelWithText:@"     CAM_" withFont:[UIFont systemFontOfSize:17.f] color:[UIColor blackColor] aligment:NSTextAlignmentLeft];
+        [_regionLb setBackgroundColor:[UIColor groupTableViewBackgroundColor]];
+    }
+    return _regionLb;
+}
+- (void)layoutSubviews {
+    [super layoutSubviews];
+     [_cvLayout setItemSize:CGSizeMake(CGRectGetWidth(self.contentView.bounds) - 40, 60.f)];
+    NSLog(@"XXXXXXXX%@",NSStringFromCGRect(self.contentView.frame));
+    NSLog(@"XXXXXXXXcell%@",NSStringFromCGRect(self.bounds));
 }
 
 
+- (void)setupCell {
+    
+    [self.contentView setBackgroundColor:[UIColor whiteColor]];
+    [self.contentView addSubview:self.regionTitle];
+    [self.contentView addSubview:self.mainCollectionView];
+    
+//    if (@available(iOS 11.0, *)) {
+//        [self.contentView setDirectionalLayoutMargins:NSDirectionalEdgeInsetsMake(64, 20, 0, 0)];
+//    } else {
+//        [self.contentView setLayoutMargins:UIEdgeInsetsMake(64, 20, 0, 0)];
+//    }
+    
+    [self.regionTitle mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.leading.trailing.equalTo(self.contentView);
+        make.height.mas_equalTo(40.f);
+    }];
+    
+    
+    self.mainCollectionView.delegate = self;
+    self.mainCollectionView.dataSource = self;
+    [self.mainCollectionView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.equalTo(self.regionTitle.mas_bottom);
+        make.leading.trailing.equalTo(self.contentView);
+        make.bottom.mas_equalTo(self.contentView);
+    }];
+    [self.mainCollectionView registerClass:[ItemCell class] forCellWithReuseIdentifier:[ItemCell cellReuseIdentifier]];
+}
 
 
 - (void)updateCellWithModel:(RegionModel **)model
@@ -37,11 +78,7 @@
     self.indexPath = indexPath;
     self.regionModel = *model; //sectionModel;
     
-    //reigion title
-//    [self.titleLabel setText:_regionModel.regionTitle];
-    
-    
-    
+//    [self.regionLb setText:self.regionModel.regionTitle];
     
     //content
     self.items = self.regionModel.itemList;
@@ -80,18 +117,12 @@
 //    Cam *cam = self.cams[indexPath.row];
 //    self.camName.text = _items
     
-    
-    
-    
-    
-    
-    
-    
-    
+
     //UI
     [self.mainCollectionView reloadData];
     [self fitCollectonViewHeight];
 }
+
 #define NUM_OF_ITEM_ONCE_ROW 1.f
 #define LINE_SPACE_COLLECTION_ITEM 20
 #define ITEM_WIDTH CGRectGetWidth(self.bounds)
@@ -108,10 +139,10 @@
     else {
         displayNumOfRow = 1;
     }
-    CGFloat collectionViewHeight = displayNumOfRow * ITEM_HEIGHT + (displayNumOfRow - 1)*LINE_SPACE_COLLECTION_ITEM;
+//    CGFloat collectionViewHeight = displayNumOfRow * ITEM_HEIGHT + (displayNumOfRow - 1)*LINE_SPACE_COLLECTION_ITEM;
     
     
-    self.collectionViewHeightConstraint.constant = collectionViewHeight;
+//    self.collectionViewHeightConstraint.constant = collectionViewHeight;
 //    [self.mainCollectionView updateHeight:collectionViewHeight];
 }
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated {
@@ -160,51 +191,28 @@
     
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self) {
-        
-        [self.contentView setBackgroundColor:[UIColor whiteColor]];
-        self.camName = [UILabel labelWithText:@"" withFont:[UIFont systemFontOfSize:15.f] color:[UIColor blackColor] aligment:NSTextAlignmentCenter];
-        //        self.selectedIcon = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@""]]; error cuz image == nil CUICatalog: Invalid asset name supplied: ''
+         //如果你的tableView没有数据，是不会改变高度的。先随便填点数据看下，高度就变了
 
 //
-//        [self.contentView addSubview:self.camName];
-//        [self.contentView addSubview:self.selectedIcon];
-        [self.contentView addSubview:self.mainCollectionView];
-        
-        
-        
-//        [self.selectedIcon mas_makeConstraints:^(MASConstraintMaker *make) {
-//            make.centerY .equalTo(self.contentView);
-//            make.leading.equalTo(self.contentView).offset(10.f);
-//            make.size.mas_equalTo(CGSizeMake(40, 40));
+//        [self.contentView setBackgroundColor:[UIColor redColor]];
+//        [self.contentView addSubview:self.mainCollectionView];
+//        self.mainCollectionView.delegate = self;
+//        self.mainCollectionView.dataSource = self;
+////        [self.mainCollectionView setContentInset:UIEdgeInsetsMake(0, 10.f, 0, 10.f)];
+//        [self.mainCollectionView mas_makeConstraints:^(MASConstraintMaker *make) {
+//            make.edges.equalTo(self.contentView);
 //        }];
 //
-//        [self.camName mas_makeConstraints:^(MASConstraintMaker *make) {
-//            make.centerY.equalTo(self.contentView);
-//            make.trailing.equalTo(self.contentView).offset(-5.f);
-//
-//        }];
-        
-        
-        self.mainCollectionView.delegate = self;
-        self.mainCollectionView.dataSource = self;
-//        self.mainCollectionView.contentInset = UIEdgeInsetsMake(0, GAP_COLLECTION_ITEM, 0, GAP_COLLECTION_ITEM);
-        [self.mainCollectionView mas_makeConstraints:^(MASConstraintMaker *make) {
-            make.edges.equalTo(self.contentView);
-        }];
-        [self.mainCollectionView registerClass:[ItemCell class] forCellWithReuseIdentifier:[ItemCell cellReuseIdentifier]];
+//        [self.mainCollectionView registerClass:[ItemCell class] forCellWithReuseIdentifier:[ItemCell cellReuseIdentifier]];
         self.selectionStyle = UITableViewCellSelectionStyleNone;
-        
-        
-        
     }
-    
-    
     return self;
 }
 
-+ (CGFloat)cellHeight{
-    return 100;
-}
+
+//+ (CGFloat)cellHeight{
+//    return 400;
+//}
 
 #pragma mark - DataSource Delegate
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
@@ -212,10 +220,10 @@
 }
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
-    ItemCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:[ItemCell cellReuseIdentifier] forIndexPath:indexPath];
-    ItemModel *item = [self.items objectAtIndex:indexPath.row];
-    [cell updateCellWithModel:item]; //setModel forCell
-    return cell;
+    ItemCell *itemCell = [collectionView dequeueReusableCellWithReuseIdentifier:[ItemCell cellReuseIdentifier] forIndexPath:indexPath];
+    ItemModel *itemModel = [self.items objectAtIndex:indexPath.row];
+    [itemCell updateCellWithModel:itemModel]; //setModel forCell
+    return itemCell;
 }
 
 //- (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
@@ -240,7 +248,7 @@
 - (UICollectionView *)mainCollectionView {
     if (!_mainCollectionView) {
         _mainCollectionView = [[UICollectionView alloc] initWithFrame:CGRectZero collectionViewLayout:self.cvLayout];
-        [_mainCollectionView setBackgroundColor:[UIColor redColor]];
+        [_mainCollectionView setBackgroundColor:[UIColor whiteColor]];
     }
     
     return _mainCollectionView;
@@ -252,10 +260,15 @@
     if (!_cvLayout) {
         //the item width must be less than the width of the UICollectionView minus the section insets left and right values, minus the content insets left and right values.
         _cvLayout = [[UICollectionViewFlowLayout alloc] init];
-        [_cvLayout setItemSize:CGSizeMake(40.f, 20.f)];//CGRectGetWidth(self.bounds)
-        [_cvLayout setMinimumLineSpacing:10.f];
+       //CGRectGetWidth(self.bounds)CGRectGetWidth(self.contentView.bounds)
+        
+        NSLog(@"XXXXXXXX%@",NSStringFromCGRect(self.contentView.frame));
+        [_cvLayout setMinimumLineSpacing:0.f];
         [_cvLayout setMinimumInteritemSpacing:0.f];
         [_cvLayout setScrollDirection:UICollectionViewScrollDirectionVertical];
+        
+//        [self.contentView setNeedsLayout];
+        
     }
     
     return _cvLayout;

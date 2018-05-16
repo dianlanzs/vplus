@@ -9,9 +9,9 @@
 #import "Cam.h"
 
 @implementation Cam
-//
-//+ (NSArray *)ignoredProperties {
-//    return @[@"cam_h"];
-//}
+
++ (NSArray *)ignoredProperties {
+    return @[@"cam_videoTool"];
+}
 @end
 

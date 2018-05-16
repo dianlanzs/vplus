@@ -10,6 +10,8 @@
 #import "ItemModel.h"
 @interface ItemCell : UICollectionViewCell
 
+@property (nonatomic, copy) void(^callbackUpper)(UIButton *buton);
+
 
 //baseClass
 + (NSString *)cellReuseIdentifier;

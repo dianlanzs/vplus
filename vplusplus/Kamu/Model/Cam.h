@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 #import "MediaEntity.h"
+
+#import "ZLPlayerView.h"
 @class Device;
 @interface Cam : RLMObject
 
@@ -17,6 +19,9 @@
 @property  NSData * _Nullable cam_cover;
 @property NSString * _Nullable cam_tag;
 
+
+
+@property (nonatomic, strong)ZLPlayerView * _Nullable cam_videoTool;
 
 @property RLMArray <MediaEntity>  * _Nullable cam_entities;
 

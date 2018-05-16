@@ -110,6 +110,10 @@ static AVCodec *audioCodec;
 
 int cloud_init(void)
 {
+    
+    
+  
+    
     CLOUD_PRINTF("cloud_init\n");
 	int ret = IOTC_Initialize2(0);
 	//CLOUD_PRINTF("IOTC_Initialize() ret = %d\n", ret);
@@ -155,7 +159,7 @@ int cloud_init(void)
 int cloud_exit(void)
 {
     CLOUD_PRINTF("cloud_exit\n");
-	avDeInitialize();
+//    avDeInitialize();  //zhoulei
 	IOTC_DeInitialize();
 
 

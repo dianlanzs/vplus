@@ -305,24 +305,28 @@ typedef NS_ENUM(NSInteger, PanDirection){
 //        [self.delegate zl_startVideo:self];
 //    }
 //}
-- (void)setDidEnterBackground:(BOOL)didEnterBackground {
-    _didEnterBackground = didEnterBackground;
-    
-    //当前页面进入前台
-    if (!didEnterBackground && _iscurrentPage) {
-        [self.delegate zl_startVideo:self];
-//        [self.delegate zl_startAudio:self];
-        _state = ZLPlayerStatePlaying;
-//        ZLPlayerShared.isLockScreen = self.isLocked;         // 根据是否锁定屏幕方向 来恢复单例里锁定屏幕的方向
-    }
-    //当前页面进入后台
-    else if (didEnterBackground && _iscurrentPage) {
-        [self.delegate zl_stopAudio:self];
-        [self.delegate zl_stopVideo:self];
-        _state = ZLPlayerStateStopped;
-//        ZLPlayerShared.isLockScreen = YES; //锁屏
-    }
-}
+
+
+
+
+//- (void)setDidEnterBackground:(BOOL)didEnterBackground {
+//    _didEnterBackground = didEnterBackground;
+//
+//    //当前页面进入前台
+//    if (!didEnterBackground && _iscurrentPage) {
+//        [self.delegate zl_startVideo:self];
+////        [self.delegate zl_startAudio:self];
+//        _state = ZLPlayerStatePlaying;
+////        ZLPlayerShared.isLockScreen = self.isLocked;         // 根据是否锁定屏幕方向 来恢复单例里锁定屏幕的方向
+//    }
+//    //当前页面进入后台
+//    else if (didEnterBackground && _iscurrentPage) {
+//        [self.delegate zl_stopAudio:self];
+//        [self.delegate zl_stopVideo:self];
+//        _state = ZLPlayerStateStopped;
+////        ZLPlayerShared.isLockScreen = YES; //锁屏
+//    }
+//}
 
 
 

@@ -18,14 +18,11 @@ typedef NS_ENUM(NSUInteger, SelectionType) {
 @interface RowCell : FilterCell<UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout>
 
 
-@property (nonatomic, strong) UILabel *camName;
-@property (nonatomic, strong) UIImageView *selectedIcon;
-
 @property (assign, nonatomic) SelectionType selectionType;
 @property (nonatomic, strong) RegionModel *regionModel;  //RowModel
 
 
-
+@property (nonatomic, strong) UILabel *regionLb;
 
 
 @property (strong, nonatomic) NSMutableArray *selectedItemList;
@@ -37,7 +34,7 @@ typedef NS_ENUM(NSUInteger, SelectionType) {
 
 @property (strong, nonatomic)  UICollectionView *mainCollectionView;
 @property (nonatomic, strong) UICollectionViewFlowLayout *cvLayout;
-@property (weak, nonatomic) NSLayoutConstraint *collectionViewHeightConstraint;
+//@property (weak, nonatomic) NSLayoutConstraint *collectionViewHeightConstraint;
 
 
 @end

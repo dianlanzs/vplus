@@ -63,5 +63,7 @@
 #import "cloud.h"
 //#import "DeviceManager.h"
 
+#import "UIView+EqualMargin.h"
+
 #endif
 #endif

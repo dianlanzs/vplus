@@ -87,7 +87,7 @@
     }];
     
     [self.filter setAnimationDuration:.3f];
-    [self.filter setLeading:0.15 * AM_SCREEN_WIDTH];
+    [self.filter setLeading:0.3 * AM_SCREEN_WIDTH];
     [self.filter setRegionList:[self setRegionList]];  //RegionModel 数组
     
     
@@ -127,7 +127,7 @@
     NSMutableArray *items = [NSMutableArray array];
     for (Cam *cloudCam in self.cloudDevice.nvr_cams) {
         ItemModel *item = [ItemModel new];
-        [item setItemName:cloudCam.cam_name];
+        [item setItemName:cloudCam.cam_name ? cloudCam.cam_name : cloudCam.cam_id];
         [item setSelected:NO];
         [items addObject:item];
     }

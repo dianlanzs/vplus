@@ -53,6 +53,7 @@ static NSString *channel = @"AppStore";
     [[NSNotificationCenter defaultCenter]removeObserver:self name:@"netWorkChangeEventNotification" object:nil];
 }
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    
     cloud_init();
     
     
@@ -342,6 +343,20 @@ static NSString *channel = @"AppStore";
 
 
 
+-(BOOL)didUserPressLockButton{
+    //获取屏幕亮度
+    CGFloat oldBrightness = [UIScreen mainScreen].brightness;
+    //以较小的数量改变屏幕亮度
+    [UIScreen mainScreen].brightness = oldBrightness + (oldBrightness <= 0.01 ? (0.01) : (-0.01));
+    CGFloat newBrightness = [UIScreen mainScreen].brightness;
+    //恢复屏幕亮度
+    [UIScreen mainScreen].brightness = oldBrightness;
+    //判断屏幕亮度是否能够被改变
+    return oldBrightness != newBrightness;
+    
+}
+    
+    
 
 
 
@@ -355,11 +370,25 @@ static NSString *channel = @"AppStore";
 - (void)applicationDidEnterBackground:(UIApplication *)application {
     // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
     // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
+    
+//
+//    if ([self didUserPressLockButton]) {
+//        //User pressed lock button
+//        NSLog(@"Lock screen.");
+           cloud_exit();
+//    } else {
+//        NSLog(@"Home.");
+//        //user pressed home button
+//
+//    }
+        
+        
 }
 
 
 - (void)applicationWillEnterForeground:(UIApplication *)application {
     // Called as part of the transition from the background to the active state; here you can undo many of the changes made on entering the background.
+    cloud_init();
 }
 
 
@@ -373,6 +402,21 @@ static NSString *channel = @"AppStore";
 }
 
 
+//-(void)applicationProtectedDataWillBecomeUnavailable:(NSNotificationCenter *)notification {
+//    NSLog(@"锁屏");
+//
+//    cloud_exit();
+////    signal(SIGPIPE, SIG_IGN);
+////    exit(0);
+//
+//}
+
+
+//- (void)applicationProtectedDataDidBecomeAvailable:(UIApplication *)application {
+//    cloud_init();
+//    NSLog(@"解锁");
+//    
+//}
 
 
 
