@@ -60,4 +60,16 @@
  */
 @property (nonatomic, assign) NSInteger    fatherViewTag;
 
+
+
+
+
+
+
+
+
+
+@property (nonatomic,assign) long nvr_h;
+@property  int cam_h;
+
 @end

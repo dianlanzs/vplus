@@ -52,42 +52,98 @@
 
 
 #pragma mark - 生命周期方法
+- (void)emptyInterface {
+    [self.tableView setTableHeaderView:self.emptyView];
+    self.navigationItem.rightBarButtonItem = nil;
+    self.tableView.scrollEnabled = NO;
+}
+
+- (void)deviceInterface {
+    [self.tableView setTableHeaderView:[[UIView alloc] initWithFrame:CGRectMake(0, 0, AM_SCREEN_WIDTH, CGFLOAT_MIN)]];//set header  nil
+    self.tableView.scrollEnabled = YES;
+    if (!self.navigationItem.rightBarButtonItem) {
+        [self setNavBar];
+    }
+}
 - (void)viewDidLoad {
-    
     [super viewDidLoad];
+    
+    
+    //UI
+    if (self.results.count == 0) {
+        [self emptyInterface];
+    }
+    
     self.navigationItem.title = @"设备";
     [self.view setBackgroundColor:[UIColor groupTableViewBackgroundColor]];
     [self.view addSubview:self.tableView];
     
+    
+    
+    
+    
+    
     __weak typeof (self) ws = self;
-    self.token = [self.results addNotificationBlock:^(RLMResults<Device *> * _Nullable results, RLMCollectionChange * _Nullable change, NSError * _Nullable error) {
-        if (!results.count) {
-            [ws.tableView setTableHeaderView:ws.emptyView];
-            
-            ws.navigationItem.rightBarButtonItem = nil;
-            ws.tableView.scrollEnabled = NO;
-        }else{
-            [ws.tableView setTableHeaderView:[[UIView alloc] initWithFrame:CGRectMake(0, 0, AM_SCREEN_WIDTH, CGFLOAT_MIN)]];// CGFLOAT_MAX
-            ws.tableView.scrollEnabled = YES;
-            if (!ws.navigationItem.rightBarButtonItem) {
-                [ws setNavBar];
+    for (Device *obsDevice in self.results) {
+        NSInteger idx = 0;
+        //add & delete opration can not trigger notification!!
+        self.token = [obsDevice addNotificationBlock:^(BOOL deleted, NSArray<RLMPropertyChange *> * _Nullable changes, NSError * _Nullable error) {
+            if (deleted) {
+                NSLog(@"设备已经删除！");
+            }else {
+                //property changes
+                for (RLMPropertyChange *property in changes) {
+                    if ([property.name isEqualToString:@"nvr_status"] ) {//&& [property.value integerValue] > 1000
+                        NSLog(@"------------------DEVICE CHANGED STATUS:%@ ------------------",property.value); // [token invalidate];  token = nil;
+                        QRResultCell *cell = [self.tableView cellForRowAtIndexPath:   [NSIndexPath indexPathForRow:0 inSection:idx]];
+                        if ([property.value intValue] == CLOUD_DEVICE_STATE_CONNECTED) {
+                            [cell.maskView setHidden:YES];
+                            [cell upadteCams];
+                        } else {
+                            [cell.maskView setHidden:NO];
+                            [cell.spinner stopAnimating];
+                            if ([property.value intValue] ==  CLOUD_DEVICE_STATE_DISCONNECTED) {
+                                [cell.statusLabel setText:@"DISCONNECT"];
+                            }else if ([property.value intValue] == CLOUD_DEVICE_STATE_AUTHENTICATE_ERR) {
+                                [cell.statusLabel setText:@"AUTHENTICATE_ERR"];
+                            }else if ([property.value intValue] == CLOUD_DEVICE_STATE_OTHER_ERR) {
+                                [cell.statusLabel setText:@"OTHER_ERR"];
+                            }else if ([property.value intValue] == CLOUD_DEVICE_STATE_UNKNOWN) {
+                                [cell.statusLabel setText:@"Getting Device Status"];
+                                [cell.spinner startAnimating];
+                            }
+                        }
+                    }
+                }
             }
-        }
-    }];
+        }];
+        
+        idx ++;
+    }
+    
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(addNew:) name:@"addNew" object:nil];
-
 }
 
 - (void)addNew:(NSNotification *)notification {
     
+    if (self.results.count == 0) {
+        [self deviceInterface];
+    }
+    //异步方式 write
     [RLM transactionWithBlock:^{
         [RLM addObject:notification.object]; //KVO-Comapliant
+        //        [self.tableView insertSections:[NSIndexSet indexSetWithIndex:self.results.count - 1] withRowAnimation:UITableViewRowAnimationBottom]; //will auto call sections  // mabey  嵌套写事物了 cuz crash !!
     }];
-    [self.tableView insertSections:[NSIndexSet indexSetWithIndex:self.results.count - 1] withRowAnimation:UITableViewRowAnimationBottom];
+    
+    [self.tableView insertSections:[NSIndexSet indexSetWithIndex:self.results.count - 1] withRowAnimation:UITableViewRowAnimationFade];
 }
 
 - (void)deleteNvr:(NSIndexPath *)path {
+   if (self.results.count == 1) {
+        [self emptyInterface];
+    }
+    cloud_close_device((void *)[self.results objectAtIndex:path.section].nvr_h);
     [RLM transactionWithBlock:^{
         [RLM deleteObject:[self.results objectAtIndex:path.section]];
     }];
@@ -96,7 +152,6 @@
     
     [self.navigationController popToRootViewControllerAnimated:YES];
     [MBProgressHUD showSuccess:@"设备 已经删除"];
-    //  cloud_destroy_device(deleteDevice.nvr_h);
 }
     
 - (void)setNavBar {
@@ -124,21 +179,18 @@
 #pragma mark - Table view 数据源回调方法
 //swipe  删除会调用 numberOfSection  ，和 numberOfRows 方法
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    NSLog(@"section");
+    NSLog(@"section %lu",self.results.count);
     return self.results.count;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    NSLog(@"row");
+    NSLog(@"row - 1");
     return 1;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-     NSLog(@"cell");
+     NSLog(@"**CELL**");
     Device *nonCams_device = self.results[indexPath.section];
-    [RLM transactionWithBlock:^{
-        [nonCams_device setNvr_index:(int)indexPath.section];
-    }];
     if (nonCams_device.nvr_type == CLOUD_DEVICE_TYPE_GW) {
         QRResultCell *nvrCell = [[QRResultCell alloc] init];
 //        tableView.rowHeight = 300; //110*2 + 60 （itemH *2  + topBar ）
@@ -254,9 +306,7 @@
 
 - (void) handleRefresh:(UIRefreshControl *)sender{
     [sender endRefreshing];
-//    NSInteger idx = 0;
-    
-   
+    NSInteger idx = 0;
      RLMResults<Device *> *nvrs = RLM_R_NVR_STATUS(CLOUD_DEVICE_STATE_DISCONNECTED);
     for (Device *nvr_disconnect in nvrs) { //这里是查询 DB 里的 属性 ，== inital value == 0  ,self,results 查询 没
             RLMThreadSafeReference *deviceRef = [RLMThreadSafeReference referenceWithThreadConfined:nvr_disconnect];
@@ -270,9 +320,10 @@
                 }
             });
 
-            QRResultCell * c = [self.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:nvr_disconnect.nvr_index]];
+            QRResultCell * c = [self.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:idx]];
             [c.statusLabel setText:@"getting device status"];
             [c.spinner startAnimating];
+        idx++;
     }
 
 

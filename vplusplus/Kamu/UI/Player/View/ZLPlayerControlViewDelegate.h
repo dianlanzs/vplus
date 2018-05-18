@@ -74,7 +74,8 @@
 - (void)zl_controlView:(UIView *)controlView snapAction:(UIButton *)sender;
 - (void)zl_controlView:(UIView *)controlView recordVideoAction:(UIButton *)sender;
 
-
+/** 加载失败按钮事件 */
+- (void)zl_controlView:(UIView *)controlView failAction:(UIButton *)sender;
 
 
 

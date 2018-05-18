@@ -43,17 +43,8 @@ static SDL_Rect rect;
 #import "LCVoiceHud.h"
 
 #import "PCMPlayer.h"
-/*
- 定义cams 数组
- */
-//struct CGPoint {
-//
-//    CGFloat handle;
-//    NSString * camID;
-//};
+#import "ReactiveObjC.h"
 
-//static device_cam_info_t g_cam_info[4];
-//static int g_cam_num = 0;
 
 #define AUTOOL [PCMPlayer sharedAudioManager]
 
@@ -75,27 +66,16 @@ mydevice_data_callback callBack;
 
 @property (strong, nonatomic) UITableView *tableView;
 @property (strong, nonatomic) GLDrawController *glDrawVc;
-
-
-
-//@property (nonatomic, strong)Waver *waver;
-
-
+//@property (strong, nonatomic) GLDrawController *glvc;
 
 @property (nonatomic, strong) ZLPlayerControlView *controlView;
-@property (strong, nonatomic) ZLPlayerView *playerView;
+@property (strong, nonatomic) ZLPlayerView *vp;
 @property (nonatomic, strong) ZLPlayerModel *playerModel;
-
-
-
-
-
-
-
 @property (nonatomic, strong) FunctionView *funcBar;
-//@property (nonatomic, strong)UINavigationBar *navBar;
 
+@property (nonatomic, strong) NSTimer *timer;
 
+@property (nonatomic, assign) NSInteger flag;
 
 
 
@@ -107,22 +87,18 @@ mydevice_data_callback callBack;
 
 
 
-
-
+- (ZLPlayerView *)vp {
+    if (!_vp) {
+        _vp = [[ZLPlayerView alloc] initWithModel:nil];
+    }
+    return _vp;
+}
 
 
 #pragma mark - 生命周期方法
 - (void)device:(Device *)nvr sendData:(void *)data dataType:(int)type {
     
-    
-    dispatch_async(dispatch_get_main_queue(), ^{
-        if (self.playerView.state == ZLPlayerStateBuffering) {
-            [self.playerView stopBuffering];
-        }
-    });
-    
-    
-    
+    [self setFlag:1];
     if (type == CLOUD_CB_VIDEO) {
         cb_video_info_t *info = (cb_video_info_t *)data;
 //        if (info->cam_id == self.cam.cam_h) {
@@ -130,6 +106,7 @@ mydevice_data_callback callBack;
             int width = pFrame_->width;
             int height = pFrame_->height;
             [self.glDrawVc writeY:pFrame_->data[0] U:pFrame_->data[1] V:pFrame_->data[2] width:width height:height];
+        
 //        }
     }else if (type == CLOUD_CB_AUDIO) {
         cb_audio_info_t *info = (cb_audio_info_t *)data;
@@ -141,7 +118,8 @@ mydevice_data_callback callBack;
     }
     
     
-    
+  
+   
 }
 
 
@@ -152,6 +130,7 @@ mydevice_data_callback callBack;
     [self setNavgation];
     [self setupView];
     self.nvrCell.nvrModel.delegate = self;
+
 }
 
 
@@ -169,18 +148,12 @@ mydevice_data_callback callBack;
     [self zl_playerBackAction];
 }
 - (void)setting:(id)sender {
-    
-    
-//    [self.playerView setIscurrentPage:NO];//重要
-
-
     QRootElement *camRoot = [[DataBuilder new] createForCamSettings:(VideoCell *)[self.nvrCell.QRcv cellForItemAtIndexPath:self.indexpath] nvrCell:self.nvrCell];
     CamSettingsController *camSettingsVc = [[CamSettingsController alloc] initWithRoot:camRoot];
     [self.navigationController pushViewController:camSettingsVc animated:YES];
     
     
     camSettingsVc.deleteCam = ^{
-        [self.glDrawVc setDelegate:nil];
         cloud_device_del_cam((void *)self.nvrCell.nvrModel.nvr_h, self.cam.cam_h);
         [RLM transactionWithBlock:^{
             [self.nvrCell.nvrModel.nvr_cams removeObjectAtIndex:self.indexpath.item];
@@ -189,35 +162,49 @@ mydevice_data_callback callBack;
         [self.navigationController popToRootViewControllerAnimated:YES];
         [MBProgressHUD showSuccess:@"cam 已经删除"];
     };
-    //        [weakObj.playerView setIsDisappeared:YES]; //push和present 时候 会不会走 viewWillDisapeard
-    
     
 }
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    [MBProgressHUD showPromptWithText:@"starting video & audio ..."];
-    [self.playerView configZLPlayer];  ///MARK:可以设置成 单例 VETOOL
-    [self zl_startAuido];
-    self.navigationItem.title = self.cam.cam_name? [self.cam.cam_name uppercaseString] : [self.cam.cam_id uppercaseString];
-
     
+    [self.vp start];
+    //开启定时器
+    _timer = [NSTimer scheduledTimerWithTimeInterval:3.f target:self selector:@selector(checking) userInfo:nil repeats:YES];
+    [_timer fire];//run immediately
+    self.navigationItem.title = self.cam.cam_name? [self.cam.cam_name uppercaseString] : [self.cam.cam_id uppercaseString];
 }
-
+- (void)checking {
+    
+    [self setFlag:0]; //outer must changed this value
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        if (self.flag == 0 && self.nvrCell.nvrModel.nvr_status == CLOUD_DEVICE_STATE_CONNECTED) {
+            [self.vp setState:ZLPlayerStateBuffering];//设备连接 ，回调没来
+        }
+        else if (self.flag == 0 && self.nvrCell.nvrModel.nvr_status == CLOUD_DEVICE_STATE_DISCONNECTED) {
+            [self.vp setState:ZLPlayerStateFailed];//设备断开 ，回调没来
+        }
+        else if (self.flag == 1 && self.nvrCell.nvrModel.nvr_status == CLOUD_DEVICE_STATE_CONNECTED) {
+            [self.vp setState:ZLPlayerStatePlaying];//设备连接 ，回调来了
+        }
+        //设备断开 回调来了 -- Never ,exist
+        
+    });
+}
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:YES];
 }
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
     [self.navigationController setNavigationBarHidden:NO animated:YES];
-    
-    [self zl_stopAudio:nil]; //present  会不会走 disappear？？？？   EXP:证明PUSH会走  disappear!
-    [self zl_stopVideo:nil];
+  
+    [self.vp stop];
     [MBProgressHUD showSuccess:@"closed succeed"];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
-    //self 已经释放
     [super viewDidDisappear:YES];
+    [self.timer invalidate];  //timer  relese 了
+    self.timer = nil;
 }
 
 - (void)didReceiveMemoryWarning {
@@ -226,10 +213,35 @@ mydevice_data_callback callBack;
 
 
 - (void)dealloc {
-    ;
+    NSLog(@"PlayerViewController relese!");
 }
 
+#pragma mark - UI
+- (void)setupView {
+    
+    [self.view addSubview:self.funcBar];//使用_funcBar，不显示，  cuz 没有走get 方法 self.funcBar!!
+    [self addChildViewController:self.glDrawVc];
+    [self.vp insertSubview:self.glDrawVc.view atIndex:0]; //insert glview into bottom
+    [self.glDrawVc.view setFrame:self.vp.bounds];
+    [self.glDrawVc didMoveToParentViewController:self];
+    
+    [self.view addSubview:self.vp];
+    [self.vp.controlView makeConstraints]; //control
+    [self.vp setPlayerModel:self.playerModel]; //model
+    [self.vp setDelegate:self]; //delegate
+    [self.glDrawVc setDelegate:self];
+    
 
+    //translucent:    + 64
+    self.vp.frame = CGRectMake(0, kBtnH + 64, AM_SCREEN_WIDTH, AM_SCREEN_WIDTH * 0.5625); //16:9
+    [self.funcBar mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.leading.trailing. equalTo(self.view);
+        make.top.mas_equalTo(self.view).offset(64);
+        make.height.mas_equalTo(kBtnH);
+    }];
+    
+    [self.navigationController.navigationBar setTranslucent:YES];//设置模糊，保持View 的尺寸全屏！！
+}
 #pragma mark - 操作方法 //MARK: 注册回调操作,、、形参，Self不提示 没有self变量？？？
 
 
@@ -300,21 +312,15 @@ mydevice_data_callback callBack;
     
     [self.navigationController popViewControllerAnimated:YES];
     
-//    dispatch_async(dispatch_get_global_queue(0, 0), ^{
-        NSData *cover = [self takeSnapshot];
-//        [self zl_stopAudio:nil];
-//        [self zl_stopVideo:nil];
-        
-        VideoCell * c = (VideoCell *)[self.nvrCell.QRcv cellForItemAtIndexPath:self.indexpath];
-        [c.playableView setImage:[UIImage imageWithData:cover]];
-        [RLM transactionWithBlock:^{
-            [self.cam setCam_cover:cover];//database
-        }];
-//    });
-    
+    NSData *cover = [self takeSnapshot];
+    VideoCell * c = (VideoCell *)[self.nvrCell.QRcv cellForItemAtIndexPath:self.indexpath];
+    [c.playableView setImage:[UIImage imageWithData:cover]];
+    [RLM transactionWithBlock:^{
+        [self.cam setCam_cover:cover];//database
+    }];
     [MBProgressHUD showSpinningWithMessage:@"in closing..." ];
-
-   
+    
+    
 }
 
 
@@ -325,7 +331,7 @@ mydevice_data_callback callBack;
     if (Orientation == UIInterfaceOrientationPortrait) {
 
         [self.navigationController setNavigationBarHidden:NO animated:NO];
-        [self.playerView mas_remakeConstraints:^(MASConstraintMaker *make) {
+        [self.vp mas_remakeConstraints:^(MASConstraintMaker *make) {
             make.top.mas_equalTo(self.funcBar.mas_bottom);
             make.leading.trailing.equalTo(self.view);
             make.height.mas_equalTo(211);
@@ -339,7 +345,7 @@ mydevice_data_callback callBack;
         keyW.bounds = CGRectMake(0, 0, 375, 667);
         
     }else {
-            [self.playerView mas_remakeConstraints:^(MASConstraintMaker *make) {
+            [self.vp mas_remakeConstraints:^(MASConstraintMaker *make) {
             make.edges.mas_equalTo(self.view); //fill the container
         }];
         [self.navigationController.view sendSubviewToBack:self.navigationController.navigationBar];
@@ -352,69 +358,11 @@ mydevice_data_callback callBack;
 }
 
 
-
-
-
-- (void)zl_startVideo:(ZLPlayerView *)playerView {
-    if (self.cam.cam_h >= 0) {
-        cloud_device_play_video((void *)self.nvrCell.nvrModel.nvr_h,self.cam.cam_h);
-        [self.glDrawVc setPaused:NO];
-    }
-}
-
-- (void)zl_stopVideo:(id)playerView {
-    [self.glDrawVc setPaused:YES];
-//    RLMThreadSafeReference *deviceRef = [RLMThreadSafeReference referenceWithThreadConfined:self.nvrCell.nvrModel];
-//    @autoreleasepool {
-//        RLMRealm *realm = [RLMRealm realmWithConfiguration:RLM.configuration error:nil];
-//        Device *device = [realm resolveThreadSafeReference:deviceRef];
-//        if (device) {
-            cloud_device_stop_video((void *)self.nvrCell.nvrModel.nvr_h, self.cam.cam_h);
-//    }
-
-}
-
-
-
-
-
-- (void)zl_muteAudio:(BOOL)isMuted {
-    
-    if (isMuted) {
-        cloud_device_stop_audio((void *)self.nvrCell.nvrModel.nvr_h, self.cam.cam_h);
-        [AUTOOL setInput:NO output:NO];
-    }else {
-        cloud_device_play_audio((void *)self.nvrCell.nvrModel.nvr_h, self.cam.cam_h);
-        [AUTOOL setInput:NO output:YES];
-        
-    }
-    
-}
-
-- (void)zl_startAuido {
-    cloud_device_play_audio((void *)self.nvrCell.nvrModel.nvr_h, self.cam.cam_h);
-    [AUTOOL startService:self.nvrCell.nvrModel.nvr_h cam:self.cam.cam_h];
-}
-- (void)zl_stopAudio:(id)playerView {
-//    RLMThreadSafeReference *deviceRef = [RLMThreadSafeReference referenceWithThreadConfined:self.nvrCell.nvrModel];
-//        @autoreleasepool {
-//            RLMRealm *realm = [RLMRealm realmWithConfiguration:RLM.configuration error:nil];
-//            Device *device = [realm resolveThreadSafeReference:deviceRef];
-//            if (device) {
-                cloud_device_stop_audio((void *)self.nvrCell.nvrModel.nvr_h, self.cam.cam_h);
-//            }
-//        }
-    [AUTOOL stopService];
-}
-
 //开启录制
 - (void)zl_startRecord:(id)playerView{
     [AUTOOL.volumeHUD show];
     cloud_device_speaker_enable((void *)self.nvrCell.nvrModel.nvr_h,self.cam.cam_h);
     [AUTOOL setInput:YES output:NO];
- 
-    
-
 }
 
 - (void)zl_cancelRecord:(id)playerView{
@@ -432,7 +380,6 @@ mydevice_data_callback callBack;
 }
 
 
-//获取当前时间戳
 - (NSString *)getDate{
     NSDate* date = [NSDate date];
     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
@@ -442,16 +389,12 @@ mydevice_data_callback callBack;
 }
 
 - (NSData *)takeSnapshot {
-    
-    GLKView *glkView = (GLKView *)self.glDrawVc.view;
-    UIImage *snapshot = [glkView snapshot];
+    GLKView *glk_view = (GLKView *)self.glDrawVc.view;
+    UIImage *snapshot = [glk_view snapshot];
     NSLog(@"已经截图！----》图片SIZE:%lu",[ UIImageJPEGRepresentation(snapshot, 0.5f) length]);
     return  UIImageJPEGRepresentation(snapshot, 0.5f);
     
 }
-
-
-
 
 #pragma mark - getter
 
@@ -466,8 +409,6 @@ mydevice_data_callback callBack;
     return _tableView;
 }
 
-
-
 - (ZLPlayerModel *)playerModel {
     if (!_playerModel) {
         _playerModel                  = [[ZLPlayerModel alloc] init];
@@ -475,37 +416,20 @@ mydevice_data_callback callBack;
         _playerModel.placeholderImage = [UIImage imageNamed:@"loading_bgView1"];
         //        _playerModel.resolutionDic = @{@"高清" : self.videoURL.absoluteString,
         //                                       @"标清" : self.videoURL.absoluteString};
+        
+        [_playerModel setCam_h:self.cam.cam_h];
+        [_playerModel setNvr_h:self.nvrCell.nvrModel.nvr_h];
     }
     return _playerModel;
 }
-
-- (ZLPlayerView *)playerView {
-    
-    if (!_playerView) {
-        
-        _playerView = [ZLPlayerView new];
-        [self addChildViewController:self.glDrawVc];  //add child controller
-        [_playerView addSubview:self.glDrawVc.view];
-        [self.glDrawVc.view setFrame:_playerView.bounds];
-        [self.glDrawVc didMoveToParentViewController:self];
-
-        _playerView.hasPreviewView = YES; //可以设置缓冲数据 UI
-        _playerView.delegate = self;
-
-       
-    }
-    return _playerView;
-}
-
 - (GLDrawController *)glDrawVc {
     
     if (!_glDrawVc) {
         _glDrawVc = [GLDrawController new];
-        [_glDrawVc setPreferredFramesPerSecond:30];
+        [_glDrawVc setPreferredFramesPerSecond:20];
     }
     return _glDrawVc;
 }
-
 
 - (FunctionView *)funcBar {
     if (!_funcBar) {
@@ -515,27 +439,16 @@ mydevice_data_callback callBack;
     }
     return _funcBar;
 }
+//- (void)glkViewController:(GLKViewController *)controller willPause:(BOOL)pause {
+//
+//    if (!pause) { //resume
+//
+//        [self.glDrawVc setM_bHasNewFrame:NO];
+////        [self.vp start];
+//    }
+//}
 
-#pragma mark - UI
-- (void)setupView {
-    
-    [self.view addSubview:self.funcBar];//使用_funcBar，不显示，  cuz 没有走get 方法 self.funcBar!!
-    [self.view addSubview:self.playerView];
-    
-    
-    //translucent:    + 64
-    self.playerView.frame = CGRectMake(0, kBtnH + 64, AM_SCREEN_WIDTH, AM_SCREEN_WIDTH * 0.5625); //16:9
-    [self.playerView playerControlView:nil playerModel:self.playerModel];
-    
-    [self.funcBar mas_makeConstraints:^(MASConstraintMaker *make) {
-        
-        make.leading.trailing. equalTo(self.view);
-        make.top.mas_equalTo(self.view).offset(64);
-        make.height.mas_equalTo(kBtnH);
-    }];
-    
-    [self.navigationController.navigationBar setTranslucent:YES];//设置模糊，保持View 的尺寸全屏！！
-}
+
 @end
 
 

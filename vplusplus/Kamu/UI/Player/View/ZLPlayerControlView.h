@@ -20,7 +20,8 @@
 @property (nonatomic, strong) MRoundedButton          *speakerBtn_vertical;
 
 
-
+/** 加载失败按钮 */
+@property (nonatomic, strong) UIButton                *failBtn;
 
 
 /** 播放按钮状态 */

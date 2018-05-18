@@ -13,6 +13,9 @@
 #import "ZLPlayerModel.h"
 #import "ZLPlayerControlViewDelegate.h"
 
+#import "PCMPlayer.h"
+#define AUTOOL [PCMPlayer sharedAudioManager]
+
 
 // 枚举值，包含水平移动方向和垂直移动方向
 typedef NS_ENUM(NSInteger, PanDirection){
@@ -26,8 +29,7 @@ typedef NS_ENUM(NSInteger, PanDirection){
 
 /** 定义一个实例变量，保存枚举值 */
 @property (nonatomic, assign) PanDirection           panDirection;
-/** 播发器的几种状态 */
-@property (nonatomic, assign) ZLPlayerState          state;
+
 
 /** 是否锁定屏幕方向 */
 @property (nonatomic, assign) BOOL                   isLocked;
@@ -48,12 +50,11 @@ typedef NS_ENUM(NSInteger, PanDirection){
 @property (nonatomic, strong) UIPanGestureRecognizer *shrinkPanGesture;
 
 
-@property (nonatomic, strong) ZLPlayerModel          *playerModel;
 @property (nonatomic, strong) NSDictionary           *resolutionDic;
 @property (nonatomic, strong) UIColor                *statusOriginBackgroundColor;
 
 
-@property (nonatomic, strong) RTSpinKitView *spinner;
+
 
 /** 亮度view */
 @property (nonatomic, strong) ZLBrightnessView       *brightnessView;
@@ -62,26 +63,72 @@ typedef NS_ENUM(NSInteger, PanDirection){
 
 @implementation ZLPlayerView
 
+- (UIViewController *)findViewController:(UIView*)view {
+    id responder = view;
+    
+    while (responder){
+        if ([responder isKindOfClass:[UIViewController class]]){
+            return responder;
+        }
+        responder = [responder nextResponder];
+        
+    }
+    return nil;
+    
+}
+
 
 #pragma mark - 布局 View
 
+- (instancetype)initWithModel: (ZLPlayerModel *)vp_model {
+    self = [super init];
+    if (self) {
+        [self addSubview:self.spinner];
+        [self addSubview:self.controlView];
+        [self.spinner mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.center.equalTo(self);
+        }];
+        [self.controlView mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.edges.mas_equalTo(UIEdgeInsetsZero);
+        }];
+        [self setState:ZLPlayerStateUnknwon];
+        [self setIsFullScreen:NO];//db
+        [self setHasPreviewView:NO];//db
+        
+       
 
-- (void)layoutSubviews {
-    [super layoutSubviews];
-}
-- (void)configZLPlayer {
-    [self.spinner startAnimating];//点play的时候 ，加载转圈
-    [self.delegate zl_startVideo:self]; //开始播放
-    [self.controlView zl_playerDownloadBtnState:YES];
-    [self setIsFullScreen:NO];
-    [self setState:ZLPlayerStateBuffering];
-}
-- (void)stopBuffering {
-    [self.spinner stopAnimating];
-    self.state = ZLPlayerStatePlaying;
+        
+        [self addNotifications];
+        [self createGesture];
+    }
+    return self;
 }
 
 
+- (void)setState:(ZLPlayerState)state {
+    if (state != _state) {
+        _state = state;
+        
+        if (state == ZLPlayerStateFailed) {
+            [self.controlView.failBtn setHidden:NO];
+            [self.spinner stopAnimating];
+        } else {
+            [self.controlView.failBtn setHidden:YES];
+          if (state == ZLPlayerStateBuffering) {
+                [self.spinner startAnimating];
+            } else if (state == ZLPlayerStatePlaying) {
+                [self.spinner stopAnimating];
+            }
+        }
+        
+    }
+}
+
+- (void)stop {
+    cloud_device_stop_video((void *)self.playerModel.nvr_h, self.playerModel.cam_h);
+    cloud_device_stop_audio((void *)self.playerModel.nvr_h, self.playerModel.cam_h);
+    [AUTOOL stopService];
+}
 - (void)dealloc {
 //    self.playerModel = nil;
 //    ZLPlayerShared.isLockScreen = NO;
@@ -190,45 +237,19 @@ typedef NS_ENUM(NSInteger, PanDirection){
     }
 }
 
-#pragma mark - ---- 生命周期接口方法 --------- 、、call this first
-- (void)playerControlView:(ZLPlayerControlView *)controlView playerModel:(ZLPlayerModel *)playerModel {
-    
-    
-    
-    if (!controlView) {
-        
-        ZLPlayerControlView *zlv_control = [[ZLPlayerControlView alloc] init];
-        [self setControlView:zlv_control];
-        [zlv_control makeConstraints];
 
-    } else {
-        [self setControlView:controlView];
-    }
-    
-    [self setPlayerModel:playerModel];
-    
-    
-    
-    
-    
-}
+#pragma mark - ---- 生命周期接口方法 --------- 、、call this first
+
 
 #pragma mark - Getter,Setter
 
-- (void)setControlView:(ZLPlayerControlView *)controlView {
-    if (_controlView != controlView) {
-        _controlView = controlView;
+- (ZLPlayerControlView *)controlView {
+    if (!_controlView) {
+        _controlView = [[ZLPlayerControlView alloc] init];
+        //        [_controlView makeConstraints]; //MARK: cuz use superview but self not yet returned
+        _controlView.delegate = self;
     }
-    controlView.delegate = self;
-    [self addSubview:controlView];
-    [self addSubview:self.spinner];
-    [controlView mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.edges.mas_equalTo(UIEdgeInsetsZero);
-    }];
-    [self.spinner mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.center.equalTo(self);
-    }];
-    
+    return _controlView;
 }
 
 //设置Model、、2. 在设置model
@@ -236,9 +257,7 @@ typedef NS_ENUM(NSInteger, PanDirection){
     _playerModel = playerModel;
     [self.controlView zl_playerModel:playerModel];
     
-    
-    [self addNotifications];
-    [self createGesture];
+
     // 分辨率
     if (playerModel.resolutionDic) {
         self.resolutionDic = playerModel.resolutionDic;
@@ -365,8 +384,13 @@ typedef NS_ENUM(NSInteger, PanDirection){
 //        return;
 //    }
     
-    self.isFullScreen ? [self interfaceOrientation:UIInterfaceOrientationPortrait] :
-    ([UIDevice currentDevice].orientation == UIDeviceOrientationLandscapeRight ? [self interfaceOrientation:UIInterfaceOrientationLandscapeLeft]: [self interfaceOrientation:UIInterfaceOrientationLandscapeRight]);
+    
+    if (self.isFullScreen) {
+        [self interfaceOrientation:UIInterfaceOrientationPortrait];
+    } else {
+         ([UIDevice currentDevice].orientation == UIDeviceOrientationLandscapeRight ? [self interfaceOrientation:UIInterfaceOrientationLandscapeLeft]: [self interfaceOrientation:UIInterfaceOrientationLandscapeRight]);
+    }
+   
 }
 
 ///MARK:2.约束 横竖屏视图
@@ -443,6 +467,20 @@ typedef NS_ENUM(NSInteger, PanDirection){
 
 
 #pragma mark - 按钮点击代理方法
+- (void)reconnect {
+     cloud_connect_device((void *)self.playerModel.nvr_h, "admin", "123");
+}
+- (void)start {
+    cloud_device_play_video((void *)self.playerModel.nvr_h,self.playerModel.cam_h);
+    cloud_device_play_audio((void *)self.playerModel.nvr_h, self.playerModel.cam_h);
+    [AUTOOL startService:self.playerModel.nvr_h cam:self.playerModel.cam_h];
+    [self.spinner startAnimating];
+}
+/** 加载失败按钮事件 */
+- (void)zl_controlView:(UIView *)controlView failAction:(UIButton *)sender {
+    [self reconnect];
+    [self start];
+}
 
 //全屏按钮点击
 - (void)zl_controlView:(UIView *)controlView fullScreenAction:(UIButton *)sender {
@@ -474,8 +512,13 @@ typedef NS_ENUM(NSInteger, PanDirection){
 }
 //静音按钮
 - (void)zl_controlView:(UIView *)controlView muteAction:(UIButton *)muteButton {
-//    self.isMuted = muteButton.isSelected;
-    [self.delegate zl_muteAudio:muteButton.isSelected];
+    if (muteButton.isSelected) {
+        cloud_device_stop_audio((void *)self.playerModel.nvr_h, self.playerModel.cam_h);
+        [AUTOOL setInput:NO output:NO];
+    }else {
+        cloud_device_play_audio((void *)self.playerModel.nvr_h, self.playerModel.cam_h);
+        [AUTOOL setInput:NO output:YES];
+    }
 }
 //麦克风对讲
 - (void)zl_controlView:(UIView *)controlView speakerAction:(UIButton *)sender {

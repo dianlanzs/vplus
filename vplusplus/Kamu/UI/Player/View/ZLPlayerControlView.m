@@ -147,6 +147,7 @@ static const CGFloat ZLPlayerControlBarAutoFadeOutTimeInterval = 0.35f;
         
         [self addSubview:self.lockBtn];
         [self addSubview:self.playerBtn];
+        [self addSubview:self.failBtn];
         
         
         
@@ -565,6 +566,13 @@ static const CGFloat ZLPlayerControlBarAutoFadeOutTimeInterval = 0.35f;
 
 
 #pragma mark - Action
+
+- (void)failBtnClick:(UIButton *)sender {
+    self.failBtn.hidden = YES;
+    if ([self.delegate respondsToSelector:@selector(zl_controlView:failAction:)]) {
+        [self.delegate zl_controlView:self failAction:sender];
+    }
+}
 // 点击切换分别率按钮
 - (void)changeResolution:(UIButton *)sender {
     
@@ -677,6 +685,17 @@ static const CGFloat ZLPlayerControlBarAutoFadeOutTimeInterval = 0.35f;
 
 
 #pragma mark - getter
+- (UIButton *)failBtn {
+    if (!_failBtn) {
+        _failBtn = [UIButton buttonWithType:UIButtonTypeSystem];
+        [_failBtn setTitle:@"加载失败,点击重试" forState:UIControlStateNormal];
+        [_failBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+        _failBtn.titleLabel.font = [UIFont systemFontOfSize:14.0];
+        _failBtn.backgroundColor = RGBA(0, 0, 0, 0.7);
+        [_failBtn addTarget:self action:@selector(failBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    return _failBtn;
+}
 //视频名称
 - (UILabel *)titleLabel {
     if (!_titleLabel) {
@@ -889,6 +908,12 @@ static const CGFloat ZLPlayerControlBarAutoFadeOutTimeInterval = 0.35f;
         make.height.mas_equalTo(49);
         make.trailing.equalTo(self.topImageView.mas_trailing).offset(-10);
         make.centerY.equalTo(self.backBtn.mas_centerY);
+    }];
+    
+    
+    [self.failBtn mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.center.equalTo(self);
+        make.size.mas_equalTo(CGSizeMake(150, 40));
     }];
     
     //    [self.resolutionBtn mas_makeConstraints:^(MASConstraintMaker *make) {

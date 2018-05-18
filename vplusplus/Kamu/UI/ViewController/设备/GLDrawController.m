@@ -63,13 +63,13 @@ enum
     
     
     [super viewDidLoad];
-//    [self.view addSubview:self.playerFatherView];
+    
 
 
     //关闭内部交互
     [self.view setUserInteractionEnabled:NO];
     //has 新frame == NO
-    m_bHasNewFrame = false;
+    _m_bHasNewFrame = false;
     
     //高度 宽度 = 0
     H = 0;
@@ -269,7 +269,7 @@ enum
     app.u_data = pU;
     app.v_data = pV;
 
-    m_bHasNewFrame = YES;
+    _m_bHasNewFrame = YES;
     //解锁
     [m_YUVDataLock unlock];
 
@@ -307,23 +307,41 @@ enum
 
 #pragma mark - GLKViewController 代理方法
 - (void)update {
-    
+//    NSLog(@"update: %f ---- draw:%f ---- DisplayedFrames:%lu",self.timeSinceLastUpdate ,self.timeSinceLastDraw,self.framesDisplayed);
+
 }
 
 - (BOOL)drawYUV {
     //上锁
     [m_YUVDataLock lock];
     //是否有新Frame
-    if (!m_bHasNewFrame) {
+//    current_time = time();
+    
+    
+//    NSTimer *current_time = [nstime]
+    if (!_m_bHasNewFrame) {
         [m_YUVDataLock unlock];        //解锁
+//        [self.spinner startAnimating];
+//        if （current_time > last_time +1) {
+//            start_buffering();
+//        }
+        
+        
+        
         //Steve dbg
         //usleep(10000);
         return false;   
+//    } else {
+//        last_time = time();
+//        stop_buffering();
     }
     
     //    Byte *y = app.m_pYUVData;
     //    Byte *u = app.m_pYUVData + H * W;
     //    Byte *v = app.m_pYUVData + H * W * 5 / 4;
+
+
+    
     Byte *y = app.y_data;
     Byte *u = app.u_data;
     Byte *v = app.v_data;
@@ -340,7 +358,7 @@ enum
     //glTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, m_nWidth / 2, m_nHeight / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE, v);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, W / 2, H / 2, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, v);
     
-    m_bHasNewFrame = false;
+    _m_bHasNewFrame = false;
     [m_YUVDataLock unlock];
     
     return YES;
@@ -349,8 +367,7 @@ enum
 
 
 #pragma mark - GLKViewDelegate  代理回调方法
-- (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
-{
+- (void)glkView:(GLKView *)view drawInRect:(CGRect)rect {
 //    NSLog(@"draw....");
     
     if ([self drawYUV] == NO) {
@@ -555,5 +572,6 @@ enum
     
     return YES;
 }
+
 
 @end

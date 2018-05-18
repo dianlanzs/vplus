@@ -32,6 +32,13 @@ extern "C" {
 #include "libavcodec/avcodec.h"
 #include "libavutil/avutil.h"
 #include "libswscale/swscale.h"
+
+//#define ALLOC_FRAME avcodec_alloc_frame
+//#define FREE_FRAME avcodec_free_frame
+
+#define ALLOC_FRAME av_frame_alloc
+#define FREE_FRAME av_frame_free
+
 /*
 #include "libswresample/swresample.h"
 #include "libavdevice/avdevice.h"
@@ -89,6 +96,9 @@ typedef enum {
     CLOUD_CB_ADDCAM = 4,
     CLOUD_CB_ALARM = 5,
     CLOUD_CB_RECORD_LIST = 6,
+    CLOUD_CB_VIDEO_BS = 7,
+    CLOUD_CB_AUDIO_BS = 8,
+
 } CLOUD_CB_TYPE;
 
 typedef struct cb_video_info_s {
@@ -110,6 +120,20 @@ typedef struct cb_audio_info_s {
     short *sample_buffer;
     int sample_length;
 } cb_audio_info_t;
+
+typedef struct cb_video_bs_info_s {
+    cloud_device_handle device;
+    cloud_cam_handle cam_id;
+    unsigned char *bs_data;
+    int bs_size;
+} cb_video_bs_info_t;
+
+typedef struct cb_audio_bs_info_s {
+    cloud_device_handle device;
+    cloud_cam_handle cam_id;
+    unsigned char *bs_data;
+    int bs_size;
+} cb_audio_bs_info_t;
 
 
 typedef enum {
@@ -144,7 +168,7 @@ typedef struct record_filelist_t {
 typedef int rec_pb_handle;
 //
 //typedef int (*CLOUD_DEVICE_CALLBACK)(CLOUD_CB_TYPE type, void *param,void *context);
-    
+
 typedef int (*CLOUD_DEVICE_CALLBACK)(cloud_device_handle handle,CLOUD_CB_TYPE type, void *param,void *context);
 /*
 if (type == CLOUD_CB_STATE) {
@@ -159,6 +183,10 @@ if (type == CLOUD_CB_STATE) {
     char *userdata = (char *)param;
 } else if (type == CLOUD_CB_RECORD_LIST) {
     record_filelist_t *info = (record_filelist_t *)param;
+} else if (type == CLOUD_CB_VIDEO_BS) {
+    cb_video_bs_info_t *info = (cb_video_bs_info_t *)param;
+} else if (type == CLOUD_CB_AUDIO_BS) {
+    cb_audio_bs_info_t *info = (cb_audio_bs_info_t *)param;
 }
 */
 
@@ -167,9 +195,9 @@ int cloud_init(void);
 //云服务退出
 int cloud_exit(void);
 //根据设备id创建一个设备句柄，之后对设备的操作必须带入这个句柄。
-cloud_device_handle cloud_create_device(const char *did);
+cloud_device_handle cloud_open_device(const char *did);
 //销毁设备句柄
-int cloud_destroy_device(cloud_device_handle handle);
+int cloud_close_device(cloud_device_handle handle);
 //获取设备类型
 cloud_device_type_t cloud_get_device_type(cloud_device_handle handle);
 //主动获取设备状态

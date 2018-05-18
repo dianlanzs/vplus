@@ -38,37 +38,48 @@
 
 @implementation QRResultCell
 
+int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *param,void *context) {
 
-
-- (void)updateNvr:(void *)nvrHandle withState:(cloud_device_state_t)state  {
-
+    Device *d = [Device new];
+    QRResultCell *ctx = (__bridge QRResultCell *)context;
     
-    if (nvrHandle == (void *)self.nvrModel.nvr_h) {
-        [self.spinner stopAnimating];
-        if (state == CLOUD_DEVICE_STATE_CONNECTED) {
-            [self upadteCams];
-            [self.maskView setHidden:YES];
-        } else {
-            if (state ==  CLOUD_DEVICE_STATE_DISCONNECTED) {
-                [self.statusLabel setText:@"DISCONNECT"];
-            }else if (state == CLOUD_DEVICE_STATE_AUTHENTICATE_ERR) {
-                [self.statusLabel setText:@"AUTHENTICATE_ERR"];
-            }else if (state == CLOUD_DEVICE_STATE_OTHER_ERR) {
-                [self.statusLabel setText:@"OTHER_ERR"];
-            }else if (state == CLOUD_DEVICE_STATE_UNKNOWN) {
-                [self.statusLabel setText:@"STATE_UNKNOWN"];
-            }
-            
-            [self.maskView setHidden:NO];
-        }
-        
-        [RLM transactionWithBlock:^{
-            self.nvrModel.nvr_status = state;
-        }];
-        [self.QRcv reloadData];
+    if (type == CLOUD_CB_STATE) {
+        cloud_device_state_t state = *((cloud_device_state_t *)param);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            //同步
+            [RLM beginWriteTransaction];
+            ctx.nvrModel.nvr_status = state;
+            [RLM commitWriteTransaction];
+
+        });
     }
-  
+    
+    else if (type == CLOUD_CB_VIDEO || type == CLOUD_CB_AUDIO ){
+        [ctx.nvrModel.delegate device:ctx.nvrModel sendData:param dataType:type];
+    }
+    
+    else if (type == CLOUD_CB_RECORD_LIST) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [ctx.nvrModel.delegate device:ctx.nvrModel sendData:param dataType:type];
+        });
+    }
+    
+    else if (type == CLOUD_CB_ALARM){
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (d.alarmShowed == 0) {
+                d.alarmShowed = 1;
+                Popup *p_alarm = [[Popup alloc] initWithTitle:@"alarm" subTitle:[NSString stringWithUTF8String:"test"] cancelTitle:nil successTitle:@"ok" cancelBlock:nil successBlock:^{
+                    d.alarmShowed = 0;
+                }];
+                [p_alarm showPopup];
+            }
+        });
+    }
+    return 0;
 }
+//
+//- (void)updateNvr:(void *)nvrHandle withState:(cloud_device_state_t)state  {
+//}
 
 #pragma mark - 生命周期
 // Designated initializer.  If the cell can be reused, you must pass in a reuse identifier.  You should use the same reuse identifier for all cells of the same form.  
@@ -88,7 +99,7 @@
     [self setSelectionStyle:UITableViewCellSelectionStyleNone];
     
 //    [self.layer setCornerRadius:5.f];
-//    [self.layer setMasksToBounds:YES];
+//    [self.layer setMasksToBounds:YES]; dsfsdfsd
     
     self.layer.shadowOffset = CGSizeMake(0, -3);  //x 方向向右偏移0  ，y 方向向上偏移5 ，负为向上偏移
     self.layer.shadowOpacity = 0.4f; ///阴影透明度
@@ -165,6 +176,8 @@
         
     }
     
+    [self.QRcv reloadData];
+    
 }
 
 
@@ -172,7 +185,7 @@
     
     if (_nvrModel != nvrModel) {
         [RLM transactionWithBlock:^{
-            nvrModel.nvr_h = (long)cloud_create_device([nvrModel.nvr_id UTF8String]);
+            nvrModel.nvr_h = (long)cloud_open_device([nvrModel.nvr_id UTF8String]);
             nvrModel.nvr_status = CLOUD_DEVICE_STATE_UNKNOWN;
         }];
         
@@ -208,41 +221,7 @@
     
 }
 
-int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *param,void *context) {
-    
-    Device *d = [[Device alloc] init];
-    QRResultCell *ctx = (__bridge QRResultCell *)context;
 
-    if (type == CLOUD_CB_STATE) {
-        cloud_device_state_t state = *((cloud_device_state_t *)param);
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [ctx updateNvr:handle withState:state];
-        });
-    }
-    
-    else if (type == CLOUD_CB_VIDEO || type == CLOUD_CB_AUDIO ){
-        [ctx.nvrModel.delegate device:ctx.nvrModel sendData:param dataType:type];
-    }
-    
-    else if (type == CLOUD_CB_RECORD_LIST) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [ctx.nvrModel.delegate device:ctx.nvrModel sendData:param dataType:type];
-        });
-    }
-    
-    else if (type == CLOUD_CB_ALARM){
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (d.alarmShowed == 0) {
-                d.alarmShowed = 1;
-                Popup *p_alarm = [[Popup alloc] initWithTitle:@"alarm" subTitle:[NSString stringWithUTF8String:"test"] cancelTitle:nil successTitle:@"ok" cancelBlock:nil successBlock:^{
-                    d.alarmShowed = 0;
-                }];
-                [p_alarm showPopup];
-            }
-        });
-    }
-    return 0;
-}
 
 
 #pragma mark - getter
@@ -302,7 +281,7 @@ int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *para
 
 - (UILabel *)statusLabel {
     if (!_statusLabel) {
-        _statusLabel = [UILabel labelWithText:@"Getting Device Status" withFont:[UIFont systemFontOfSize:20.f] color:[UIColor whiteColor] aligment:NSTextAlignmentCenter];
+        _statusLabel = [UILabel labelWithText:@"Hello" withFont:[UIFont systemFontOfSize:20.f] color:[UIColor whiteColor] aligment:NSTextAlignmentCenter];
     }
     return _statusLabel;
 }
@@ -310,10 +289,11 @@ int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *para
     if (!_spinner) {
         _spinner = [[RTSpinKitView alloc] initWithStyle:RTSpinKitViewStyleThreeBounce color:[UIColor whiteColor] spinnerSize:25.f];
         [_spinner setHidesWhenStopped:YES];
-        [_spinner startAnimating];
     }
     
     return _spinner;
    
 }
+
+
 @end

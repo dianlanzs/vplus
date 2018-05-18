@@ -11,7 +11,7 @@
 
 #import "DeviceFooter.h"
 #import "VideoCell.h"
-
+#import "ZLPlayerView.h"
 
 @class QRResultCell;
 
@@ -39,4 +39,9 @@
 @property (nonatomic, copy)NSString *str_param;
 @property (nonatomic, assign) BOOL showedPopup;
 
+
+
+//@property (nonatomic, strong) ZLPlayerView *vp;
+
+- (void)upadteCams;
 @end

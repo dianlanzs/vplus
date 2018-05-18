@@ -16,14 +16,12 @@
 // 如果需要使用idfa功能所需要引入的头文件（可选）
 #import <AdSupport/AdSupport.h>
 
-
 #import "AppDelegate.h"
 #import "AMNavigationController.h"
 #import "RDVTabBarController.h"
 #import "RDVTabBarItem.h"
 
 
-#import "Device.h"
 #import "NetWorkTools.h"
 #import "ReactiveObjC.h"
 
@@ -44,6 +42,8 @@ static NSString *channel = @"AppStore";
 @property (nonatomic, assign) BOOL isTutkPushRegistered;
 @end
 
+
+#define DEVICES [Device allObjects]
 @implementation AppDelegate
 
 
@@ -375,7 +375,14 @@ static NSString *channel = @"AppStore";
 //    if ([self didUserPressLockButton]) {
 //        //User pressed lock button
 //        NSLog(@"Lock screen.");
-           cloud_exit();
+    
+    
+//    for (Device *closeDevice in DEVICES) {
+//        cloud_close_device((void *)closeDevice.nvr_h);
+//    }
+//
+    
+//           cloud_exit();
 //    } else {
 //        NSLog(@"Home.");
 //        //user pressed home button
@@ -388,7 +395,10 @@ static NSString *channel = @"AppStore";
 
 - (void)applicationWillEnterForeground:(UIApplication *)application {
     // Called as part of the transition from the background to the active state; here you can undo many of the changes made on entering the background.
-    cloud_init();
+//    for (Device *openDevice in DEVICES) {
+//        cloud_open_device([openDevice.nvr_id UTF8String]);
+//    }
+//    cloud_init();
 }
 
 

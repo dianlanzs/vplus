@@ -16,9 +16,13 @@
     //条件锁
     NSCondition *m_YUVDataLock;
     GLuint _testTxture[3];
-    BOOL m_bHasNewFrame;
+    
 }
 
+
+
+
+@property (nonatomic, assign)BOOL m_bHasNewFrame;
 
 - (void)writeY:(Byte *)pY U:(Byte *)pU V:(Byte *)pV width:(int)w height:(int)h;
 

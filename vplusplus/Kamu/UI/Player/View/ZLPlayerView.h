@@ -18,6 +18,9 @@
 #import "ZLPlayer.h"
 #import "ZLPlayerControlView.h"
 
+
+#import "GLDrawController.h"
+
 @protocol ZLPlayerDelegate <NSObject>
 
 
@@ -59,6 +62,8 @@
 // 播放器的几种状态
 typedef NS_ENUM(NSInteger, ZLPlayerState) {
     
+    ZLPlayerStateUnknwon,
+    
     ZLPlayerStateFailed,     // 播放失败
     ZLPlayerStateBuffering,  // 缓冲中
     ZLPlayerStatePlaying,    // 播放中
@@ -76,72 +81,39 @@ typedef NS_ENUM(NSInteger, ZLPlayerState) {
 
 
 /** 是否为全屏 */
-@property (nonatomic, assign) BOOL                   isFullScreen;
-
-//
-//@property (nonatomic,strong) Device *cam;
-//@property (nonatomic,assign) cloud_device_handle * handle;
-//@property (nonatomic, strong) GLImageView *drawView;
-
-
-
-
-
-
-
-
-
-
-/** 设置playerLayer的填充模式 */
-
-//@property (nonatomic, assign) ZLPlayerLayerGravity    playerLayerGravity;
+@property (nonatomic, assign) BOOL isFullScreen;
 
 
 ///MARK: 控制层 视图和模型
-@property (nonatomic, strong) ZLPlayerControlView                 *controlView;
+@property (nonatomic, strong) ZLPlayerControlView *controlView;
 /** 是否有下载功能(默认是关闭) */
-@property (nonatomic, assign) BOOL                    hasDownload;
+@property (nonatomic, assign) BOOL  hasDownload;
 /** 是否开启预览图 */
-@property (nonatomic, assign) BOOL                    hasPreviewView;
+@property (nonatomic, assign) BOOL hasPreviewView;
 /** 设置代理 */
-@property (nonatomic, weak) id<ZLPlayerDelegate>      delegate;
+@property (nonatomic, weak) id<ZLPlayerDelegate> delegate;
 
 /** 是否被用户暂停 */
-@property (nonatomic, assign, readonly) BOOL          isPauseByUser;
-/** 播发器的几种状态 */
-@property (nonatomic, assign, readonly) ZLPlayerState state;
+@property (nonatomic, assign, readonly) BOOL isPauseByUser;
 
-/** player在栈上，即此时push或者模态了新控制器 */
-//@property (nonatomic, assign) BOOL                    isPushedOrPresented;
-@property (nonatomic, assign) BOOL                    iscurrentPage;
-
-
-/** 静音（默认为NO）*/
-//@property (nonatomic, assign) BOOL                    isMuted;
 /** 是否强制竖屏播放，默认为NO */
 @property (nonatomic, assign) BOOL                    forcePortrait;
 
+/** 播发器的几种状态 */
+@property (nonatomic, assign) ZLPlayerState          state;
+@property (nonatomic, strong) RTSpinKitView *spinner;
 
-
-
-
-@property (nonatomic, strong) void (^stopVideo)();
-@property (nonatomic, strong) void (^playVideo)();
-@property (nonatomic, strong) void (^stopAudio)();
-@property (nonatomic, strong) void (^playAudio)();
 
 
 //======================= 存储 API =======================
 @property (nonatomic, strong) void (^snapshot)();
 @property (nonatomic, strong) void (^recordVideo)(BOOL isRecord);
 
+@property (nonatomic, strong) ZLPlayerModel          *playerModel;
 
 
 
-
-- (void)playerControlView:(UIView *)controlView playerModel:(ZLPlayerModel *)playerModel;
-
-//自动播放
-- (void)configZLPlayer;
-- (void)stopBuffering;
+- (instancetype)initWithModel: (ZLPlayerModel *)vp_model;
+- (void)start;
+- (void)stop;
 @end

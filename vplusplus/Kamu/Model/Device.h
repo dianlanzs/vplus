@@ -53,13 +53,12 @@ typedef enum {
 @property  int nvr_status;
 @property  int alarmShowed;
 
-@property  int nvr_index;
 
 
 
 
 
-@property NSString * _Nullable nvr_tag;
+//@property NSString * _Nullable nvr_tag;
 
 @property RLMArray<Cam> * _Nullable nvr_cams;
 @end
