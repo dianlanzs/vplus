@@ -41,3 +41,4 @@
 + (instancetype)sharedBrightnessView;
 
 @end
+

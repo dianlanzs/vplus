@@ -2,7 +2,7 @@
 //  UIImage+CutRound.h
 //  Kamu
 //
-//  Created by YGTech on 2017/12/5.
+//  Created by Zhoulei on 2017/12/5.
 //  Copyright © 2017年 com.Kamu.cme. All rights reserved.
 //
 

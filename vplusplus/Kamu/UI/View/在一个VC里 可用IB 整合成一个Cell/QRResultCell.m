@@ -2,7 +2,7 @@
 //  QRResultCell.m
 //  Kamu
 //
-//  Created by YGTech on 2017/12/7.
+//  Created by Zhoulei on 2017/12/7.
 //  Copyright © 2017年 com.Kamu.cme. All rights reserved.
 //
 
@@ -10,7 +10,6 @@
 #import "NSString+StringFrame.h"
 #import "PlayVideoController.h"
 #import "ReactiveObjC.h"
-
 
 
 @interface QRResultCell()<UICollectionViewDelegate,UICollectionViewDataSource>
@@ -28,7 +27,7 @@
 @property (nonatomic, strong) UIImageView *idIcon;
 @property (nonatomic, strong) NSTimer *timer;
 
-
+@property (nonatomic, strong) RLMNotificationToken *token;
 
 
 
@@ -46,21 +45,27 @@ int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *para
     if (type == CLOUD_CB_STATE) {
         cloud_device_state_t state = *((cloud_device_state_t *)param);
         dispatch_async(dispatch_get_main_queue(), ^{
-            //同步
-            [RLM beginWriteTransaction];
-            ctx.nvrModel.nvr_status = state;
-            [RLM commitWriteTransaction];
+            NSLog(@"设备状态改变");
+            [RLM transactionWithBlock:^{
+                   ctx.nvrModel.nvr_status = state;
+            }];
 
         });
     }
     
     else if (type == CLOUD_CB_VIDEO || type == CLOUD_CB_AUDIO ){
-        [ctx.nvrModel.delegate device:ctx.nvrModel sendData:param dataType:type];
+        [ctx.nvrModel.avDelegate device:ctx.nvrModel sendAvData:param dataType:type];
     }
     
     else if (type == CLOUD_CB_RECORD_LIST) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [ctx.nvrModel.delegate device:ctx.nvrModel sendData:param dataType:type];
+//        record_filelist_t *info = (record_filelist_t *)param;
+//        int i;
+//        for (i=0;i<info->num;i++) {
+//            printf("id %d: %s - %d \n",i,info->blocks[i].filename,info->blocks[i].createtime);
+//        }
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            [ctx.nvrModel.listDelegate device:ctx.nvrModel sendListData:param dataType:type];
+            
         });
     }
     
@@ -88,27 +93,43 @@ int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *para
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self) {
         [self.contentView setBackgroundColor:[UIColor whiteColor]];
+        [self.contentView addSubview:self.footer];
         [self.contentView addSubview:self.QRcv];
+        [self.footer mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.leading.equalTo(self.contentView);
+            make.bottom.equalTo(self.contentView);
+            make.size.mas_equalTo(CGSizeMake(CGRectGetWidth(self.contentView.bounds), 40.f));
+        }];
         [self.QRcv mas_makeConstraints:^(MASConstraintMaker *make) {
             make.top.equalTo(self.contentView).offset(0.f);
             make.leading.equalTo(self.contentView).offset(0.0f);
             make.trailing.equalTo(self.contentView).offset(-0.0f);
-            make.bottom.equalTo(self.contentView).offset(0.f);
+            make.bottom.mas_equalTo(self.footer.mas_top).offset(0.f);
         }];
+        
+        
     }
     [self setSelectionStyle:UITableViewCellSelectionStyleNone];
-    
-//    [self.layer setCornerRadius:5.f];
-//    [self.layer setMasksToBounds:YES]; dsfsdfsd
-    
-    self.layer.shadowOffset = CGSizeMake(0, -3);  //x 方向向右偏移0  ，y 方向向上偏移5 ，负为向上偏移
-    self.layer.shadowOpacity = 0.4f; ///阴影透明度
-    self.layer.shadowColor = [UIColor blackColor].CGColor;
+    [self shadow];
+
     return self;
 }
+- (void)shadow {
+    self.layer.shadowOffset = CGSizeMake(1, 1);  //x 方向向右偏移0  ，y 方向向上偏移5 ，负为向上偏移
+    self.layer.shadowOpacity = 0.4f; ///阴影透明度
+    self.layer.shadowColor = [UIColor blackColor].CGColor;
+}
 
-
-
+//TURN OUT：删除cell  will call dealloc 
+- (void)dealloc {
+    [self.token invalidate];
+}
+- (DeviceFooter *)footer {
+    if (!_footer) {
+        _footer = [[DeviceFooter alloc] init];
+    }
+    return _footer;
+}
 
 #pragma mark - 视图数据源和代理
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
@@ -162,7 +183,6 @@ int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *para
             
             Cam *searchedCam = [Cam new];
             searchedCam.cam_id = [NSString stringWithUTF8String:ipc_info[i].camdid];
-            searchedCam.cam_h = ipc_info[i].index;
             
             RLMArray *db_cams = self.nvrModel.nvr_cams;
             Cam *db_cam =  [[db_cams objectsWhere:[NSString stringWithFormat:@"cam_id = '%@'",searchedCam.cam_id]] firstObject];
@@ -184,23 +204,62 @@ int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *para
 - (void)setNvrModel:(Device *)nvrModel {
     
     if (_nvrModel != nvrModel) {
+        _nvrModel = nvrModel;
         [RLM transactionWithBlock:^{
             nvrModel.nvr_h = (long)cloud_open_device([nvrModel.nvr_id UTF8String]);
-            nvrModel.nvr_status = CLOUD_DEVICE_STATE_UNKNOWN;
+            nvrModel.nvr_status = CLOUD_DEVICE_STATE_UNKNOWN; //from db set status unknown！
         }];
         
-        _nvrModel = nvrModel;
+        if (!_token) {
+            __weak typeof (self) ws = self;
+            //add & delete opration can not trigger notification!! cuz its not oberseve self.resluts
+            self.token = [nvrModel addNotificationBlock:^(BOOL deleted, NSArray<RLMPropertyChange *> * _Nullable changes, NSError * _Nullable error) {
+                if (deleted) {
+                    NSLog(@"设备已经删除！");
+                }else {
+                    for (RLMPropertyChange *property in changes) {
+                        if ([property.name isEqualToString:@"nvr_status"] ) {
+                            NSLog(@"------------------DEVICE CHANGED STATUS:%@ ------------------",property.value);
+                            if ([property.value intValue] == CLOUD_DEVICE_STATE_CONNECTED) {
+                                [ws.maskView setHidden:YES];
+                                [ws upadteCams];
+                            } else {
+                                [ws.maskView setHidden:NO];
+                                [ws.spinner stopAnimating];
+                                if ([property.value intValue] ==  CLOUD_DEVICE_STATE_DISCONNECTED) {
+                                    [ws.statusLabel setText:@"DISCONNECT"];
+                                }else if ([property.value intValue] == CLOUD_DEVICE_STATE_AUTHENTICATE_ERR) {
+                                    [ws.statusLabel setText:@"AUTHENTICATE_ERR"];
+                                }else if ([property.value intValue] == CLOUD_DEVICE_STATE_OTHER_ERR) {
+                                    [ws.statusLabel setText:@"OTHER_ERR"];
+                                }else if ([property.value intValue] == CLOUD_DEVICE_STATE_UNKNOWN) {
+                                    [ws.statusLabel setText:@"Getting Device Status"];
+                                    [ws.spinner startAnimating];
+                                }
+                            }
+                        }
+                    }
+                }
+            }];
+        }
+
+        
+        
+        
+        cloud_set_pblist_callback((void *)nvrModel.nvr_h, my_device_callback, (__bridge void *) self);
         cloud_set_data_callback((void *)nvrModel.nvr_h, my_device_callback, (__bridge void *) self);
+
+        
+
+        
+        
+        
         cloud_set_status_callback((void *)nvrModel.nvr_h,my_device_callback,(__bridge void *) self);
         cloud_set_event_callback((void *)nvrModel.nvr_h, my_device_callback,(__bridge void *) self);
         
         
         [self addSubview:self.maskView];
         [self.maskView mas_makeConstraints:^(MASConstraintMaker *make) {
-//            make.leading.equalTo(self).offset(10.f);
-//            make.trailing.equalTo(self).offset(-10.f);
-//            make.top.equalTo(self).offset(0.f);
-//            make.bottom.equalTo(self).offset(-0.f);
             make.edges.mas_equalTo(UIEdgeInsetsZero);
         }];
         
@@ -217,6 +276,7 @@ int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *para
             }
             
         });
+        [self.footer.deviceLb setText:nvrModel.nvr_name];
     }
     
 }

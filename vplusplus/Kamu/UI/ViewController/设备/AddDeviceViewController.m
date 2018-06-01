@@ -2,7 +2,7 @@
 //  AddDeviceViewController.m
 //  Kamu
 //
-//  Created by YGTech on 2017/11/20.
+//  Created by Zhoulei on 2017/11/20.
 //  Copyright © 2017年 com.Kamu.cme. All rights reserved.
 //
 
@@ -67,6 +67,8 @@
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
+    [self.navigationController.navigationBar setBackgroundImage:[UIImage new] forBarMetrics:UIBarMetricsDefault];
+    [self.navigationController.navigationBar setShadowImage:[UIImage new]];
 
 }
 - (void)didReceiveMemoryWarning {
@@ -74,7 +76,12 @@
     // Dispose of any resources that can be recreated.
 }
 
+- (void)viewDidDisappear:(BOOL)animated {
+    [super viewDidDisappear:animated];
+    [self.navigationController.navigationBar setBackgroundImage:nil forBarMetrics:UIBarMetricsDefault];
+    [self.navigationController.navigationBar setShadowImage:nil];
 
+}
 #pragma mark -QRCodeScanne Delegate
 - (void)didScannedQRCode:(NSString *)result {
     
@@ -137,7 +144,7 @@
     
     [self.descLb mas_makeConstraints:^(MASConstraintMaker *make) {
         make.leading.trailing.equalTo(self.view);
-        make.top.equalTo(self.specView.mas_bottom).offset(0.f);
+        make.top.equalTo(self.specView.mas_bottom).offset(5.f);
 
     }];
     

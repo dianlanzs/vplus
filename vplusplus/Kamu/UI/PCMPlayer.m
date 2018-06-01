@@ -2,7 +2,7 @@
 //  PCMPlayer.m
 //  Kamu
 //
-//  Created by YGTech on 2018/2/13.
+//  Created by Zhoulei on 2018/2/13.
 //  Copyright © 2018年 com.Kamu.cme. All rights reserved.
 //
 
@@ -41,7 +41,7 @@ static OSStatus recordingCallback(void *inRefCon,
 
    [audioProcessor calculateMeters:[NSData dataWithBytes: audioProcessor.buffList ->mBuffers[0].mData length:(unsigned int)audioProcessor.buffList->mBuffers[0].mDataByteSize]];
     
-    cloud_device_speaker_data((void *)audioProcessor.nvr_h,audioProcessor.cam_h,(unsigned char*) audioProcessor.buffList->mBuffers[0].mData, (int)  audioProcessor.buffList->mBuffers[0].mDataByteSize);
+    cloud_device_speaker_data((void *)audioProcessor.nvr_h,[audioProcessor.cam_id UTF8String],(unsigned char*) audioProcessor.buffList->mBuffers[0].mData, (int)  audioProcessor.buffList->mBuffers[0].mDataByteSize);
   
 
     free(audioProcessor.buffList->mBuffers[0].mData);
@@ -183,10 +183,10 @@ static OSStatus playbackCallback(void *inRefCon,
 
 
 
-- (void)startService:(long)nvr_h cam:(int)cam_h{
+- (void)startService:(long)nvr_h cam:(NSString *)cam_id{
     NSLog( @"-- start --");
     self.nvr_h = nvr_h;
-    self.cam_h = cam_h;
+    self.cam_id = cam_id;
     [self setInput:0 output:1];
     [self.mIn replaceBytesInRange: NSMakeRange(0, [self.mIn length]) withBytes: NULL length: 0];
     ///MARK:  只能用 耳机模式 ，和 Play & record Session ,苹果真的好坑爹！！

@@ -2,16 +2,14 @@
 //  QRResultCell.h
 //  Kamu
 //
-//  Created by YGTech on 2017/12/7.
+//  Created by Zhoulei on 2017/12/7.
 //  Copyright © 2017年 com.Kamu.cme. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>
-#import "Device.h"
 
 #import "DeviceFooter.h"
 #import "VideoCell.h"
-#import "ZLPlayerView.h"
 
 @class QRResultCell;
 
@@ -38,10 +36,5 @@
 @property (nonatomic, strong)Popup *p_alarm;
 @property (nonatomic, copy)NSString *str_param;
 @property (nonatomic, assign) BOOL showedPopup;
-
-
-
-//@property (nonatomic, strong) ZLPlayerView *vp;
-
 - (void)upadteCams;
 @end

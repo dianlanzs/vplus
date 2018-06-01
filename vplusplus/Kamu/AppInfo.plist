@@ -30,9 +30,17 @@
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>jpush.cn</key>
+			<dict>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
+		</dict>
 	</dict>
-	<key>NSAllowsArbitraryLoads</key>
-	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>相机访问</string>
 	<key>NSMicrophoneUsageDescription</key>

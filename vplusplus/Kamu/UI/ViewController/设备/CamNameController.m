@@ -2,7 +2,7 @@
 //  CamNameController.m
 //  Kamu
 //
-//  Created by YGTech on 2018/2/11.
+//  Created by Zhoulei on 2018/2/11.
 //  Copyright © 2018年 com.Kamu.cme. All rights reserved.
 //
 

@@ -2,7 +2,7 @@
 //  PCMPlayer.h
 //  Kamu
 //
-//  Created by YGTech on 2018/2/13.
+//  Created by Zhoulei on 2018/2/13.
 //  Copyright © 2018年 com.Kamu.cme. All rights reserved.
 //
 
@@ -28,7 +28,7 @@
 @property (nonatomic, strong) LCVoiceHud *volumeHUD;
 @property (nonatomic, assign) AudioBufferList *buffList;
 @property (nonatomic,assign) long nvr_h;
-@property  int cam_h;
+@property  NSString * cam_id;
 
 //输出
 @property (nonatomic, assign) BOOL output;
@@ -38,7 +38,7 @@
 + (PCMPlayer *)sharedAudioManager;
 
 - (void)setInput:(BOOL)input output:(BOOL)output;
-- (void)startService:(long)nvr_h cam:(int)cam_h;
+- (void)startService:(long)nvr_h cam:(NSString *)cam_id;
 - (void)stopService;
 
 

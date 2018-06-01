@@ -98,23 +98,30 @@ static  CGFloat const kTorch_H  = 30;
 #pragma mark - UI
 #pragma mark 私有方法
 - (void)updateLayout{
-    CGRect screenRect = [UIScreen mainScreen].bounds;
-    //整个二维码扫描界面的颜色
-    CGSize screenSize = screenRect.size;
-    CGRect screenDrawRect = CGRectMake(0, 0, screenSize.width,screenSize.height);
+//    CGRect screenRect = self.frame;
+//    CGSize screenSize = screenRect.size;
+    CGRect screenDrawRect = CGRectMake(0, 0, AM_SCREEN_WIDTH,AM_SCREEN_HEIGHT);
     
     CGSize transparentArea = _transparentAreaSize;
-    //中间清空的矩形框
-    _clearDrawRect = CGRectMake(screenDrawRect.size.width / 2 - transparentArea.width / 2,
-                                      screenDrawRect.size.height / 2 - transparentArea.height / 2,
-                                      transparentArea.width,transparentArea.height);
     
-    CGContextRef ctx = UIGraphicsGetCurrentContext();
+    
+    
+    //中间清空的矩形框  -64 if no nav translucent
+    _clearDrawRect = CGRectMake((screenDrawRect.size.width - transparentArea.width) * 0.5 ,
+                                      (screenDrawRect.size.height  - transparentArea.height) * 0.5,
+                                      transparentArea.width,transparentArea.height);
+    CGContextRef ctx = UIGraphicsGetCurrentContext(); //获取上下文
     [self addScreenFillRect:ctx rect:screenDrawRect];
     [self addCenterClearRect:ctx rect:_clearDrawRect];
     [self addWhiteRect:ctx rect:_clearDrawRect];
     [self addCornerLineWithContext:ctx rect:_clearDrawRect];
     [self addScanLine:_clearDrawRect];
+    
+    
+    
+    
+    
+    
     
     
     [self addLightButton:_clearDrawRect];
@@ -215,7 +222,7 @@ static  CGFloat const kTorch_H  = 30;
 }
 #pragma mark 画扫描线
 - (void)addScanLine:(CGRect)rect{
-    self.scanLine = [[UIView alloc]initWithFrame:CGRectMake(rect.origin.x, rect.origin.y, rect.size.width, 1)];
+    self.scanLine = [[UIView alloc]initWithFrame:CGRectMake(rect.origin.x, rect.origin.y , rect.size.width, 1)];
     self.scanLine.backgroundColor = _scanningLieColor;
     [self addSubview:self.scanLine];
 }

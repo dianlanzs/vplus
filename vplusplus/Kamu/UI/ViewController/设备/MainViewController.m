@@ -2,7 +2,7 @@
 //  MainViewController.m
 //  Kamu
 //
-//  Created by YGTech on 2017/12/4.
+//  Created by Zhoulei on 2017/12/4.
 //  Copyright © 2017年 com.Kamu.cme. All rights reserved.
 //
 
@@ -40,7 +40,7 @@
 @property (nonatomic, strong) UITableView *tableView;
 
 @property (nonatomic, strong) RLMResults<Device *> *results;
-@property (nonatomic, strong) RLMNotificationToken *token;
+
 
 @end
 
@@ -67,11 +67,10 @@
 }
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
-    
-    //UI
     if (self.results.count == 0) {
         [self emptyInterface];
+    }else {
+        [self deviceInterface];
     }
     
     self.navigationItem.title = @"设备";
@@ -82,44 +81,12 @@
     
     
     
+    /*
+     add 设备  的时候 没有监听 这个设备 ，view did load 已经过了 ，添加一个设备 就监听一次 该设备！！
+     
+     
+     */
     
-    __weak typeof (self) ws = self;
-    for (Device *obsDevice in self.results) {
-        NSInteger idx = 0;
-        //add & delete opration can not trigger notification!!
-        self.token = [obsDevice addNotificationBlock:^(BOOL deleted, NSArray<RLMPropertyChange *> * _Nullable changes, NSError * _Nullable error) {
-            if (deleted) {
-                NSLog(@"设备已经删除！");
-            }else {
-                //property changes
-                for (RLMPropertyChange *property in changes) {
-                    if ([property.name isEqualToString:@"nvr_status"] ) {//&& [property.value integerValue] > 1000
-                        NSLog(@"------------------DEVICE CHANGED STATUS:%@ ------------------",property.value); // [token invalidate];  token = nil;
-                        QRResultCell *cell = [self.tableView cellForRowAtIndexPath:   [NSIndexPath indexPathForRow:0 inSection:idx]];
-                        if ([property.value intValue] == CLOUD_DEVICE_STATE_CONNECTED) {
-                            [cell.maskView setHidden:YES];
-                            [cell upadteCams];
-                        } else {
-                            [cell.maskView setHidden:NO];
-                            [cell.spinner stopAnimating];
-                            if ([property.value intValue] ==  CLOUD_DEVICE_STATE_DISCONNECTED) {
-                                [cell.statusLabel setText:@"DISCONNECT"];
-                            }else if ([property.value intValue] == CLOUD_DEVICE_STATE_AUTHENTICATE_ERR) {
-                                [cell.statusLabel setText:@"AUTHENTICATE_ERR"];
-                            }else if ([property.value intValue] == CLOUD_DEVICE_STATE_OTHER_ERR) {
-                                [cell.statusLabel setText:@"OTHER_ERR"];
-                            }else if ([property.value intValue] == CLOUD_DEVICE_STATE_UNKNOWN) {
-                                [cell.statusLabel setText:@"Getting Device Status"];
-                                [cell.spinner startAnimating];
-                            }
-                        }
-                    }
-                }
-            }
-        }];
-        
-        idx ++;
-    }
     
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(addNew:) name:@"addNew" object:nil];
@@ -130,13 +97,22 @@
     if (self.results.count == 0) {
         [self deviceInterface];
     }
+
     //异步方式 write
     [RLM transactionWithBlock:^{
-        [RLM addObject:notification.object]; //KVO-Comapliant
-        //        [self.tableView insertSections:[NSIndexSet indexSetWithIndex:self.results.count - 1] withRowAnimation:UITableViewRowAnimationBottom]; //will auto call sections  // mabey  嵌套写事物了 cuz crash !!
+        [RLM addObject:notification.object];
+        /*
+        1.  __imp_ = (__imp_ = "The Realm is already in a write transaction")
+
+         [self.tableView insertSections:[NSIndexSet indexSetWithIndex:self.results.count - 1] withRowAnimation:UITableViewRowAnimationBottom]; //will auto call sections  // mabey  嵌套写事务了 cuz crash !!
+         turn out :插入的时候 调用 了 section  row  和 cellForRow的方法了
+         
+         2. Cannot register notification blocks from within write transactions.
+         */
     }];
-    
+   
     [self.tableView insertSections:[NSIndexSet indexSetWithIndex:self.results.count - 1] withRowAnimation:UITableViewRowAnimationFade];
+
 }
 
 - (void)deleteNvr:(NSIndexPath *)path {
@@ -215,6 +191,32 @@
             [self.navigationController pushViewController:addCamVc animated:YES];
         };
 //        nvrCell.delegate = self;
+        
+        
+        
+        
+        
+        // ==== footer
+        weakNvrCell.footer.setNvr = ^(DeviceFooter *footer){
+            QRootElement *rootForm = [[DataBuilder new] createForNvrSettings:weakNvrCell]; //创建数据
+            NvrSettingsController *nvrSettingsVc = [[NvrSettingsController alloc] initWithRoot:rootForm];
+            [self.navigationController pushViewController:nvrSettingsVc  animated:YES];
+            
+            nvrSettingsVc .deleteNvr = ^{
+                Popup *p = [[Popup alloc] initWithTitle:@"提示" subTitle:@"请确认是否需要删除该设备？" cancelTitle:@"取消" successTitle:@"确认" cancelBlock:nil successBlock:^{
+                    [self deleteNvr:[NSIndexPath indexPathForRow:0 inSection:indexPath.section]];
+                }];
+                [p setBackgroundBlurType:PopupBackGroundBlurTypeDark];
+                [p setIncomingTransition:PopupIncomingTransitionTypeEaseFromCenter];
+                [p showPopup];
+            };
+        };
+        
+        
+        weakNvrCell.footer.entryMedias = ^(DeviceFooter *footer) {
+            LibraryController *libVc = [[LibraryController alloc] initWithDevice:weakNvrCell.nvrModel]; //state need refresh
+            [self.navigationController pushViewController:libVc  animated:YES];
+        };
         return nvrCell;
     }
     //ipc
@@ -231,48 +233,17 @@
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section {
-    return 40;
+    return 1;
 }
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
-    return 40;
+    return 1;
 }
 //在iOS 11.12  deviceLb 不显示 中 implemetion this method
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
     return [[UIView alloc]init];
 }
 - (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section {
-    QRResultCell *cell = [tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:section]];
-    
-//   Device *d = self.results[section];
-    DeviceFooter *footer = [[DeviceFooter alloc] init];
-//    [footer.deviceLb setText:d.nvr_name];
-    [footer.deviceLb setText:cell.nvrModel.nvr_name];
-    [cell setFooter:footer];
-    //settings
-    footer.setNvr = ^(DeviceFooter *footer){
-        QRootElement *rootForm = [[DataBuilder new] createForNvrSettings:cell]; //创建数据
-        NvrSettingsController *nvrSettingsVc = [[NvrSettingsController alloc] initWithRoot:rootForm];
-        [self.navigationController pushViewController:nvrSettingsVc  animated:YES];
-        
-        nvrSettingsVc .deleteNvr = ^{
-            Popup *p = [[Popup alloc] initWithTitle:@"提示" subTitle:@"请确认是否需要删除该设备？" cancelTitle:@"取消" successTitle:@"确认" cancelBlock:nil successBlock:^{
-                [self deleteNvr:[NSIndexPath indexPathForRow:0 inSection:section]];
-            }];
-            [p setBackgroundBlurType:PopupBackGroundBlurTypeDark];
-            [p setIncomingTransition:PopupIncomingTransitionTypeEaseFromCenter];
-            [p showPopup];
-        };
-    };
-    
-    
-    footer.entryMedias = ^(DeviceFooter *footer) {
-        LibraryController *libVc = [[LibraryController alloc] initWithDevice:cell.nvrModel];
-        [self.navigationController pushViewController:libVc  animated:YES];
-    };
-    
-    
-    
-    return footer;
+    return [[UIView alloc]init];
 }
 #pragma mark - getter
 
@@ -285,8 +256,7 @@
 //
 //        [_tableView setEstimatedRowHeight:200.f];
 //        [_tableView setRowHeight:UITableViewAutomaticDimension];
-        [_tableView setRowHeight:201.f];
-        
+        [_tableView setRowHeight:100 + 1 + 100 + 40];
         _pullRefresh = [[UIRefreshControl alloc] init];
         _pullRefresh.tintColor = [UIColor lightGrayColor];
         _pullRefresh.attributedTitle = [NSAttributedString attrText:@"正在刷新..." withFont:[UIFont systemFontOfSize:15.f] color:[UIColor lightGrayColor] aligment:NSTextAlignmentCenter];

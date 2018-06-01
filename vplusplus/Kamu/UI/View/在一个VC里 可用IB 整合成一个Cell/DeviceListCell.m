@@ -2,7 +2,7 @@
 //  DeviceListCell.m
 //  Kamu
 //
-//  Created by YGTech on 2017/11/29.
+//  Created by Zhoulei on 2017/11/29.
 //  Copyright © 2017年 com.Kamu.cme. All rights reserved.
 //
 

@@ -2,7 +2,7 @@
 //  VideoCell.m
 //  Kamu
 //
-//  Created by YGTech on 2017/12/11.
+//  Created by Zhoulei on 2017/12/11.
 //  Copyright © 2017年 com.Kamu.cme. All rights reserved.
 //
 

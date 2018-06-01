@@ -13,7 +13,8 @@
     return @[@"nvr_pwd",
              @"alarmShowed",
              @"nvr_data",
-             @"delegate"];
+             @"avDelegate",
+             @"listDelegate"];
 }
 
 - (long)nvr_h {

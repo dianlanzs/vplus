@@ -2,7 +2,7 @@
 //  PrefixHeader.pch
 //  Kamu
 //
-//  Created by YGTech on 2017/11/24.
+//  Created by Zhoulei on 2017/11/24.
 //  Copyright © 2017年 com.Kamu.cme. All rights reserved.
 //
 
@@ -38,6 +38,7 @@
 
 //Cell
 //#import "MGSwipeButton.h"
+#import "NSString+StringFrame.h"
 
 
 //图像设置
@@ -64,6 +65,9 @@
 //#import "DeviceManager.h"
 
 #import "UIView+EqualMargin.h"
+
+
+
 
 #endif
 #endif

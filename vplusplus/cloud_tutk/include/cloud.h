@@ -83,9 +83,7 @@ typedef struct {
 } local_device_info_t;
 
 typedef struct {
-    cloud_cam_handle index;
     char camdid[32]; //rf_id
-
 } device_cam_info_t;
 
 
@@ -103,7 +101,7 @@ typedef enum {
 
 typedef struct cb_video_info_s {
     cloud_device_handle device;
-    cloud_cam_handle cam_id;
+    char camdid[32]; //rf_id
     AVFrame *pFrame;
     int org_width;
     int org_height;
@@ -115,7 +113,7 @@ typedef struct cb_video_info_s {
 
 typedef struct cb_audio_info_s {
     cloud_device_handle device;
-    cloud_cam_handle cam_id;
+    char camdid[32]; //rf_id
     AVFrame *pFrame;
     short *sample_buffer;
     int sample_length;
@@ -123,14 +121,14 @@ typedef struct cb_audio_info_s {
 
 typedef struct cb_video_bs_info_s {
     cloud_device_handle device;
-    cloud_cam_handle cam_id;
+    char camdid[32]; //rf_id
     unsigned char *bs_data;
     int bs_size;
 } cb_video_bs_info_t;
 
 typedef struct cb_audio_bs_info_s {
     cloud_device_handle device;
-    cloud_cam_handle cam_id;
+    char camdid[32]; //rf_id
     unsigned char *bs_data;
     int bs_size;
 } cb_audio_bs_info_t;
@@ -156,6 +154,7 @@ typedef struct {
     unsigned int timelength;
     unsigned int filelength;
     RECORD_TYPE recordtype;
+    char camdid[32]; //rf_id
 } rec_file_block;
 
 typedef struct record_filelist_t {
@@ -211,54 +210,60 @@ int cloud_disconnect_device(cloud_device_handle handle);
 //获取当前设备下的camera数目
 int cloud_device_get_cams(cloud_device_handle handle, int max_num, device_cam_info_t* info);
 
-cloud_cam_handle cloud_device_probe_cam(cloud_device_handle handle, CLOUD_DEVICE_CALLBACK fn_callback, void* fn_context);
+int cloud_device_probe_cam(cloud_device_handle handle, CLOUD_DEVICE_CALLBACK fn_callback, void* fn_context);
 //往设备添加一个camera
-cloud_cam_handle cloud_device_add_cam(cloud_device_handle handle, const char* cam_did);
+int cloud_device_add_cam(cloud_device_handle handle, const char* cam_did);
 //从设备删除一个camera
-int cloud_device_del_cam(cloud_device_handle handle, cloud_cam_handle  cam_handle);
+int cloud_device_del_cam(cloud_device_handle handle, const char* cam_did);
 //局域网内搜索设备
 int cloud_scan_local_device(local_device_info_t *device, int max_num, int time_second);
 //播放设备camera视频
-int cloud_device_play_video(cloud_device_handle handle,cloud_cam_handle cam_handle);
+int cloud_device_play_video(cloud_device_handle handle,const char* cam_did);
 //停止播放设备camera视频
-int cloud_device_stop_video(cloud_device_handle handle,cloud_cam_handle cam_handle);
+int cloud_device_stop_video(cloud_device_handle handle,const char* cam_did);
 //播放设备camera音频
-int cloud_device_play_audio(cloud_device_handle handle,cloud_cam_handle cam_handle);
+int cloud_device_play_audio(cloud_device_handle handle,const char* cam_did);
 //播放设备camera音频
-int cloud_device_stop_audio(cloud_device_handle handle,cloud_cam_handle cam_handle);
+int cloud_device_stop_audio(cloud_device_handle handle,const char* cam_did);
 //打开设备camera声音输出
-int cloud_device_speaker_enable(cloud_device_handle handle,cloud_cam_handle cam_handle);
+int cloud_device_speaker_enable(cloud_device_handle handle,const char* cam_did);
 //关闭设备camera声音输出
-int cloud_device_speaker_disable(cloud_device_handle handle,cloud_cam_handle cam_handle);
+int cloud_device_speaker_disable(cloud_device_handle handle,const char* cam_did);
 //发送手机采集的pcm数据
-int cloud_device_speaker_data(cloud_device_handle handle,cloud_cam_handle cam_handle,unsigned char* data, int size);
+int cloud_device_speaker_data(cloud_device_handle handle,const char* cam_did,unsigned char* data, int size);
 //设置设备状态回调函数
 int cloud_set_status_callback(cloud_device_handle handle, CLOUD_DEVICE_CALLBACK fn_callback,void* context);
 //设置设备av数据（解码后）显示回调函数
 int cloud_set_data_callback(cloud_device_handle handle, CLOUD_DEVICE_CALLBACK fn_callback,void* context);
 int cloud_set_event_callback(cloud_device_handle handle, CLOUD_DEVICE_CALLBACK fn_callback,void* context);
+int cloud_set_pblist_callback(cloud_device_handle handle, CLOUD_DEVICE_CALLBACK fn_callback,void* context);
 
-int cloud_device_cam_set_display(cloud_device_handle handle,cloud_cam_handle cam_handle, enum AVPixelFormat format,int width, int height);
+int cloud_device_cam_set_display(cloud_device_handle handle,const char* cam_did, enum AVPixelFormat format,int width, int height);
 
 
 //其它命令
 //获取设备camera质量
-int cloud_device_cam_get_quality(cloud_device_handle handle,cloud_cam_handle cam_handle, video_quality_t quality);
+int cloud_device_cam_get_quality(cloud_device_handle handle,const char* cam_did, video_quality_t quality);
 //配置设备camera质量
-int cloud_device_cam_set_quality(cloud_device_handle handle,cloud_cam_handle cam_handle, video_quality_t quality);
+int cloud_device_cam_set_quality(cloud_device_handle handle,const char* cam_did, video_quality_t quality);
 
-int cloud_device_cam_get_battery(cloud_device_handle handle,cloud_cam_handle cam_handle, int val);
-int cloud_device_cam_get_signal(cloud_device_handle handle,cloud_cam_handle cam_handle, int val);
-
-
+int cloud_device_cam_get_battery(cloud_device_handle handle,const char* cam_did);
+int cloud_device_cam_get_signal(cloud_device_handle handle,const char* cam_did);
 
 
-//int cloud_device_cam_list_files(cloud_device_handle handle,cloud_cam_handle cam_handle, int start_time,int end_time,RECORD_TYPE recordtype,int *block_num, rec_file_block **blocks);
-int cloud_device_cam_list_files(cloud_device_handle handle,cloud_cam_handle cam_handle, int start_time,int end_time,RECORD_TYPE recordtype);
-int cloud_device_cam_pb_play_file(cloud_device_handle handle,cloud_cam_handle cam_handle, char *filename);
-int cloud_device_cam_pb_play_time(cloud_device_handle handle,cloud_cam_handle cam_handle, int time);
-int cloud_device_cam_pb_stop(cloud_device_handle handle,cloud_cam_handle cam_handle);
-int cloud_device_cam_pb_seek_file(cloud_device_handle handle,cloud_cam_handle cam_handle, int offset);
+    
+
+//int cloud_device_cam_list_files(cloud_device_handle handle,const char* cam_did, int start_time,int end_time,RECORD_TYPE recordtype,int *block_num, rec_file_block **blocks);
+int cloud_device_cam_list_files(cloud_device_handle handle,const char* cam_did, int start_time,int end_time,RECORD_TYPE recordtype);
+int cloud_device_cam_pb_play_file(cloud_device_handle handle,const char* cam_did, const char *filename);
+    
+    
+int cloud_device_cam_pb_play_time(cloud_device_handle handle,const char* cam_did, int time);
+    
+    
+    
+int cloud_device_cam_pb_stop(cloud_device_handle handle,const char* cam_did);
+int cloud_device_cam_pb_seek_file(cloud_device_handle handle,const char* cam_did, int offset);
 
 #ifdef __cplusplus
 }

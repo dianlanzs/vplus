@@ -2,7 +2,7 @@
 //  ZLPlayerView.h
 //  Kamu
 //
-//  Created by YGTech on 2018/1/4.
+//  Created by Zhoulei on 2018/1/4.
 //  Copyright © 2018年 com.Kamu.cme. All rights reserved.
 //
 
@@ -10,16 +10,14 @@
 #import <AVFoundation/AVFoundation.h>
 #import <MediaPlayer/MediaPlayer.h>
 
-#import "ZLPlayerView.h"
-#import "UIView+ZLCustomControlView.h"
 
-
-
-#import "ZLPlayer.h"
+//#import "UIView+ZLCustomControlView.h"
 #import "ZLPlayerControlView.h"
-
-
 #import "GLDrawController.h"
+
+
+@class ZLPlayerModel;
+
 
 @protocol ZLPlayerDelegate <NSObject>
 
@@ -73,16 +71,17 @@ typedef NS_ENUM(NSInteger, ZLPlayerState) {
 
 
 
-@interface ZLPlayerView : UIView <ZLPlayerControlViewDelegate>
+@interface ZLPlayerView : UIView <ZLPlayerControlViewDelegate,ZLPlayerDelegate>
 
 
 
+@property (nonatomic, strong) NSTimer *timer;
 
 
 
 /** 是否为全屏 */
 @property (nonatomic, assign) BOOL isFullScreen;
-
+@property (nonatomic, assign) NSInteger chekingFlag;
 
 ///MARK: 控制层 视图和模型
 @property (nonatomic, strong) ZLPlayerControlView *controlView;
@@ -103,17 +102,22 @@ typedef NS_ENUM(NSInteger, ZLPlayerState) {
 @property (nonatomic, assign) ZLPlayerState          state;
 @property (nonatomic, strong) RTSpinKitView *spinner;
 
-
+@property (strong, nonatomic) GLDrawController *glvc;
 
 //======================= 存储 API =======================
 @property (nonatomic, strong) void (^snapshot)();
 @property (nonatomic, strong) void (^recordVideo)(BOOL isRecord);
 
-@property (nonatomic, strong) ZLPlayerModel          *playerModel;
+@property (nonatomic, strong) ZLPlayerModel *playerModel;
 
+- (NSData *)takeSnapshot;
 
-
-- (instancetype)initWithModel: (ZLPlayerModel *)vp_model;
+- (instancetype)initWithModel: (ZLPlayerModel *)vp_model controller:(UIViewController *)vc;
 - (void)start;
 - (void)stop;
+
+
+- (void)fireTimer;
+- (void)invalidTimer;
++ (instancetype)vpToolWithModel: (ZLPlayerModel *)vp_model controller:(UIViewController *)vc;
 @end

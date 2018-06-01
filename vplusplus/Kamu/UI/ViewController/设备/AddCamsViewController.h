@@ -2,7 +2,7 @@
 //  AddCamsViewController.h
 //  Kamu
 //
-//  Created by YGTech on 2017/12/25.
+//  Created by Zhoulei on 2017/12/25.
 //  Copyright © 2017年 com.Kamu.cme. All rights reserved.
 //
 

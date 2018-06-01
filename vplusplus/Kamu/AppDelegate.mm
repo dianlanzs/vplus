@@ -27,8 +27,10 @@
 
 #import "VPPRequest.h"
 #import "AFNetworkActivityIndicatorManager.h"
-static NSString *appKey = @"b73cec65cd36960ce7fd68ff";
+static NSString *appKey = @"ab43e34db3569dc318b8fc47";
 static NSString *channel = @"AppStore";
+static BOOL isProduction = NO;
+
 
 @interface AppDelegate ()<JPUSHRegisterDelegate>
 
@@ -73,7 +75,6 @@ static NSString *channel = @"AppStore";
 //    self.u_data = new Byte[1920 * 1080 * 1/4]; //数组容量  ptr[m]
 //    self.v_data = new Byte[1920 * 1080 * 1/4]; //数组容量  ptr[m]
 
-  
     /*
      //没有登录过 ，---> 模态 展现登录控制器
      if (![[NSUserDefaults standardUserDefaults] boolForKey:@"everLaunched"]) {
@@ -100,11 +101,6 @@ static NSString *channel = @"AppStore";
     //    }
     //
     
-    
-    
-    
- 
-    
 //    [self configJpushWith:launchOptions];
     //设置MRButton外观
     [self setMRButtonAppearance];
@@ -124,17 +120,118 @@ static NSString *channel = @"AppStore";
     
 }
 - (void)configJpushWith:(NSDictionary *)launchOptions {
-//        [self setup_APNs];
-//        [self setup_JpushdidFinishLaunchingWithOptions:launchOptions];
+        [self setup_APNs];
+        [self setup_JpushdidFinishLaunchingWithOptions:launchOptions];
 }
-
+//本机app注册APNs 成功回调
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
 //    [self configTutkPushWith:deviceToken];
+    /// Required - 上报DeviceToken给极光服务器
+    [JPUSHService registerDeviceToken:deviceToken];
+}
+//本机注册 APNs 失败回调
+- (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
+    //Optional
+    NSLog(@"did Fail To Register For Remote Notifications With Error: %@", error);
+}
+//添加初始化APNs代码
+- (void)setup_APNs{
+    JPUSHRegisterEntity * entity = [[JPUSHRegisterEntity alloc] init];
+    entity.types = JPAuthorizationOptionAlert|JPAuthorizationOptionBadge|JPAuthorizationOptionSound;
+    if ([UIDevice currentDevice].systemVersion.floatValue >= 9.0) {
+        /*可以添加自定义categories
+         NSSet<UNNotificationCategory *> *categories for iOS10 or later
+         NSSet<UIUserNotificationCategory *> *categories for iOS8 and iOS9
+         */
+    }
+    [JPUSHService registerForRemoteNotificationConfig:entity delegate:self];
+}
+//添加初始化JPush代码
+- (void)setup_JpushdidFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    //    NSString *advertisingId = [[[ASIdentifierManager sharedManager] advertisingIdentifier] UUIDString];
+    [JPUSHService setupWithOption:launchOptions
+                           appKey:appKey
+                          channel:nil
+                 apsForProduction:isProduction
+            advertisingIdentifier:nil];
+    
 }
 
+#pragma mark- JPUSHRegisterDelegate
+//#ifdef NSFoundationVersionNumber_iOS_9_x_Max
+#pragma mark- JPUSHRegisterDelegate
+- (void)jpushNotificationCenter:(UNUserNotificationCenter *)center willPresentNotification:(UNNotification *)notification withCompletionHandler:(void (^)(NSInteger))completionHandler {
+    NSDictionary * userInfo = notification.request.content.userInfo;
+    
+    UNNotificationRequest *request = notification.request; // 收到推送的请求
+    UNNotificationContent *content = request.content; // 收到推送的消息内容
+    
+    NSNumber *badge = content.badge;  // 推送消息的角标
+    NSString *body = content.body;    // 推送消息体
+    UNNotificationSound *sound = content.sound;  // 推送消息的声音
+    NSString *subtitle = content.subtitle;  // 推送消息的副标题
+    NSString *title = content.title;  // 推送消息的标题
+    
+    if([notification.request.trigger isKindOfClass:[UNPushNotificationTrigger class]]) {
+        [JPUSHService handleRemoteNotification:userInfo];
+        NSLog(@"iOS10 前台收到远程通知:%@", [self logDic:userInfo]);
+        //        [rootViewController addNotificationCount];
+    }
+    else {
+        // 判断为本地通知
+        NSLog(@"iOS10 前台收到本地通知:{\nbody:%@，\ntitle:%@,\nsubtitle:%@,\nbadge：%@，\nsound：%@，\nuserInfo：%@\n}",body,title,subtitle,badge,sound,userInfo);
+    }
+    completionHandler(UNNotificationPresentationOptionBadge|UNNotificationPresentationOptionSound|UNNotificationPresentationOptionAlert); // 需要执行这个方法，选择是否提醒用户，有Badge、Sound、Alert三种类型可以设置
+}
+
+- (void)jpushNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(UNNotificationResponse *)response withCompletionHandler:(void (^)())completionHandler {
+    
+    NSDictionary * userInfo = response.notification.request.content.userInfo;
+    UNNotificationRequest *request = response.notification.request; // 收到推送的请求
+    UNNotificationContent *content = request.content; // 收到推送的消息内容
+    
+    NSNumber *badge = content.badge;  // 推送消息的角标
+    NSString *body = content.body;    // 推送消息体
+    UNNotificationSound *sound = content.sound;  // 推送消息的声音
+    NSString *subtitle = content.subtitle;  // 推送消息的副标题
+    NSString *title = content.title;  // 推送消息的标题
+    
+    if([response.notification.request.trigger isKindOfClass:[UNPushNotificationTrigger class]]) {
+        [JPUSHService handleRemoteNotification:userInfo];
+        NSLog(@"iOS10 收到远程通知:%@", [self logDic:userInfo]);
+        //        [rootViewController addNotificationCount];
+        
+    }
+    else {
+        // 判断为本地通知
+        NSLog(@"iOS10 收到本地通知:{\nbody:%@，\ntitle:%@,\nsubtitle:%@,\nbadge：%@，\nsound：%@，\nuserInfo：%@\n}",body,title,subtitle,badge,sound,userInfo);
+    }
+    
+    completionHandler();  // 系统要求执行这个方法
+}
+//#endif
+// log NSSet with UTF8
+// if not ,log will be \Uxxx
+- (NSString *)logDic:(NSDictionary *)dic {
+    if (![dic count]) {
+        return nil;
+    }
+    NSString *tempStr1 =
+    [[dic description] stringByReplacingOccurrencesOfString:@"\\u"
+                                                 withString:@"\\U"];
+    NSString *tempStr2 =
+    [tempStr1 stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""];
+    NSString *tempStr3 =
+    [[@"\"" stringByAppendingString:tempStr2] stringByAppendingString:@"\""];
+    NSData *tempData = [tempStr3 dataUsingEncoding:NSUTF8StringEncoding];
+    NSString *str =
+    [NSPropertyListSerialization propertyListFromData:tempData
+                                     mutabilityOption:NSPropertyListImmutable
+                                               format:NULL
+                                     errorDescription:NULL];
+    return str;
+}
 - (void)configTutkPushWith:(NSData *)token{
-    
-    
     NSMutableArray *tempArray = [NSMutableArray array];
     VPPRequest *vp_pushReq = [[VPPRequest alloc] init];
     [vp_pushReq configPramsWith:@{@"token":token}];

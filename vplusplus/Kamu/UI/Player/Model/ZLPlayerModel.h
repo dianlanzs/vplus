@@ -2,13 +2,17 @@
 //  ZLPlayerModel.h
 //  Kamu
 //
-//  Created by YGTech on 2018/1/4.
+//  Created by Zhoulei on 2018/1/4.
 //  Copyright © 2018年 com.Kamu.cme. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
 
 
+
+
+
+#import "ZLPlayerView.h"
 @interface ZLPlayerModel : NSObject
 
 
@@ -61,15 +65,14 @@
 @property (nonatomic, assign) NSInteger    fatherViewTag;
 
 
-
-
-
-
-
-
-
+@property (nonatomic, strong) Device *nvrModel;
 
 @property (nonatomic,assign) long nvr_h;
-@property  int cam_h;
+
+@property(nonatomic,strong) MediaEntity *cam_entity;
+@property  NSString *cam_id;
+@property  int nvr_status;
+
+
 
 @end

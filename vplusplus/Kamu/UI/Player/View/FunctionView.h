@@ -2,7 +2,7 @@
 //  FunctionView.h
 //  Kamu
 //
-//  Created by YGTech on 2018/1/17.
+//  Created by Zhoulei on 2018/1/17.
 //  Copyright © 2018年 com.Kamu.cme. All rights reserved.
 //
 
@@ -10,6 +10,14 @@
 
 @interface FunctionView : UIView
 
+@property (nonatomic, strong) UIView *batteryView;
+@property (nonatomic, strong) UILabel *batteryLabel;
 
-//@property (nonatomic, copy) void (^signal_settings)(id sender);
+@property (nonatomic, strong) UIView *wifi;
+
+
+
+//电量接口
+- (void)setBatteryProgress:(NSInteger)progressValue;
+- (void)setWifiProgress:(NSInteger)progressValue;
 @end

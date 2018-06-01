@@ -2,7 +2,7 @@
 //  ItemModel.h
 //  Kamu
 //
-//  Created by YGTech on 2018/5/11.
+//  Created by Zhoulei on 2018/5/11.
 //  Copyright © 2018年 com.Kamu.cme. All rights reserved.
 //
 
@@ -12,4 +12,6 @@
 @property (copy, nonatomic) NSString *itemId;
 @property (copy, nonatomic) NSString *itemName;
 @property (assign, nonatomic) BOOL selected;
+
+@property (nonatomic, assign) NSString * cam_id;
 @end

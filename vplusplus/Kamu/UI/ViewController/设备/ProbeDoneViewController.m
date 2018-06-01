@@ -2,7 +2,7 @@
 //  ProbeDoneViewController.m
 //  测试Demo
 //
-//  Created by YGTech on 2018/3/22.
+//  Created by Zhoulei on 2018/3/22.
 //  Copyright © 2018年 com.Kamu.cme. All rights reserved.
 //
 
@@ -60,29 +60,10 @@
 
 //注册回调 cam 有数据的 时候会走 callback！
 int my_device_action_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *param,void *context) {
-    
-    
-    CLOUD_PRINTF("my_device_action_callback:type %d, param %p, context %p\n",type,param,context);
-  
-    
-    
-//    RLMThreadSafeReference *deviceRef = [RLMThreadSafeReference
-//                                         referenceWithThreadConfined:ctx.nvrCell.nvrModel];
-//    @autoreleasepool {
-//        RLMRealm *realm = [RLMRealm realmWithConfiguration:RLM.configuration error:nil];
-//        Device *device = [realm resolveThreadSafeReference:deviceRef];
-//        if (device) {
-//          ctx.probedCam.cam_h = cloud_device_add_cam((void *)device.nvr_h, camDid);
-//        }
-//    }
-    
  
     dispatch_async(dispatch_get_main_queue(), ^{
         ProbeDoneViewController * ctx = (__bridge ProbeDoneViewController *)context;
         ctx.probedCam.cam_id = [NSString stringWithUTF8String:(char *)param];
-        ctx.probedCam.cam_h = cloud_device_add_cam((void *)ctx.nvrCell.nvrModel.nvr_h, (char *)param);
-        
-      
         //动画：
         [UIView animateWithDuration:1.f delay:0.f usingSpringWithDamping:7.f initialSpringVelocity:4.f options:UIViewAnimationOptionCurveEaseIn animations:^{
             

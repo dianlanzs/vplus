@@ -2,7 +2,7 @@
 //  GLDrawController.m
 //  Kamu
 //
-//  Created by YGTech on 2017/12/12.
+//  Created by Zhoulei on 2017/12/12.
 //  Copyright © 2017年 com.Kamu.cme. All rights reserved.
 //
 
@@ -11,10 +11,6 @@
 
 #import "GLDrawController.h"
 #import "AppDelegate.h"
-
-#import "ZLPlayerControlView.h"
-#import "UIView+ZLCustomControlView.h"
-#import "ZLPlayerView.h"
 
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 // 1.Uniform index.
@@ -43,13 +39,6 @@ enum
 
 @property (strong, nonatomic) EAGLContext *context;
 
-
-
-//
-//@property (strong, nonatomic) ZLPlayerView *playerView;
-//@property (nonatomic, strong) ZLPlayerModel *playerModel;
-//
-//@property (strong, nonatomic)  IBOutlet UIView *playerFatherView;
 @end
 
 

@@ -2,7 +2,7 @@
 //  QRDoneViewController.m
 //  Kamu
 //
-//  Created by YGTech on 2017/12/5.
+//  Created by Zhoulei on 2017/12/5.
 //  Copyright © 2017年 com.Kamu.cme. All rights reserved.
 //
 
@@ -112,6 +112,7 @@
         _aDevice = [[Device alloc] init];
         [_aDevice setNvr_id:self.qr_String];
         [_aDevice setNvr_name:self.changeName.text];
+        [_aDevice setNvr_status:CLOUD_DEVICE_STATE_UNKNOWN];  //db for first oberseve
     }
     
     return _aDevice;

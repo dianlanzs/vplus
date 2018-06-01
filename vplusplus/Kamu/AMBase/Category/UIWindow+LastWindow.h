@@ -2,7 +2,7 @@
 //  UIWindow+LastWindow.h
 //  Kamu
 //
-//  Created by YGTech on 2017/12/28.
+//  Created by Zhoulei on 2017/12/28.
 //  Copyright © 2017年 com.Kamu.cme. All rights reserved.
 //
 

@@ -165,6 +165,14 @@
 
 
 
+// 颜色值RGB
+#define RGBA(r,g,b,a)                       [UIColor colorWithRed:r/255.0f green:g/255.0f blue:b/255.0f alpha:a]
+// 图片路径
+#define ZLPlayerSrcName(file)               [@"ZLPlayer.bundle" stringByAppendingPathComponent:file]
+#define ZLPlayerFrameworkSrcName(file)      [@"Frameworks/ZLPlayer.framework/ZLPlayer.bundle" stringByAppendingPathComponent:file]
+#define ZLPlayerImage(file)                 [UIImage imageNamed:ZLPlayerSrcName(file)] ? :[UIImage imageNamed:ZLPlayerFrameworkSrcName(file)]
+#define ZLPlayerOrientationIsLandscape      UIDeviceOrientationIsLandscape([UIDevice currentDevice].orientation)
+#define ZLPlayerOrientationIsPortrait       UIDeviceOrientationIsPortrait([UIDevice currentDevice].orientation)
 #pragma mark -常量
 
 static CGFloat const kTabBarHeight = 49.0;
@@ -173,6 +181,6 @@ static CGFloat const kNavigationbarHeight = 44;
 static CGFloat const kTopbarHeight = 64;
 
 static CGFloat const kBottomBtnHeight = 300;
-static CGFloat const kBtnH = 40;
+static CGFloat const kBtnH = 40; 
 static CGFloat const kTextFieldH = 40;
 

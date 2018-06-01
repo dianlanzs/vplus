@@ -2,7 +2,7 @@
 //  LoginController.m
 //  Kamu
 //
-//  Created by YGTech on 2018/1/10.
+//  Created by Zhoulei on 2018/1/10.
 //  Copyright © 2018年 com.Kamu.cme. All rights reserved.
 //
 
@@ -46,9 +46,6 @@
     if (!_loginView) {
         
         _loginView = [[LoginView alloc] initWithFrame:self.view.bounds];
-        
-        
-        
         __weak typeof(self) weakSelf = self;
         _loginView.notify = ^(UIButton *sender ,BOOL isSucceed) {
             

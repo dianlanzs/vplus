@@ -8,9 +8,10 @@
 
 #import <UIKit/UIKit.h>
 #import "ZLPlayerControlViewDelegate.h"
-#import "ZLPlayerModel.h"
 
-#import "ZLPlayer.h"
+
+@class ZLPlayerModel;
+
 
 
 

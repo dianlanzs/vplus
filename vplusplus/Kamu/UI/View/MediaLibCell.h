@@ -2,7 +2,7 @@
 // MediaLibCell.h
 //  测试Demo
 //
-//  Created by YGTech on 2018/3/1.
+//  Created by Zhoulei on 2018/3/1.
 //  Copyright © 2018年 com.Kamu.cme. All rights reserved.
 //
 
@@ -16,5 +16,5 @@
 
 @property(nonatomic,strong) MediaEntity *entity;
 
-
+@property (nonatomic, copy) void (^playcallback)(MediaLibCell *cell);
 @end
