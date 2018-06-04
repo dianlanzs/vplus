@@ -12,54 +12,16 @@
 
 
 @interface CommonPlayerControl()
-@property (nonatomic, strong) UIView * bottomControl;
 @end
 
 
 @implementation CommonPlayerControl
 
 
-
-- (instancetype)initWithControl:(UIView *)bottomControl {
+- (instancetype)initWithFunction:(UIView *)function {
     
     self = [super init];
     if (self) {
-        
-        [self setBottomControl:bottomControl];
-        [self config];
-    }
-    [self resetControl];
-            [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidEnterBackground) name:UIApplicationWillResignActiveNotification object:nil];
-            [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidEnterPlayground) name:UIApplicationDidBecomeActiveNotification object:nil];
-    //        //监听 设备朝向 通知！
-    //        [self listeningOrientation];
-    
-    return self;
-    
-}
-
-- (void)resetControl {
-    if ([self.bottomControl isKindOfClass:[PlaybackControl class]]) {
-        PlaybackControl *pbControl = (PlaybackControl *)self.bottomControl;
-        pbControl.videoSlider.value = 0;
-        pbControl.bottomProgressView.progress = 0;
-        pbControl.progressView.progress       = 0;
-        pbControl.currentTimeLabel.text       = @"00:00";
-        pbControl.totalTimeLabel.text         = @"00:00";
-        pbControl.fastView.hidden             = YES;
-    }
-    self.failBtn.hidden              = YES;
-    self.backgroundColor             = [UIColor clearColor];
-    self.lockBtn.hidden              = !self.isFullScreen;  //在playView 控制，竖屏隐藏lock button
-    [self showControlView];
-}
-
-
-
-
-- (instancetype)config {
-    
-    
         [self addSubview:self.topImageView];
         [self.topImageView mas_makeConstraints:^(MASConstraintMaker *make) {
             make.leading.trailing.equalTo(self);
@@ -84,8 +46,28 @@
             make.bottom.equalTo(self).offset(0);
             make.height.mas_equalTo(60);
         }];
-      
     }
+  
+            [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidEnterBackground) name:UIApplicationWillResignActiveNotification object:nil];
+            [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidEnterPlayground) name:UIApplicationDidBecomeActiveNotification object:nil];
+    //        //监听 设备朝向 通知！
+    //        [self listeningOrientation];
+    [self setFunctionControl:function];
+
+    return self;
+    
+}
+- (void)setFunctionControl:(UIView *)functionControl {
+    if (_functionControl != functionControl) {
+        _functionControl = functionControl;
+        [self.bottomImageView addSubview:_functionControl];
+        [_functionControl mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.top.leading.bottom.equalTo(self.bottomImageView);
+            make.trailing.equalTo(self.fullScreenBtn.mas_leading);
+        }];
+        [self resetFuncControl];
+    }
+}
 - (UIImageView *)topImageView {
     if (!_topImageView) {
         _topImageView                        = [[UIImageView alloc] init];
@@ -130,9 +112,6 @@
 }
 */
 
-
-
-
 - (UIButton *)fullScreenBtn {
     if (!_fullScreenBtn) {
         _fullScreenBtn = [UIButton buttonWithType:UIButtonTypeCustom];
@@ -148,8 +127,6 @@
 }
 
 
-
-
 - (UILabel *)titleLabel {
     if (!_titleLabel) {
         _titleLabel = [[UILabel alloc] init];
@@ -159,8 +136,6 @@
     }
     return _titleLabel;
 }
-
-
 
 - (UIButton *)backBtn {
     if (!_backBtn) {
@@ -175,8 +150,7 @@
 }
 
 
-
-
+//fail Button
 - (UIButton *)failBtn {
     if (!_failBtn) {
         _failBtn = [UIButton buttonWithType:UIButtonTypeSystem];
@@ -193,6 +167,9 @@
     [self.delegate zl_controlView:self failAction:sender];
 }
 
+
+
+//Bottom bar
 - (UIImageView *)bottomImageView {
     if (!_bottomImageView) {
         _bottomImageView                        = [[UIImageView alloc] init];
@@ -203,68 +180,39 @@
         [self.fullScreenBtn mas_makeConstraints:^(MASConstraintMaker *make) {
             make.width.height.mas_equalTo(30);
             make.trailing.equalTo(_bottomImageView.mas_trailing).offset(-5);
-            make.centerY.equalTo(self);
+            make.centerY.equalTo(_bottomImageView);
         }];
     }
     return _bottomImageView;
 }
 
+
+
+
+
+
+
+
+
+
+
 - (void)autoFadeOutControlView {
-    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(show) object:nil];
-    [self performSelector:@selector(hide) withObject:nil afterDelay:7];
+    //    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(hide) object:nil];
+    [self performSelector:@selector(hideCommonControl) withObject:nil afterDelay:7.f];
 }
 - (void)zl_playerCancelAutoFadeOutControlView {
     [NSObject cancelPreviousPerformRequestsWithTarget:self];
 }
-- (void)hide {
+- (void)hideCommonControl {
     [self setHidden:YES];
 }
-- (void)show {
+- (void)showCommonControl {
     [self setHidden:NO];
 }
-
-
-- (void)ms {
-
-
-//    [self.placeholderImageView mas_makeConstraints:^(MASConstraintMaker *make) {
-//        make.edges.mas_equalTo(UIEdgeInsetsZero);
-//    }];
-
-
-
-//返回按钮 约束 高度15
-
-//
-//    [self.downLoadBtn mas_makeConstraints:^(MASConstraintMaker *make) {
-//        make.width.mas_equalTo(40);
-//        make.height.mas_equalTo(49);
-//        make.trailing.equalTo(self.topImageView.mas_trailing).offset(-10);
-//        make.centerY.equalTo(self.backBtn.mas_centerY);
-//    }];
-
-
-
-
-//    [self.resolutionBtn mas_makeConstraints:^(MASConstraintMaker *make) {
-//        make.width.mas_equalTo(40);
-//        make.height.mas_equalTo(25);
-//        make.trailing.equalTo(self.downLoadBtn.mas_leading).offset(-10);
-//        make.centerY.equalTo(self.backBtn.mas_centerY);
-//    }];
-//
-
-
-
-
-
-    
-    //锁定按钮
-  
-
-//[self.bottomImageView mas_makeConstraints:^(MASConstraintMaker *make) {
-//    make.leading.trailing.bottom.mas_equalTo(0);
-//    make.height.mas_equalTo(60);
-//}];
+- (void)resetCommonControl {
+    self.failBtn.hidden              = YES;
+    self.backgroundColor             = [UIColor clearColor];
+    //    self.commonControl.lockBtn.hidden              = !self.isFullScreen; //全屏不隐藏
 }
+
 @end

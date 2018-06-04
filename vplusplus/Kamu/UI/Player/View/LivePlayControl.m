@@ -56,7 +56,6 @@
 //    [self.delegate zl_controlView:self recordVideoAction:sender];
 }
 
-
 - (UIButton *)captureBtn {
     if (!_captureBtn) {
         _captureBtn = [UIButton buttonWithType:UIButtonTypeCustom];
@@ -220,4 +219,8 @@
 //        }
 //    }];
 //}
+
+- (void)resetFuncControl {
+    [self.muteBtn setSelected:NO];
+}
 @end

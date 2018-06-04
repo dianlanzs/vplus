@@ -69,7 +69,7 @@ typedef enum {
 
 typedef struct cam_info_s {
     int valid;
-    int     playing;
+    /*
     AVCodecContext *video_codec_ctx;
     AVPacket packet;
     AVFrame *pFrame_;
@@ -88,6 +88,7 @@ typedef struct cam_info_s {
 	int fpsCnt;
 	int bps;
 	int lostCnt;
+	*/
 
     record_filelist_t rec_info;
 
@@ -146,14 +147,28 @@ typedef struct {
     int audio_stopped;
     int speak_stopping;
     int speak_stopped;
+
+    int seeking;
+    int paused;
+
     AVCodecContext *audio_codec_ctx;
-    AVPacket packet;
-    AVFrame *pFrame_;
+    AVPacket audio_packet;
+    AVFrame *audio_pFrame_;
     //short audio_sample[1024];
+
+    AVCodecContext *video_codec_ctx;
+    AVPacket video_packet;
+    AVFrame *video_pFrame_;
+	int cnt;
+	int fpsCnt;
+	int bps;
+	int lostCnt;
 
     cloud_device_state_t  state;
 
     cloud_cmd_queue_t* msgq;
+    unsigned char play_seq;
+    unsigned int play_timestamp_base;
 } cloud_device_t;
 
 static int g_video_bsout = 0;
@@ -163,9 +178,12 @@ static void *thread_device(void *arg);
 static void *thread_ReceiveVideo(void *arg);
 static void *thread_ReceiveAudio(void *arg);
 static void *thread_SendAudio(void *arg);
+static int device_decoder_reset(cloud_device_t *device);
 static int device_cam_init(cloud_device_t *device,int camid,char *camdid);
 static int device_cam_deinit(cloud_device_t *device,int camid);
-static void cam_video_dec(cloud_device_t *device,cam_info_t *cam , char* buf, int size);
+static void cam_video_dec(cloud_device_t *device,cam_info_t *cam , char* buf, int size,unsigned int timestamp);
+static void device_video_dec(cloud_device_t *device,cam_info_t *cam ,char* buf, int size,unsigned int timestamp);
+
 static int device_audio_init(cloud_device_t *device);
 static int device_audio_deinit(cloud_device_t *device);
 static void device_audio_dec(cloud_device_t *device, char* buf, int size);
@@ -182,6 +200,8 @@ static cloud_cmd_t* cloud_cmd_get(cloud_cmd_queue_t *p_msgq_ctx);
 static int cloud_cmd_clear(cloud_cmd_queue_t *p_msgq_ctx);
 static cloud_cmd_t* new_cmd(unsigned int cmd_type, int size);
 static void free_cmd(cloud_cmd_t *cmd);
+
+
 
 
 static AVCodec *videoCodec;
@@ -585,6 +605,7 @@ int cloud_device_play_video(cloud_device_handle handle,const char* cam_did)
         pthread_mutex_unlock(&device->lock);
 		return -1;
     }
+    device->seeking = 0;
     cmd->m_msg.data[1] = cam_handle;
 
     cloud_cmd_put(device->msgq,cmd);
@@ -646,6 +667,7 @@ int cloud_device_play_audio(cloud_device_handle handle,const char* cam_did)
         pthread_mutex_unlock(&device->lock);
 		return -1;
     }
+    device->seeking = 0;
     cmd->m_msg.data[1] = cam_handle;
     cloud_cmd_put(device->msgq,cmd);
 
@@ -807,6 +829,7 @@ int cloud_device_cam_list_files(cloud_device_handle handle,const char* cam_did, 
 }
 int cloud_device_cam_pb_play_file(cloud_device_handle handle,const char* cam_did, const char *filename)
 {
+	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
     cloud_device_t *device = (cloud_device_t *)handle;
 
     pthread_mutex_lock(&device->lock);
@@ -829,11 +852,12 @@ int cloud_device_cam_pb_play_file(cloud_device_handle handle,const char* cam_did
         pthread_mutex_unlock(&device->lock);
 		return -1;
     }
+    device->seeking = 0;
+    device->paused = 0;
     SMsgAVIoctrlPlayRecord* ioMsg = (SMsgAVIoctrlPlayRecord *)cmd->m_msg.ext;
 
     ioMsg->channel = cam_handle;
     ioMsg->command = AVIOCTRL_RECORD_PLAY_START;
-    ioMsg->stTimeDay.year = 0;
     ioMsg->reserved[0] = 0x79;
     ioMsg->reserved[1] = 0x67;
     char *fname = (char *)ioMsg + sizeof(SMsgAVIoctrlPlayRecord);
@@ -851,11 +875,13 @@ int cloud_device_cam_pb_play_file(cloud_device_handle handle,const char* cam_did
 }
 int cloud_device_cam_pb_play_time(cloud_device_handle handle,const char* cam_did, int time)
 {
+	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
     return 0;
 
 }
 int cloud_device_cam_pb_stop(cloud_device_handle handle,const char* cam_did)
 {
+	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
     cloud_device_t *device = (cloud_device_t *)handle;
 
     pthread_mutex_lock(&device->lock);
@@ -878,11 +904,12 @@ int cloud_device_cam_pb_stop(cloud_device_handle handle,const char* cam_did)
         pthread_mutex_unlock(&device->lock);
 		return -1;
     }
+    device->seeking = 0;
+    device->paused = 0;
     SMsgAVIoctrlPlayRecord* ioMsg = (SMsgAVIoctrlPlayRecord *)cmd->m_msg.ext;
 
     ioMsg->channel = cam_handle;
     ioMsg->command = AVIOCTRL_RECORD_PLAY_STOP;
-    ioMsg->stTimeDay.year = 0;
     ioMsg->reserved[0] = 0x79;
     ioMsg->reserved[1] = 0x67;
 
@@ -894,10 +921,102 @@ int cloud_device_cam_pb_stop(cloud_device_handle handle,const char* cam_did)
     return 0;
 
 }
+int cloud_device_cam_pb_pause(cloud_device_handle handle,const char* cam_did)
+{
+	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
+    cloud_device_t *device = (cloud_device_t *)handle;
+
+    pthread_mutex_lock(&device->lock);
+
+    if (device->state != CLOUD_DEVICE_STATE_CONNECTED) {
+        pthread_mutex_unlock(&device->lock);
+        CLOUD_PRINTF("device->state != CLOUD_DEVICE_STATE_CONNECTED\n");
+        return -1;
+    }
+    int cam_handle = find_cam(device,cam_did);
+    if (cam_handle < 0) {
+        pthread_mutex_unlock(&device->lock);
+        CLOUD_PRINTF("device cam not valid!\n");
+        return -1;
+    }
+    if (device->paused) {
+        pthread_mutex_unlock(&device->lock);
+        CLOUD_PRINTF("device already paused!\n");
+        return -1;
+    }
+
+    cloud_cmd_t *cmd = new_cmd(DEVICE_PBCTRL,sizeof(SMsgAVIoctrlPlayRecord));
+    if (cmd == NULL) {
+        CLOUD_PRINTF("err:new cmd fail!\n");
+        pthread_mutex_unlock(&device->lock);
+		return -1;
+    }
+    device->seeking = 0;
+    device->paused = 1;
+    SMsgAVIoctrlPlayRecord* ioMsg = (SMsgAVIoctrlPlayRecord *)cmd->m_msg.ext;
+
+    ioMsg->channel = cam_handle;
+    ioMsg->command = AVIOCTRL_RECORD_PLAY_PAUSE;
+    ioMsg->reserved[0] = 0x79;
+    ioMsg->reserved[1] = 0x67;
+
+    cloud_cmd_put(device->msgq,cmd);
+
+    pthread_mutex_unlock(&device->lock);
+
+    return 0;
+
+}
+int cloud_device_cam_pb_resume(cloud_device_handle handle,const char* cam_did)
+{
+	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
+    cloud_device_t *device = (cloud_device_t *)handle;
+
+    pthread_mutex_lock(&device->lock);
+
+    if (device->state != CLOUD_DEVICE_STATE_CONNECTED) {
+        pthread_mutex_unlock(&device->lock);
+        CLOUD_PRINTF("device->state != CLOUD_DEVICE_STATE_CONNECTED\n");
+        return -1;
+    }
+    int cam_handle = find_cam(device,cam_did);
+    if (cam_handle < 0) {
+        pthread_mutex_unlock(&device->lock);
+        CLOUD_PRINTF("device cam not valid!\n");
+        return -1;
+    }
+    if (device->paused == 0) {
+        pthread_mutex_unlock(&device->lock);
+        CLOUD_PRINTF("device already resumed!\n");
+        return -1;
+    }
+    cloud_cmd_t *cmd = new_cmd(DEVICE_PBCTRL,sizeof(SMsgAVIoctrlPlayRecord));
+    if (cmd == NULL) {
+        CLOUD_PRINTF("err:new cmd fail!\n");
+        pthread_mutex_unlock(&device->lock);
+		return -1;
+    }
+    device->seeking = 0;
+    device->paused = 0;
+
+    SMsgAVIoctrlPlayRecord* ioMsg = (SMsgAVIoctrlPlayRecord *)cmd->m_msg.ext;
+
+    ioMsg->channel = cam_handle;
+    ioMsg->command = AVIOCTRL_RECORD_PLAY_PAUSE;//same as resume
+    ioMsg->reserved[0] = 0x79;
+    ioMsg->reserved[1] = 0x67;
+
+    cloud_cmd_put(device->msgq,cmd);
+
+    pthread_mutex_unlock(&device->lock);
+
+    return 0;
+
+}
 int cloud_device_cam_pb_seek_file(cloud_device_handle handle,const char* cam_did, int offset)
 {
+	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
     cloud_device_t *device = (cloud_device_t *)handle;
-	int avIndex = device->avIndex;
 
     pthread_mutex_lock(&device->lock);
 
@@ -920,11 +1039,12 @@ int cloud_device_cam_pb_seek_file(cloud_device_handle handle,const char* cam_did
         pthread_mutex_unlock(&device->lock);
 		return -1;
     }
+    device->seeking = 1;
+
     SMsgAVIoctrlPlayRecord* ioMsg = (SMsgAVIoctrlPlayRecord *)cmd->m_msg.ext;
 
     ioMsg->channel = cam_handle;
     ioMsg->command = AVIOCTRL_RECORD_PLAY_SEEKTIME;
-    ioMsg->stTimeDay.year = 0;
     ioMsg->Param = offset;
     ioMsg->reserved[0] = 0x79;
     ioMsg->reserved[1] = 0x67;
@@ -1068,9 +1188,9 @@ static void process_recv_cmd(cloud_device_t *device, unsigned int ioType,char *i
             memcpy(rblock,eblock,sizeof(rec_event_block));
             //printf("rblock %d: %p, %s - %d\n",i+gEventListRes->event_start, rblock, rblock->filename,rblock->createtime);
             //printf("eblock %d: %x :%s\n",i, eblock, eblock->filename);
+            strcpy(rblock->camdid, cam->cam_info.camdid);
             eblock ++;
             rblock ++;
-            strcpy(rblock->camdid, cam->cam_info.camdid);
         }
 
         //memcpy(&cam->rec_info.blocks[gEventListRes->event_start],&gEventListRes->event,gEventListRes->event_count*sizeof(rec_file_block));
@@ -1078,6 +1198,29 @@ static void process_recv_cmd(cloud_device_t *device, unsigned int ioType,char *i
         if (device->_pblist_callback && gEventListRes->event_start+gEventListRes->event_count >= gEventListRes->event_total) {
 
             device->_pblist_callback(device,CLOUD_CB_RECORD_LIST,&cam->rec_info,device->_data_context);
+        }
+    } else if (ioType == IOTYPE_USER_IPCAM_RECORD_PLAYCONTROL_RESP) {
+        SMsgAVIoctrlPlayRecordResp *resp = (SMsgAVIoctrlPlayRecordResp *)ioCtrlBuf;
+        if (resp->command == AVIOCTRL_RECORD_PLAY_SEEKTIME) {
+            if (device->seeking == 1) {
+                device->seeking = 0;
+            }
+            printf("seek done!!!\n");
+        } else if (resp->command == AVIOCTRL_RECORD_PLAY_END) {
+            printf("play end!!!\n");
+            if (g_video_bsout && device->_data_callback) {
+                cb_video_bs_info_t info;
+                memset(&info,0,sizeof(cb_video_bs_info_t));
+                info.device = device;
+                info.end_flag = 1;
+                (device->_data_callback)(device,CLOUD_CB_VIDEO_BS,&info,device->_data_context);
+            } else if (device->_data_callback) {
+                cb_video_info_t info;
+                memset(&info,0,sizeof(cb_video_info_t));
+                info.device = device;
+                info.end_flag = 1;
+                (device->_data_callback)(device,CLOUD_CB_VIDEO,&info,device->_data_context);
+            }
         }
 
     }
@@ -1110,6 +1253,8 @@ static int _cloud_connect_device(cloud_device_t *device)
     device->speak_cam_id = -1;
     device->speak_stopping = 0;
     device->speak_stopped = 0;
+    device->seeking = 0;
+    device->paused = 0;
 
     int ret;
 
@@ -1248,6 +1393,8 @@ int _cloud_device_play_video(cloud_device_t *device,int cam_handle)
 	memset(&ioMsg, 0, sizeof(SMsgAVIoctrlAVStream));
 
     ioMsg.channel = cam_handle;
+    device->play_seq++;
+    ioMsg.reserved[0] = device->play_seq;
     if((ret = avSendIOCtrl(avIndex, IOTYPE_USER_IPCAM_START, (char *)&ioMsg, sizeof(SMsgAVIoctrlAVStream))) < 0)
     {
         CLOUD_PRINTF("IOTYPE_USER_IPCAM_START failed[%d]\n", ret);
@@ -1485,6 +1632,8 @@ int _cloud_device_cam_pb_ctrl(cloud_device_t *device,SMsgAVIoctrlPlayRecord *pbc
         char *fname = (char *)pbctrl + sizeof(SMsgAVIoctrlPlayRecord);
         printf("fname = %s\n",fname);
 
+        device->play_seq ++;
+        pbctrl->reserved[2] = device->play_seq;
 
 	} else if (pbctrl->command == AVIOCTRL_RECORD_PLAY_STOP) {
 
@@ -1523,7 +1672,6 @@ static void *thread_device(void *arg)
 	unsigned int ioType;
 	char ioCtrlBuf[MAX_SIZE_IOCTRL_BUF];
     int timout_cnt = 0;
-    int i;
     cloud_cmd_t*  cmd;
 
 	while(device->exit == 0)
@@ -1724,6 +1872,7 @@ static void print_bitrate(cloud_device_t *device)
 
     if(usec > 1000000)
     {
+        /*
         int i;
         for(i=0;i<DEVICE_CAM_NUM_MAX;i++) {
             cam_info_t *cam = &device->cam[i];
@@ -1734,6 +1883,11 @@ static void print_bitrate(cloud_device_t *device)
             cam->fpsCnt = 0;
             cam->bps = 0;
         }
+        */
+        CLOUD_PRINTF("[avIndex:%d] FPS=%d, LostFrmCnt:%d, TotalCnt:%d, bps:%d Kbps\n", \
+                avIndex, device->fpsCnt, device->lostCnt, device->cnt, (device->bps/1024)*8);
+        device->fpsCnt = 0;
+        device->bps = 0;
         gettimeofday(&tv, NULL);
 
     }
@@ -1755,6 +1909,7 @@ static void *thread_ReceiveVideo(void *arg)
 	int outFrmSize = 0;
 	int outFrmInfoSize = 0;
 	//int bCheckBufWrong;
+	int new_stream_seq = 0;
 
 
 	while(device->exit == 0)
@@ -1800,7 +1955,7 @@ static void *thread_ReceiveVideo(void *arg)
 
 		if(ret == AV_ER_LOSED_THIS_FRAME) {
 			CLOUD_PRINTF("Lost video frame NO[%d]\n", frmNo);
-            cam->lostCnt++;
+            device->lostCnt++;
 			continue;
 		} else if(ret == AV_ER_INCOMPLETE_FRAME) {
 			CLOUD_PRINTF("AV_ER_INCOMPLETE_FRAME NO[%d]\n", frmNo);
@@ -1810,7 +1965,7 @@ static void *thread_ReceiveVideo(void *arg)
 			else
 			CLOUD_PRINTF("Incomplete video frame NO[%d] ReadSize[%d] FrmSize[%d] FrmInfoSize[%u]\n", frmNo, outBufSize, outFrmSize, outFrmInfoSize);
 			#endif
-            cam->lostCnt++;
+            device->lostCnt++;
             continue;
         } else if(ret == AV_ER_SESSION_CLOSE_BY_REMOTE) {
 			CLOUD_PRINTF("[thread_ReceiveVideo] AV_ER_SESSION_CLOSE_BY_REMOTE\n");
@@ -1825,24 +1980,38 @@ static void *thread_ReceiveVideo(void *arg)
 			device->videc_connect_err = 1;//break;
 			continue;
 		} else {
-			cam->bps += outBufSize;
+			device->bps += outBufSize;
 		}
 
         if (frameInfo.codec_id == MEDIA_CODEC_VIDEO_H264) {
-            if (g_video_bsout) {
+            if (frameInfo.reserve1[0] != device->play_seq) {
+                continue;
+            }
+
+            if (new_stream_seq != device->play_seq) {
+                device_decoder_reset(device);
+                device->play_timestamp_base = frameInfo.timestamp;
+                new_stream_seq = device->play_seq;
+                printf("device->play_seq = %d, device->play_timestamp_base = %d\n",device->play_seq,device->play_timestamp_base);
+            }
+            if (g_video_bsout && device->_data_callback && device->seeking == 0) {
                 cb_video_bs_info_t info;
+                memset(&info,0,sizeof(cb_video_bs_info_t));
+                info.timestamp = frameInfo.timestamp-device->play_timestamp_base;
                 info.device = device;
                 strcpy(info.camdid , cam->cam_info.camdid);
                 info.bs_data = buf;
                 info.bs_size = outFrmSize;
                 (device->_data_callback)(device,CLOUD_CB_VIDEO_BS,&info,device->_data_context);
             } else {
-                cam_video_dec(device,cam, buf, outFrmSize);
+                //cam_video_dec(device,cam, buf, outFrmSize,frameInfo.timestamp-device->play_timestamp_base);
+                device_video_dec(device, cam,buf, outFrmSize,frameInfo.timestamp-device->play_timestamp_base);
             }
-        }
-		cam->cnt++;
 
-		cam->fpsCnt++;
+        }
+		device->cnt++;
+
+		device->fpsCnt++;
 
 		//print_bitrate(device);
 	}
@@ -1852,20 +2021,40 @@ static void *thread_ReceiveVideo(void *arg)
 
 	return 0;
 }
+static int device_decoder_reset(cloud_device_t *device)
+{
+    printf("device_decoder_reset\n");
+    if (device->video_codec_ctx) {
+        avcodec_close(device->video_codec_ctx);
+        av_free(device->video_codec_ctx);
+        av_free_packet(&device->video_packet);
+        FREE_FRAME(&device->video_pFrame_);
+    }
+	device->video_codec_ctx = avcodec_alloc_context3(videoCodec);//解码会话层
+	if(!device->video_codec_ctx) {
+		CLOUD_PRINTF("avcodec_alloc_context3  error\n");
+		return -1;
+	}
+	if(avcodec_open2(device->video_codec_ctx, videoCodec, NULL) >= 0) {
+		device->video_pFrame_ = ALLOC_FRAME();
+		if (!device->video_pFrame_) {
+			CLOUD_PRINTF("Could not allocate video frame\n");
+            return -1;
+		}
+	} else {
+		CLOUD_PRINTF("avcodec_open2 error\n");
+		return -1;
+	}
+
+	av_init_packet(&device->video_packet);
+	return 0;
+}
 static int device_cam_init(cloud_device_t *device,int camid, char *camdid)
 {
     cam_info_t *cam = &device->cam[camid];
     memset(cam,0,sizeof(cam_info_t));
 
-    /*
-    cam->playing = 0;
-    cam->pFrameOut = NULL;
-    cam->img_convert_ctx = NULL;
-	cam->cnt = 0;
-	cam->fpsCnt = 0;
-	cam->bps = 0;
-	cam->lostCnt = 0;
-    */
+/*
 	cam->video_codec_ctx = avcodec_alloc_context3(videoCodec);//解码会话层
 	if(!cam->video_codec_ctx) {
 		CLOUD_PRINTF("avcodec_alloc_context3  error\n");
@@ -1884,6 +2073,8 @@ static int device_cam_init(cloud_device_t *device,int camid, char *camdid)
 
 	av_init_packet(&cam->packet);
 
+	*/
+
     cam->valid = 1;
     strcpy(cam->cam_info.camdid,camdid);
 
@@ -1895,7 +2086,7 @@ static int device_cam_deinit(cloud_device_t *device,int camid)
     if (cam->valid == 0) {
         return 0;
     }
-
+    /*
 	avcodec_close(cam->video_codec_ctx);
 	av_free(cam->video_codec_ctx);
 	av_free_packet(&cam->packet);
@@ -1913,17 +2104,74 @@ static int device_cam_deinit(cloud_device_t *device,int camid)
         sws_freeContext(cam->img_convert_ctx);
         cam->img_convert_ctx = NULL;
     }
+    */
     if (cam->rec_info.blocks) {
         free(cam->rec_info.blocks);
     }
     strcpy(cam->cam_info.camdid,"");
     cam->valid = 0;
 
-    //SDL_FreeYUVOverlay(cam->overlay);
 	return 0;
 }
 
-static void cam_video_dec(cloud_device_t *device,cam_info_t *cam , char* buf, int size)
+static void device_video_dec(cloud_device_t *device,cam_info_t *cam ,char* buf, int size,unsigned int timestamp)
+{
+    AVFrame *pFrame_ = device->video_pFrame_;
+    device->video_packet.size = size;//将查找到的帧长度送入
+    device->video_packet.data = (unsigned char *)buf;//将查找到的帧内存送入
+    //CLOUD_PRINTF("video_dec_dis:%p,%d\n",buf,size);
+/*
+	video_codec_ctx->time_base.num = 1;
+	video_codec_ctx->frame_number = 1; //每包一个视频帧
+	video_codec_ctx->codec_type = AVMEDIA_TYPE_VIDEO;
+	video_codec_ctx->bit_rate = 0;
+	video_codec_ctx->time_base.den = 15;//帧率
+	video_codec_ctx->width = 1920;//视频宽
+	video_codec_ctx->height =1080;//视频高
+*/
+	int frameFinished = 0;//这个是随便填入数字，没什么作用
+    int decodeLen = avcodec_decode_video2(device->video_codec_ctx, pFrame_, &frameFinished, &device->video_packet);
+    if(decodeLen < 0) {
+        CLOUD_PRINTF("decode fail!\n");
+        return;
+    }
+    //CLOUD_PRINTF("decodeLen = %d\n",decodeLen);
+    device->video_packet.size -= decodeLen;
+    device->video_packet.data += decodeLen;
+    if(frameFinished > 0)//成功解码
+    {
+        int height = pFrame_->height;
+        int width = pFrame_->width;
+        //CLOUD_PRINTF("OK, get data\n");
+        //CLOUD_PRINTF("Frame height is %d\n", height);
+        //CLOUD_PRINTF("Frame width is %d\n", width);
+        //CLOUD_PRINTF("Frame linesize is %d\n", pFrame_->linesize[0]);
+
+
+        if (device->_data_callback && device->seeking == 0) {
+            cb_video_info_t info;
+            memset(&info,0,sizeof(cb_video_info_t));
+
+            info.timestamp = timestamp;
+            info.device = device;
+            strcpy(info.camdid , cam->cam_info.camdid);
+
+            //printf("b cam %d,frame %p\n",cam->cam_info.index,cam->pFrame_);
+            info.pFrame = pFrame_;
+            info.pix_buffer = pFrame_->data[0];
+            info.width = width;
+            info.height = height;
+            info.org_width = width;
+            info.org_height = height;
+
+            info.format = AV_PIX_FMT_YUV420P;
+            (device->_data_callback)(device,CLOUD_CB_VIDEO,&info,device->_data_context);
+        }
+        //CLOUD_PRINTF("777\n");
+    }
+}
+#if 0
+static void cam_video_dec(cloud_device_t *device,cam_info_t *cam , char* buf, int size,unsigned int timestamp)
 {
     AVFrame *pFrame_ = cam->pFrame_;
     cam->packet.size = size;//将查找到的帧长度送入
@@ -1994,8 +2242,10 @@ static void cam_video_dec(cloud_device_t *device,cam_info_t *cam , char* buf, in
 
 
 
-        if (device->_data_callback) {
+        if (device->_data_callback && device->seeking == 0) {
             cb_video_info_t info;
+            memset(&info,0,sizeof(cb_video_info_t));
+            info.timestamp = timestamp;
             info.device = device;
             strcpy(info.camdid , cam->cam_info.camdid);
             if (cam->pFrameOut) {
@@ -2021,8 +2271,7 @@ static void cam_video_dec(cloud_device_t *device,cam_info_t *cam , char* buf, in
         //CLOUD_PRINTF("777\n");
     }
 }
-
-
+#endif
 #define AUDIO_BUF_SIZE	2048
 
 static void *thread_ReceiveAudio(void *arg)
@@ -2111,8 +2360,9 @@ static void *thread_ReceiveAudio(void *arg)
 		} else {
 			//cam->bps += outBufSize;
 		}
-        if (g_audio_bsout) {
+        if (g_audio_bsout && device->_data_callback && device->seeking == 0) {
             cb_audio_bs_info_t info;
+            memset(&info,0,sizeof(cb_audio_bs_info_t));
             info.device = device;
             strcpy(info.camdid , cam->cam_info.camdid);
             info.bs_data = buf;
@@ -2147,12 +2397,12 @@ static int device_audio_init(cloud_device_t *device)
 		CLOUD_PRINTF("avcodec_open2 error\n");
 		return -1;
 	}
-    device->pFrame_ = ALLOC_FRAME();
-    if (!device->pFrame_) {
+    device->audio_pFrame_ = ALLOC_FRAME();
+    if (!device->audio_pFrame_) {
         CLOUD_PRINTF("Could not allocate audio frame\n");
         return -1;
     }
-	av_init_packet(&device->packet);
+	av_init_packet(&device->audio_packet);
 	CLOUD_PRINTF("audio_init ok!!!!\n");
     return 0;
 }
@@ -2160,8 +2410,8 @@ static int device_audio_deinit(cloud_device_t *device)
 {
 	avcodec_close(device->audio_codec_ctx);
 	av_free(device->audio_codec_ctx);
-	av_free_packet(&device->packet);
-	FREE_FRAME(&device->pFrame_);
+	av_free_packet(&device->audio_packet);
+	FREE_FRAME(&device->audio_pFrame_);
 
 	return 0;
 }
@@ -2169,13 +2419,13 @@ static int device_audio_deinit(cloud_device_t *device)
 static void device_audio_dec(cloud_device_t *device, char* buf, int size)
 {
     //printf("device_audio_dec %p, %d\n",buf,size);
-    device->packet.size = size;//将查找到的帧长度送入
-    device->packet.data = (unsigned char *)buf;//将查找到的帧内存送入
+    device->audio_packet.size = size;//将查找到的帧长度送入
+    device->audio_packet.data = (unsigned char *)buf;//将查找到的帧内存送入
     //CLOUD_PRINTF("video_dec_dis:%p,%d\n",buf,size);
 
 /*
 	int frame_size = sizeof(device->audio_sample);
-    int decodeLen = avcodec_decode_audio3(device->audio_codec_ctx, (short *)device->audio_sample, &frame_size, &device->packet);
+    int decodeLen = avcodec_decode_audio3(device->audio_codec_ctx, (short *)device->audio_sample, &frame_size, &device->audio_packet);
 */
     //device->audio_codec_ctx->codec_type = AVMEDIA_TYPE_AUDIO;
 /*
@@ -2186,21 +2436,21 @@ static void device_audio_dec(cloud_device_t *device, char* buf, int size)
     device->audio_codec_ctx->bits_per_raw_sample = 16;
 */
 	int frameFinished = 0;//这个是随便填入数字，没什么作用
-    int decodeLen = avcodec_decode_audio4(device->audio_codec_ctx,device->pFrame_,&frameFinished,&device->packet);
+    int decodeLen = avcodec_decode_audio4(device->audio_codec_ctx,device->audio_pFrame_,&frameFinished,&device->audio_packet);
     if(decodeLen < 0) {
         CLOUD_PRINTF("avcodec_decode_audio4 fail!\n");
         return;
     }
-    
     //CLOUD_PRINTF("decodeLen = %d\n",decodeLen);
-    device->packet.size -= decodeLen;
-    device->packet.data += decodeLen;
+    device->audio_packet.size -= decodeLen;
+    device->audio_packet.data += decodeLen;
     if(frameFinished > 0)//成功解码
     {
-        if (device->_data_callback) {
+        if (device->_data_callback && device->seeking) {
             cb_audio_info_t info;
+            memset(&info,0,sizeof(cb_audio_info_t));
             info.device = device;
-            info.pFrame = device->pFrame_;
+            info.pFrame = device->audio_pFrame_;
             //info.sample_buffer = device->audio_sample;
             //info.sample_length = decodeLen;
             (device->_data_callback)(device,CLOUD_CB_AUDIO,&info,device->_data_context);

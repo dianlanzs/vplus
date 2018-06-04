@@ -8,16 +8,6 @@
 
 
 
-//定义‘DISPLAY’关闭
-//#define SDL_DISPLAY
-
-#ifdef SDL_DISPLAY
-#import "SDL/SDL.h"
-static SDL_Surface* screen = NULL;
-static SDL_Rect rect;
-#endif // SDL_DISPLAY
-
-
 #import "AMNavigationController.h"
 
 #import "MediaMuxer.h"
@@ -28,7 +18,10 @@ static SDL_Rect rect;
 #import "Waver.h"
 #import "ZLPlayer.h"
 #import "ZLPlayerModel.h"
-#import "ZLPlayerView.h"
+
+
+
+#import "LivePlayControl.h"
 
 #import "CamSettingsController.h"
 #import "FunctionView.h"
@@ -262,13 +255,14 @@ mydevice_data_callback callBack;
 
 
 #pragma mark - getter
-
 - (ZLPlayerView *)vp {
     if (!_vp) {
-        _vp = [[ZLPlayerView alloc] initWithModel:self.playerModel controller:self];
+        CommonPlayerControl *commonControl = [[CommonPlayerControl alloc] initWithFunction:[LivePlayControl new]];
+        _vp = [[ZLPlayerView alloc] initWithModel:self.playerModel control:commonControl  controller:self];
     }
     return _vp;
 }
+
 
 - (ZLPlayerModel *)playerModel {
     

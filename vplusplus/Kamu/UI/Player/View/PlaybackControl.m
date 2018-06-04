@@ -14,13 +14,19 @@
 #import "PlayerControl.h"
 #import "CommonPlayerControl.h"
 @interface PlaybackControl () <UIGestureRecognizerDelegate>
-
+//@property (nonatomic, strong) CommonPlayerControl *commonControl;
 
 @end
 
 
 @implementation PlaybackControl
 #pragma mark -  life circle
+//- (CommonPlayerControl *)commonControl {
+//    if (!_commonControl) {
+//        _commonControl = (CommonPlayerControl *)self.superview.superview;
+//    }
+//    return _commonControl;
+//}
 - (instancetype)init {
     
     self = [super init];
@@ -48,7 +54,7 @@
             make.centerY.equalTo(self.startBtn.mas_centerY);
         }];
         [self.totalTimeLabel mas_makeConstraints:^(MASConstraintMaker *make) {
-            make.trailing.equalTo(self.commonControl.fullScreenBtn.mas_leading).offset(3);
+            make.trailing.equalTo(self).offset(3);
             make.centerY.equalTo(self.startBtn.mas_centerY);
             make.width.mas_equalTo(43);
         }];
@@ -71,6 +77,12 @@
             make.leading.trailing.mas_offset(0);
             make.bottom.mas_offset(0);
         }];
+        
+        [[self getRootControl] addSubview:self.repeatBtn];
+        [self.repeatBtn mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.center.equalTo([self getRootControl]);
+        }];
+              
     }
     return self;
 }
@@ -84,7 +96,7 @@
 - (void)zl_playerDraggedTime:(NSInteger)draggedTime sliderImage:(UIImage *)image; {
     NSInteger proMin = draggedTime / 60;//当前秒
     NSInteger proSec = draggedTime % 60;//当前分钟
-    NSString *currentTimeStr = [NSString stringWithFormat:@"%02zd:%02zd", proMin, proSec];
+    NSString *currentTimeStr = [NSString stringWithFormat:@"%02lu:%02zd", (long)proMin, proSec];
     [self.videoSlider setImage:image];
     [self.videoSlider setText:currentTimeStr];
     self.fastView.hidden = YES;
@@ -137,8 +149,7 @@
         self.fastView.hidden = YES;
     });
     [self setDragged:NO];
-    [self.startBtn setSelected:YES];
-    [(PlayerControl *)self.superview autoFadeOutControlView];
+
 }
 
 - (void)zl_playerCurrentTime:(NSInteger)currentTime totalTime:(NSInteger)totalTime sliderValue:(CGFloat)value {
@@ -202,9 +213,9 @@
     return _videoSlider;
 }
 - (void)progressSliderTouchBegan:(ASValueTrackingSlider *)sender {
-    [(PlayerControl *)self.superview zl_playerCancelAutoFadeOutControlView];
-    self.videoSlider.popUpView.hidden = YES;
-    [self.delegate zl_controlView:self progressSliderTouchBegan:sender];
+//    [(PlayerControl *)self.superview zl_playerCancelAutoFadeOutControlView];
+//    self.videoSlider.popUpView.hidden = YES;
+//    [self.delegate zl_controlView:self progressSliderTouchBegan:sender]; // not implemt
 }
 
 - (void)progressSliderValueChanged:(ASValueTrackingSlider *)sender {
@@ -321,4 +332,63 @@
     return _progressView;
 }
 
+
+
+- (void)resetFuncControl {
+    self.videoSlider.value = 0;
+    self.bottomProgressView.progress = 0;
+    self.progressView.progress       = 0;
+    self.currentTimeLabel.text       = @"00:00";
+    self.totalTimeLabel.text         = @"00:00";
+    self.fastView.hidden             = YES;
+    [self.startBtn setSelected:NO];  
+}
+- (void)zl_playEnd {
+    
+    [self.startBtn setSelected:NO];
+    [self.repeatBtn setHidden:NO];
+    [self hideCommonControl];
+    self.backgroundColor  = [UIColor colorWithRed:0 green:0 blue:0 alpha:0.3];
+    [ZLBrightnessView sharedBrightnessView].isStatusBarHidden = NO;
+    self.bottomProgressView.alpha = 0;
+}
+
+//repeat play
+- (UIButton *)repeatBtn {
+    if (!_repeatBtn) {
+        _repeatBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        [_repeatBtn setImage:ZLPlayerImage(@"ZFPlayer_repeat_video") forState:UIControlStateNormal];
+        [_repeatBtn addTarget:self action:@selector(repeatBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    return _repeatBtn;
+}
+- (void)repeatBtnClick:(UIButton *)sender {
+    [self resetFuncControl];
+    [self.delegate zl_controlView:self repeatPlayAction:sender];
+}
+
+//- (CommonPlayerControl *)getRootControl{
+//
+//    UIResponder *next = self.nextResponder;
+//    while (next != nil) {
+//        if ([next isKindOfClass:[CommonPlayerControl class]]) {
+//            CommonPlayerControl *root = (CommonPlayerControl *)next;
+//            return root;
+//        }
+//        next = next.nextResponder;
+//    }
+//    return nil;
+//}
+- (CommonPlayerControl *)getRootControl{
+    
+    UIView *next = self.superview;
+    while (next != nil) {
+        if ([next isKindOfClass:[CommonPlayerControl class]]) {
+            CommonPlayerControl *root = (CommonPlayerControl *)next;
+            return root;
+        }
+        next = next.superview;
+    }
+    return nil;
+}
 @end

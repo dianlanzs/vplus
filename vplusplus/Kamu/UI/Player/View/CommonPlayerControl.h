@@ -7,16 +7,10 @@
 //
 
 #import <UIKit/UIKit.h>
-@protocol CommonControlDelegate <NSObject>
-
-- (void)zl_controlView:(UIView *)controlView backAction:(UIButton *)sender;
-- (void)zl_controlView:(UIView *)controlView fullScreenAction:(UIButton *)sender;
-- (void)zl_controlView:(UIView *)controlView lockScreenAction:(UIButton *)sender;
-- (void)zl_controlView:(UIView *)controlView failAction:(UIButton *)sender;
-@end
 
 
 
+#import "UIView+PlayerControl.h"
 
 
 @interface CommonPlayerControl : UIView
@@ -34,8 +28,10 @@
 @property (nonatomic, assign, getter=isShowing) BOOL  showing;
 @property (nonatomic, strong) UIImageView             *bottomImageView;
 
+@property (nonatomic, strong) UIView                 *functionControl;
 
-@property (nonatomic, strong) id <CommonControlDelegate> delegate;
-
-
+- (void)autoFadeOutControlView;
+- (void)hideCommonControl;
+- (void)showCommonControl;
+- (instancetype)initWithFunction:(UIView *)function;
 @end

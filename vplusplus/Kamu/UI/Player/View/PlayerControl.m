@@ -24,7 +24,7 @@
 //@end
 //
 //
-@implementation PlayerControl
+//@implementation PlayerControl
 
 
 
@@ -198,10 +198,7 @@
 //}
 ///自动消退 间隔 7s
 
-//- (void)autoFadeOutControlView {
-//    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(zl_playerHideControlView) object:nil];
-//    [self performSelector:@selector(zl_playerHideControlView) withObject:nil afterDelay:ZLPlayerAnimationTimeInterval];
-//}
+
 
 #pragma mark - setter
 
@@ -474,4 +471,4 @@
 //    return _playerBtn;
 //}
 
-@end
+//@end

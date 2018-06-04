@@ -21,14 +21,10 @@
         
         //2.判断响应者是否是控制器类型
         if ([next isKindOfClass:[UIViewController class]]) {
-            
             UIViewController *root = (UIViewController *)next;
-            
             return root;
         }
-        
         //1.获取下一响应者
-        
         next = next.nextResponder;
     }
     
@@ -38,7 +34,7 @@
 - (void)setVc:(UIViewController *)vc {
     objc_setAssociatedObject(self, @selector(vc), vc, OBJC_ASSOCIATION_RETAIN);
 }
-- (UILabel *)vc {
+- (UIViewController *)vc {
     return objc_getAssociatedObject(self, _cmd); //_cmd : selector imp
 }
 @end

@@ -27,9 +27,7 @@
 
 #import "ZLPlayerView.h"
 #import "ZLPlayerModel.h"
-#import "ZLPlayerControlView.h"
 #import "ZLBrightnessView.h"
 #import "UIViewController+ZLPlayerRotation.h"
 //#import "UIImageView+ZLCache.h"
 #import "UIWindow+ZLCurrentViewController.h"
-#import "ZLPlayerControlViewDelegate.h"

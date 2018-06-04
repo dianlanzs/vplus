@@ -7,11 +7,16 @@
 //
 
 #import "ZLPlayerView.h"
-#import "ZLPlayerControlViewDelegate.h"
 #import "PCMPlayer.h"
 
 
 #import "ZLBrightnessView.h"
+
+
+
+#import "UIView+ViewController.h"
+#import "PlaybackControl.h"
+
 
 #define ZLPlayerShared                      [ZLBrightnessView sharedBrightnessView]
 #define AUTOOL [PCMPlayer sharedAudioManager]
@@ -23,30 +28,23 @@ typedef NS_ENUM(NSInteger, PanDirection){
 };
 
 
-@interface ZLPlayerView () <UIGestureRecognizerDelegate,UIAlertViewDelegate,ZLNvrDelegate>
+@interface ZLPlayerView () <UIGestureRecognizerDelegate,UIAlertViewDelegate,ZLNvrDelegate,PlayerControlDelegate>
 
 @property (nonatomic, assign) CGFloat                sliderLastValue;
 
 
-
-/** 定义一个实例变量，保存枚举值 */
 @property (nonatomic, assign) PanDirection           panDirection;
-/** 是否锁定屏幕方向 */
 @property (nonatomic, assign) BOOL                   isLocked;
-/** 是否在调节音量*/
 @property (nonatomic, assign) BOOL                   isVolume;
-/** 进入后台*/
 @property (nonatomic, assign) BOOL                   didEnterBackground;
-/** 单击 */
 @property (nonatomic, strong) UITapGestureRecognizer *singleTap;
-/** 双击 */
 @property (nonatomic, strong) UITapGestureRecognizer *doubleTap;
 @property (nonatomic, strong) UIPanGestureRecognizer *shrinkPanGesture;
 @property (nonatomic, strong) NSDictionary           *resolutionDic;
 @property (nonatomic, strong) UIColor                *statusOriginBackgroundColor;
 
 
-@property (nonatomic, assign) NSInteger per_s;
+@property (nonatomic, strong) CommonPlayerControl *commonControl;
 /** 亮度view */
 //@property (nonatomic, strong) ZLBrightnessView       *brightnessView;
 
@@ -56,15 +54,38 @@ typedef NS_ENUM(NSInteger, PanDirection){
 @implementation ZLPlayerView
 
 #pragma mark - Device delegate
+
+
+
+
+- (void)zl_controlView:(UIView *)controlView repeatPlayAction:(UIButton *)sender {
+    cloud_device_cam_pb_play_file((void *)self.playerModel.nvr_h, [self.playerModel.cam_id UTF8String], [self.playerModel.cam_entity.fileName UTF8String]);
+}
+
+
 - (void)device:(Device *)nvr sendAvData:(void *)data dataType:(int)type {
     
     [self setChekingFlag:1];
     if (type == CLOUD_CB_VIDEO) {
         cb_video_info_t *info = (cb_video_info_t *)data;
-        AVFrame *pFrame_ = info->pFrame;
-        int width = pFrame_->width;
-        int height = pFrame_->height;
-        [self.glvc writeY:pFrame_->data[0] U:pFrame_->data[1] V:pFrame_->data[2] width:width height:height];
+        if (info->end_flag) {
+            cloud_device_stop_audio((void *)self.playerModel.nvr_h, [self.playerModel.cam_id UTF8String]);
+            [self.commonControl.functionControl zl_playEnd];
+        } else {
+            AVFrame *pFrame_ = info->pFrame;
+            int width = pFrame_->width;
+            int height = pFrame_->height;
+            int timestamp = info->timestamp;
+            [self.glvc writeY:pFrame_->data[0] U:pFrame_->data[1] V:pFrame_->data[2] width:width height:height];
+            if ([self.commonControl.functionControl isKindOfClass:[PlaybackControl class]]) {
+                
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self.commonControl.functionControl zl_playerCurrentTime:timestamp totalTime:self.playerModel.cam_entity.timelength sliderValue:timestamp / self.playerModel.cam_entity.timelength];
+                });
+                
+            }
+        }
+        
     }else if (type == CLOUD_CB_AUDIO) {
         cb_audio_info_t *info = (cb_audio_info_t *)data;
         AVFrame *pFrame_ = info->pFrame;
@@ -72,13 +93,6 @@ typedef NS_ENUM(NSInteger, PanDirection){
     }
 }
 - (void)checking {
-    
-//    CGFloat timelength = self.playerModel.cam_entity.timelength;
-//    if (timelength > 0) {
-//        _per_s += 5;
-//        [self.controlView zl_playerCurrentTime:_per_s  totalTime:timelength sliderValue:_per_s / timelength];
-//    }
-
     [self setChekingFlag:0];
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         if (self.chekingFlag == 0 && self.playerModel.nvr_status == CLOUD_DEVICE_STATE_CONNECTED) {
@@ -106,10 +120,10 @@ typedef NS_ENUM(NSInteger, PanDirection){
     if (state != _state) {
         _state = state;
         if (state == ZLPlayerStateFailed) {
-            [self.controlView.failBtn setHidden:NO];
+            [self.commonControl.failBtn setHidden:NO];
             [self.spinner stopAnimating];
         } else {
-            [self.controlView.failBtn setHidden:YES];
+            [self.commonControl.failBtn setHidden:YES];
             if (state == ZLPlayerStateBuffering) {
                 [self.spinner startAnimating];
             } else if (state == ZLPlayerStatePlaying) {
@@ -129,14 +143,7 @@ typedef NS_ENUM(NSInteger, PanDirection){
     }
     return _glvc;
 }
-- (ZLPlayerControlView *)controlView {
-    if (!_controlView) {
-        _controlView = [[ZLPlayerControlView alloc] init];
-        //        [_controlView makeConstraints]; //MARK: cuz use superview but self not yet returned
-        _controlView.delegate = self;
-    }
-    return _controlView;
-}
+
 - (RTSpinKitView *)spinner {
     if (!_spinner) {
         _spinner = [[RTSpinKitView alloc] initWithStyle:RTSpinKitViewStyleThreeBounce color:[UIColor whiteColor] spinnerSize:40.f];
@@ -210,12 +217,6 @@ typedef NS_ENUM(NSInteger, PanDirection){
 
 #pragma mark - 旋转屏幕
 - (void)_fullScreenAction {
-//    self.statusOriginBackgroundColor = [self getOriginStatusBackgroundColor];
-//    if (ZLPlayerShared.isLockScreen) {
-//        [self unLockTheScreen];
-//        return;
-//    }
-    
     if (self.isFullScreen) {
         [self interfaceOrientation:UIInterfaceOrientationPortrait];
     } else {
@@ -235,18 +236,17 @@ typedef NS_ENUM(NSInteger, PanDirection){
     [self toOrientation:orientation];
 }
 - (void)setOrientationPortraitConstraint {
-//    [self addPlayerToFatherView:self.playerModel.fatherView];
     [self toOrientation:UIInterfaceOrientationPortrait];
 }
 
 - (void)setIsFullScreen:(BOOL)isFullScreen {
     _isFullScreen = isFullScreen;
     if (isFullScreen) {
-        [self.controlView.lockBtn setHidden:NO];
-        [self.controlView zl_playerShowControlView];
+        [self.commonControl.lockBtn setHidden:NO];
+        [self.commonControl showCommonControl];
     }else {
-        [self.controlView.lockBtn setHidden:YES];
-        [self.controlView zl_playerHideControlView];
+        [self.commonControl.lockBtn setHidden:YES];
+        [self.commonControl hideCommonControl];
     }
 }
 - (void)onDeviceOrientationChange {
@@ -306,26 +306,23 @@ typedef NS_ENUM(NSInteger, PanDirection){
     }
 }
 
-
-///MARK:3.改变屏幕朝向 、 横屏/竖屏
 - (void)toOrientation:(UIInterfaceOrientation)needOrientation {
     UIInterfaceOrientation statusBarOrientation = [UIApplication sharedApplication].statusBarOrientation;
-    // 判断如果当前方向和要旋转的方向一致,那么不做任何操作
     if (statusBarOrientation == needOrientation) { return; }
     if (needOrientation != UIInterfaceOrientationPortrait && statusBarOrientation == UIInterfaceOrientationPortrait) {
         [self setIsFullScreen:YES];
-        [self.controlView.topImageView setHidden:NO];
+        [self.commonControl.topImageView setHidden:NO];
         [self.delegate orientation:needOrientation];//回调设置 navBar 隐藏
 
     }
   
     else if (needOrientation == UIInterfaceOrientationPortrait && statusBarOrientation != UIInterfaceOrientationPortrait) {
         [self setIsFullScreen:NO];
-        [self.controlView.topImageView setHidden:YES];
+        [self.commonControl.topImageView setHidden:YES];
         [self.delegate orientation:needOrientation];
     }
     [[UIApplication sharedApplication] setStatusBarOrientation:needOrientation animated:NO];
-    [self.controlView setOrientation:needOrientation];
+    [self.commonControl setOrientation:needOrientation];
 
 }
 
@@ -399,23 +396,31 @@ typedef NS_ENUM(NSInteger, PanDirection){
     [self disableRecord];
 }
 
-#pragma mark - trackSlider Delegate
+#pragma mark - trackSlider Delegate & playback
+
+- (void)zl_controlView:(UIView *)controlView playAction:(UIButton *)sender {
+    
+    if (sender.isSelected) {
+        cloud_device_cam_pb_resume((void *)self.playerModel.nvr_h,[self.playerModel.cam_id UTF8String]);
+    }else {
+        cloud_device_cam_pb_pause((void *)self.playerModel.nvr_h,[self.playerModel.cam_id UTF8String]);
+    }
+}
 
 - (void)zl_controlView:(UIView *)controlView progressSliderTap:(CGFloat)value {
     CGFloat timelength = self.playerModel.cam_entity.timelength;
     NSInteger ds = floorf(timelength * value);
-//    [self.controlView zl_playerPlayBtnState:YES];
     [self seekToTime:ds completionHandler:nil];
 }
 
 - (void)seekToTime:(NSInteger)ds completionHandler:(void (^)(BOOL finished))completionHandler {
-    //        [self.controlView zf_playerActivity:YES];        [self.player pause]; 显示暂停图标
     cloud_device_cam_pb_seek_file((void *)self.playerModel.nvr_h,[self.playerModel.cam_id UTF8String], (int)ds);
-    [self.controlView zl_playerDraggedEnd];
-    
+    [self.commonControl.functionControl zl_playerDraggedEnd];
+    [self.commonControl  autoFadeOutControlView];
 }
-- (void)zl_controlView:(ZLPlayerControlView *)controlView progressSliderValueChanged:(UISlider *)slider {
-    BOOL forward;
+- (void)zl_controlView:(UIView *)controlView progressSliderValueChanged:(UISlider *)slider {
+    
+    BOOL forward = NO;
     CGFloat value   = slider.value - self.sliderLastValue;
     if (value > 0) {
         forward = YES;
@@ -427,9 +432,9 @@ typedef NS_ENUM(NSInteger, PanDirection){
     self.sliderLastValue  = slider.value;
     CGFloat timelength = self.playerModel.cam_entity.timelength;
     NSInteger ds = floorf(timelength * slider.value);
-    [controlView zl_playerDraggedTime:ds totalTime:timelength isForward:forward hasPreview:YES];//is fullscreen ?
+    [(PlaybackControl *)controlView zl_playerDraggedTime:ds totalTime:timelength isForward:forward hasPreview:YES];//is fullscreen ?
     if (timelength > 0) {
-        [controlView zl_playerDraggedTime:ds sliderImage:((GLKView *)self.glvc.view).snapshot]; // cache images for every dragged time
+        [(PlaybackControl *)controlView zl_playerDraggedTime:ds sliderImage:((GLKView *)self.glvc.view).snapshot]; // cache images for every dragged time
     } else {
         slider.value = 0;
     }
@@ -446,51 +451,20 @@ typedef NS_ENUM(NSInteger, PanDirection){
     return  UIImageJPEGRepresentation([glk_view snapshot], 0.5f);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 #pragma mark - Controlview Delegate
-
-///controlView  是不知道 是否旋转的 ，view 旋转事件是在   player 先接收到的  ❎
-//====  controlView是知道要旋转的 ，因为 是控制层 发出的 指令
-//但是 ，真正 发生旋转  是 在 vc 里 的 ，有 控制层 ---->  player ,----》 playerController控制器
-
-//- (void)zl_controlViewWillShow:(ZLPlayerControlView *)controlView isFullscreen:(BOOL)fullscreen {
-//    fullscreen ? [controlView.topImageView setHidden:NO] : [controlView.topImageView setHidden:YES];
-//}
-
 - (void)zl_controlView:(UIView *)controlView failAction:(UIButton *)sender {
     [self reconnect];
 }
-
 - (void)zl_controlView:(UIView *)controlView fullScreenAction:(UIButton *)sender {
     [self _fullScreenAction];
 }
 - (void)zl_controlView:(UIView *)controlView backAction:(UIButton *)sender {
-//    [self changeStatusBackgroundColor:self.statusOriginBackgroundColor];
     self.isFullScreen ? [self interfaceOrientation:UIInterfaceOrientationPortrait] :  [self.delegate zl_playerBackAction];
-    
 }
-//分辨率切换按钮
-- (void)zl_controlView:(UIView *)controlView resolutionAction:(UIButton *)sender {
-}
-//锁屏按钮
-- (void)zl_controlView:(UIView *)controlView lockScreenAction:(UIButton *)lockButton {
-    //    // 调用AppDelegate单例记录播放状态是否锁屏，在TabBarController设置哪些页面支持旋转
 
-//    lockButton.selected             = !lockButton.isSelected;
-//    _isLocked = lockButton.isSelected;
-//    ZLPlayerShared.isLockScreen = lockButton.isSelected;    // 调用AppDelegate单例记录播放状态是否锁屏
+- (void)zl_controlView:(UIView *)controlView lockScreenAction:(UIButton *)lockButton {
+    lockButton.selected             = !lockButton.isSelected;
+    ZLPlayerShared.isLockScreen = lockButton.isSelected;
 }
 
 //麦克风对讲
@@ -528,7 +502,6 @@ typedef NS_ENUM(NSInteger, PanDirection){
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch {
     /*在view上加了UITapGestureRecognizer之后，这个view上的所有触摸事件都被UITapGestureRecognizer给吸收了，所以要解决这个bug，要给这个手势代理加一些事件过滤，对button事件就不要拦截独吞了*/
     if ([touch.view isKindOfClass:[UIControl class]]) {
-        //放过button点击拦截
         return NO;
     }
     return YES;
@@ -553,14 +526,14 @@ typedef NS_ENUM(NSInteger, PanDirection){
 }
 
 - (void)singleTapAction:(UIGestureRecognizer *)gesture {
-    
-    if ([gesture isKindOfClass:[NSNumber class]] && ![(id)gesture boolValue]) {
-        [self _fullScreenAction];
-        return;
-    }
-    //已经识别了 手势
     if (gesture.state == UIGestureRecognizerStateRecognized) {
-        [self.controlView zl_playerShowOrHideControlView];
+        
+        if (self.isFullScreen &&  ZLPlayerShared.isLockScreen && !self.commonControl.isHidden) {
+            [self.commonControl setHidden:YES];
+        }else {
+            [self.commonControl setHidden:!self.commonControl.isHidden];
+        }
+        
     }
 }
 // 双击播放/暂停
@@ -735,39 +708,53 @@ typedef NS_ENUM(NSInteger, PanDirection){
 //   
 //}
 
-- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event {
-    UIView *view = [super hitTest:point withEvent:event];
-    
-    if (view == nil) {
-        //转换 button‘s point  的坐标系
-        CGPoint csp_self = [self.controlView.speakerBtn_vertical convertPoint:point fromView:self];
-        if (CGRectContainsPoint(self.controlView.speakerBtn_vertical.bounds, csp_self) == true) {
-            return self.controlView.speakerBtn_vertical;
-        }
+
+
+//
+//- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event {
+//    UIView *view = [super hitTest:point withEvent:event];
+//
+//    if (view == nil) {
+//        //转换 button‘s point  的坐标系
+//        CGPoint csp_self = [self.controlView.speakerBtn_vertical convertPoint:point fromView:self];
+//        if (CGRectContainsPoint(self.controlView.speakerBtn_vertical.bounds, csp_self) == true) {
+//            return self.controlView.speakerBtn_vertical;
+//        }
+//    }
+//
+//    return view;
+//
+//}
+
+- (void)setCommonControl:(CommonPlayerControl *)commonControl {
+    if (commonControl != _commonControl) {
+        _commonControl = commonControl;
+        [self addSubview:self.commonControl];
+        [self.commonControl mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.edges.mas_equalTo(UIEdgeInsetsZero);
+        }];
+        self.commonControl.delegate = self;
+        self.commonControl.functionControl.delegate = self;
+
     }
-    
-    return view;
-    
 }
 
 #pragma mark - 实例化
-- (instancetype)initWithModel: (ZLPlayerModel *)vp_model controller:(UIViewController *)vc {
+- (instancetype)initWithModel: (ZLPlayerModel *)vp_model control:(CommonPlayerControl *)control controller:(UIViewController *)vc {
+    
     self = [super init];
     if (self) {
+
+        [self setCommonControl:control];
         self.playerModel = vp_model;
         [self addSubview:self.spinner];
-        [self addSubview:self.controlView];
         [self.spinner mas_makeConstraints:^(MASConstraintMaker *make) {
             make.center.equalTo(self);
         }];
-        [self.controlView mas_makeConstraints:^(MASConstraintMaker *make) {
-            make.edges.mas_equalTo(UIEdgeInsetsZero);
-        }];
         
-        [self.controlView makeConstraints];
         [self setState:ZLPlayerStateUnknwon];
-        [self setIsFullScreen:NO];//db
-        [self setHasPreviewView:NO];//db
+        [self setIsFullScreen:NO];
+        [self setHasPreviewView:NO];
         
         
         [self addNotifications];
@@ -790,7 +777,7 @@ typedef NS_ENUM(NSInteger, PanDirection){
 - (void)dealloc {
     //    self.playerModel = nil;
     //    ZLPlayerShared.isLockScreen = NO;
-    [self.controlView zl_playerCancelAutoFadeOutControlView];
+//    [self.controlView zl_playerCancelAutoFadeOutControlView];
     // 移除通知
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [[UIDevice currentDevice] endGeneratingDeviceOrientationNotifications];

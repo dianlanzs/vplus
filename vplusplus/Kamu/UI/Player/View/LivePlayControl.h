@@ -7,28 +7,20 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "CommonPlayerControl.h"
 
 
 
-@protocol LivePlayDelegate <NSObject>
-@optional
-- (void)zl_controlView:(UIView *)controlView muteAction:(UIButton *)sender;
-- (void)zl_controlView:(UIView *)controlView speakerAction:(UIButton *)sender;
-- (void)zl_controlView:(UIView *)controlView snapAction:(UIButton *)sender;
-- (void)zl_controlView:(UIView *)controlView recordVideoAction:(UIButton *)sender;
-- (void)recordStart:(UIButton *)sender;
-- (void)recordEnd:(UIButton *)sender;
-- (void)recordCancel:(UIButton *)sender;
-@end
+#import "UIView+PlayerControl.h"
+
+
+
+
 
 
 
 
 @interface LivePlayControl : UIView
 
-@property (nonatomic, strong) CommonPlayerControl *commonControl;
-@property (nonatomic, strong) id<LivePlayDelegate> delegate;
 
 @property (nonatomic, strong) UIButton                *muteBtn;
 

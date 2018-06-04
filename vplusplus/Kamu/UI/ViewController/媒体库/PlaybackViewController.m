@@ -9,6 +9,10 @@
 #import "PlaybackViewController.h"
 
 #import "ZLPlayerModel.h"
+
+
+#import "CommonPlayerControl.h"
+#import "PlaybackControl.h"
 @interface PlaybackViewController ()
 
 @end
@@ -45,8 +49,8 @@
 #pragma mark - getter
 - (ZLPlayerView *)vp {
     if (!_vp) {
-        _vp = [[ZLPlayerView alloc] initWithModel:self.playerModel controller:self];
-        [_vp.controlView.bottomImageView setHidden:YES];
+        CommonPlayerControl *commonControl = [[CommonPlayerControl alloc] initWithFunction:[PlaybackControl new]];
+        _vp = [[ZLPlayerView alloc] initWithModel:self.playerModel control:commonControl  controller:self];
     }
     return _vp;
 }
