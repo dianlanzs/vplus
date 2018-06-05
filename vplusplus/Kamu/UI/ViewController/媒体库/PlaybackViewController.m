@@ -32,23 +32,24 @@
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    [self.vp fireTimer];
+    [self.vp pb_start];
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
-    [self.vp invalidTimer];
-    cloud_device_cam_pb_stop((void *)self.playerModel.nvr_h,[self.playerModel.cam_id UTF8String]);
+    [self.vp pb_stop];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
     [super viewDidDisappear:animated];
+    [self.vp setState:ZLPlayerStateStopped];
 }
 
 
 #pragma mark - getter
 - (ZLPlayerView *)vp {
     if (!_vp) {
+        
         CommonPlayerControl *commonControl = [[CommonPlayerControl alloc] initWithFunction:[PlaybackControl new]];
         _vp = [[ZLPlayerView alloc] initWithModel:self.playerModel control:commonControl  controller:self];
     }

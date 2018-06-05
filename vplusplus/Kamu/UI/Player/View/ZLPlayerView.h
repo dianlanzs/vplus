@@ -79,9 +79,12 @@ typedef NS_ENUM(NSInteger, ZLPlayerState) {
 
 - (NSData *)takeSnapshot;
 - (instancetype)initWithModel: (ZLPlayerModel *)vp_model control:(CommonPlayerControl *)control controller:(UIViewController *)vc;
-- (void)start;
-- (void)stop;
 
+- (void)lv_stop;
+- (void)lv_start;
+
+- (void)pb_stop;
+- (void)pb_start;
 
 - (void)fireTimer;
 - (void)invalidTimer;

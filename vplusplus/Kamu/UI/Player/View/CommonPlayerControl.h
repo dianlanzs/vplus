@@ -28,6 +28,17 @@
 @property (nonatomic, assign, getter=isShowing) BOOL  showing;
 @property (nonatomic, strong) UIImageView             *bottomImageView;
 
+//middle
+@property (nonatomic, strong) UIButton                *repeatBtn;
+@property (nonatomic, strong) UIView                  *fastView;
+
+@property (nonatomic, strong) UIProgressView          *fastProgressView;
+@property (nonatomic, strong) UILabel                 *fastTimeLabel;
+@property (nonatomic, strong) UIImageView             *fastImageView;
+
+
+
+
 @property (nonatomic, strong) UIView                 *functionControl;
 
 - (void)autoFadeOutControlView;

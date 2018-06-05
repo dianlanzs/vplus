@@ -24,7 +24,7 @@
         [_deviceLb.layer setCornerRadius:5.f];
         [_deviceLb.layer setMasksToBounds:YES];
         [_deviceLb.layer setBorderWidth:1.f];
-         */
+        */
         [_deviceLb setFont:[UIFont boldSystemFontOfSize:21.f]];
         
         //settings
@@ -57,19 +57,24 @@
         
         [_deviceLb mas_makeConstraints:^(MASConstraintMaker *make) {
             make.centerY.equalTo(self);
-            make.size.mas_equalTo(CGSizeMake(100, [@"foo" boundingRectWithFont:[UIFont systemFontOfSize:18.f]]  + 5.f));
+//            make.size.mas_equalTo(CGSizeMake(200, [@"foo" boundingRectWithFont:[UIFont systemFontOfSize:18.f]]  + 5.f));
+            make.leading.equalTo(self).offset(20);
         }];
         
         [_settingsBtn mas_makeConstraints:^(MASConstraintMaker *make) {
             make.centerY.equalTo(self);
-            make.size.mas_equalTo(CGSizeMake(100, 40.f));//CGRectGetWidth(self.bounds) * 0.3
+            make.size.mas_equalTo(CGSizeMake(100, 40.f));
+            make.trailing.equalTo(self).offset(-20);
+
         }];
         
         [_meidiasBtn mas_makeConstraints:^(MASConstraintMaker *make) {
             make.centerY.equalTo(self);
             make.size.mas_equalTo(CGSizeMake(100, 40.f));
+            make.trailing.equalTo(_settingsBtn.mas_leading).offset(-10);
+
         }];
-        [self distributeSpacingHorizontallyWith:@[_deviceLb,_meidiasBtn,_settingsBtn]];
+//        [self distributeSpacingHorizontallyWith:@[_deviceLb,_meidiasBtn,_settingsBtn]];
         
     }
     

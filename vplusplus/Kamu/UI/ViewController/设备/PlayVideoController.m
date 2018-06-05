@@ -106,10 +106,8 @@ mydevice_data_callback callBack;
     [super viewWillAppear:animated];
     [self.funcBar setBatteryProgress:cloud_device_cam_get_battery((void *)self.nvrCell.nvrModel.nvr_h ,[self.cam.cam_id UTF8String])];
     [self.funcBar setWifiProgress:cloud_device_cam_get_signal((void *)self.nvrCell.nvrModel.nvr_h,[self.cam.cam_id UTF8String])];
-    [self.vp start];
-   
+    [self.vp lv_start];
     self.navigationItem.title = self.cam.cam_name? [self.cam.cam_name uppercaseString] : [self.cam.cam_id uppercaseString];
-    [self.vp.timer  isValid]? NSLog(@"timer 创建成功") : NSLog(@"timer 创建失败");
 
 }
 
@@ -119,9 +117,7 @@ mydevice_data_callback callBack;
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
     [self.navigationController setNavigationBarHidden:NO animated:YES];
-    [self.vp stop];
-
-    [self.vp.timer  isValid]? NSLog(@"timer 未释放") : NSLog(@"timer 释放了");
+    [self.vp lv_stop];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {

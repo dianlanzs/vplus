@@ -71,6 +71,7 @@
 
 @property(nonatomic,strong) MediaEntity *cam_entity;
 @property  NSString *cam_id;
+
 @property  int nvr_status;
 
 

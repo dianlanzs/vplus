@@ -32,6 +32,10 @@
 
 
 
+@property (nonatomic, strong) UIButton                *resolutionBtn;
+@property (nonatomic, strong) UIView                  *resolutionView;
+
+
 
 
 

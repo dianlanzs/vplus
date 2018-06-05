@@ -58,10 +58,6 @@ typedef NS_ENUM(NSInteger, PanDirection){
 
 
 
-- (void)zl_controlView:(UIView *)controlView repeatPlayAction:(UIButton *)sender {
-    cloud_device_cam_pb_play_file((void *)self.playerModel.nvr_h, [self.playerModel.cam_id UTF8String], [self.playerModel.cam_entity.fileName UTF8String]);
-}
-
 
 - (void)device:(Device *)nvr sendAvData:(void *)data dataType:(int)type {
     
@@ -69,21 +65,30 @@ typedef NS_ENUM(NSInteger, PanDirection){
     if (type == CLOUD_CB_VIDEO) {
         cb_video_info_t *info = (cb_video_info_t *)data;
         if (info->end_flag) {
-            cloud_device_stop_audio((void *)self.playerModel.nvr_h, [self.playerModel.cam_id UTF8String]);
-            [self.commonControl.functionControl zl_playEnd];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self pb_stop];
+            });
         } else {
             AVFrame *pFrame_ = info->pFrame;
             int width = pFrame_->width;
             int height = pFrame_->height;
-            int timestamp = info->timestamp;
+            CGFloat timestamp = (info->timestamp) / 1000;
             [self.glvc writeY:pFrame_->data[0] U:pFrame_->data[1] V:pFrame_->data[2] width:width height:height];
-            if ([self.commonControl.functionControl isKindOfClass:[PlaybackControl class]]) {
+            
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
                 
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [self.commonControl.functionControl zl_playerCurrentTime:timestamp totalTime:self.playerModel.cam_entity.timelength sliderValue:timestamp / self.playerModel.cam_entity.timelength];
-                });
-                
-            }
+                if (self.state != ZLPlayerStatePlaying) {
+                    [self setState:ZLPlayerStatePlaying];
+                }
+                if ([self.commonControl.functionControl isKindOfClass:[PlaybackControl class]]) {
+                    CGFloat valuePercent = timestamp / self.playerModel.cam_entity.timelength;
+                    [self.commonControl.functionControl zl_playerCurrentTime:timestamp totalTime:self.playerModel.cam_entity.timelength sliderValue:valuePercent];
+                    NSLog(@"%f --- %d            valuePercent : %f ",timestamp,self.playerModel.cam_entity.timelength ,valuePercent);
+                }
+            });
+            
+            
         }
         
     }else if (type == CLOUD_CB_AUDIO) {
@@ -344,15 +349,11 @@ typedef NS_ENUM(NSInteger, PanDirection){
 #pragma mark - 播放,暂停,静音,重连
 - (void)reconnect {
      cloud_connect_device((void *)self.playerModel.nvr_h, "admin", "123");
-    [self start];
+    [self lv_start];
 }
-- (void)start {
-    cloud_device_play_video((void *)self.playerModel.nvr_h,[self.playerModel.cam_id UTF8String]);
-    cloud_device_play_audio((void *)self.playerModel.nvr_h, [self.playerModel.cam_id UTF8String]);
-    [AUTOOL startService:self.playerModel.nvr_h cam:self.playerModel.cam_id];
-    [self.spinner startAnimating];
-    [self fireTimer];
-}
+
+
+
 - (void)fireTimer {
     _timer = [NSTimer scheduledTimerWithTimeInterval:5.f target:self selector:@selector(checking) userInfo:nil repeats:YES];
     [_timer fire];
@@ -361,13 +362,37 @@ typedef NS_ENUM(NSInteger, PanDirection){
     [_timer invalidate];
     _timer = nil;
 }
-- (void)stop {
+
+
+- (void)lv_start {
+    cloud_device_play_video((void *)self.playerModel.nvr_h,[self.playerModel.cam_id UTF8String]);
+    cloud_device_play_audio((void *)self.playerModel.nvr_h, [self.playerModel.cam_id UTF8String]);
+    [AUTOOL startService:self.playerModel.nvr_h cam:self.playerModel.cam_id];
+    [self fireTimer];
+}
+- (void)lv_stop {
     cloud_device_stop_video((void *)self.playerModel.nvr_h, [self.playerModel.cam_id UTF8String]);
     cloud_device_stop_audio((void *)self.playerModel.nvr_h, [self.playerModel.cam_id UTF8String]);
     [AUTOOL stopService];
     [self invalidTimer];
+    [self setState:ZLPlayerStateStopped];
+
 }
 
+- (void)pb_start {
+    cloud_device_cam_pb_play_file((void *)self.playerModel.nvr_h,[self.playerModel.cam_id UTF8String], [self.playerModel.cam_entity.fileName UTF8String]);
+    [AUTOOL startService:self.playerModel.nvr_h cam:self.playerModel.cam_id];
+    [self fireTimer];
+}
+- (void)pb_stop {
+
+    cloud_device_cam_pb_stop((void *)self.playerModel.nvr_h,[self.playerModel.cam_id UTF8String]);
+    [AUTOOL stopService];
+    [self invalidTimer];
+    [self setState:ZLPlayerStateStopped];
+    [self.commonControl.functionControl zl_playEnd]; //UI Change
+
+}
 
 - (void)zl_controlView:(UIView *)controlView muteAction:(UIButton *)muteButton {
     if (muteButton.isSelected) {
@@ -398,6 +423,11 @@ typedef NS_ENUM(NSInteger, PanDirection){
 
 #pragma mark - trackSlider Delegate & playback
 
+
+- (void)zl_controlView:(UIView *)controlView repeatPlayAction:(UIButton *)sender {
+    [self pb_start];
+}
+
 - (void)zl_controlView:(UIView *)controlView playAction:(UIButton *)sender {
     
     if (sender.isSelected) {
@@ -413,13 +443,10 @@ typedef NS_ENUM(NSInteger, PanDirection){
     [self seekToTime:ds completionHandler:nil];
 }
 
-- (void)seekToTime:(NSInteger)ds completionHandler:(void (^)(BOOL finished))completionHandler {
-    cloud_device_cam_pb_seek_file((void *)self.playerModel.nvr_h,[self.playerModel.cam_id UTF8String], (int)ds);
-    [self.commonControl.functionControl zl_playerDraggedEnd];
-    [self.commonControl  autoFadeOutControlView];
-}
+
 - (void)zl_controlView:(UIView *)controlView progressSliderValueChanged:(UISlider *)slider {
-    
+    cloud_device_cam_pb_pause((void *)self.playerModel.nvr_h,[self.playerModel.cam_id UTF8String]);
+
     BOOL forward = NO;
     CGFloat value   = slider.value - self.sliderLastValue;
     if (value > 0) {
@@ -432,9 +459,9 @@ typedef NS_ENUM(NSInteger, PanDirection){
     self.sliderLastValue  = slider.value;
     CGFloat timelength = self.playerModel.cam_entity.timelength;
     NSInteger ds = floorf(timelength * slider.value);
-    [(PlaybackControl *)controlView zl_playerDraggedTime:ds totalTime:timelength isForward:forward hasPreview:YES];//is fullscreen ?
+    [controlView zl_playerDraggedTime:ds totalTime:timelength isForward:forward hasPreview:YES];//is fullscreen ?
     if (timelength > 0) {
-        [(PlaybackControl *)controlView zl_playerDraggedTime:ds sliderImage:((GLKView *)self.glvc.view).snapshot]; // cache images for every dragged time
+        [controlView zl_playerDraggedTime:ds sliderImage:nil]; // cache images for every dragged time ((GLKView *)self.glvc.view).snapshot
     } else {
         slider.value = 0;
     }
@@ -444,8 +471,15 @@ typedef NS_ENUM(NSInteger, PanDirection){
     CGFloat timelength = self.playerModel.cam_entity.timelength;
     NSInteger ds = floorf(timelength * slider.value);
     [self seekToTime:ds completionHandler:nil];
-}
+    cloud_device_cam_pb_resume((void *)self.playerModel.nvr_h,[self.playerModel.cam_id UTF8String]);
+    NSLog(@"拖动结束");
 
+}
+- (void)seekToTime:(NSInteger)ds completionHandler:(void (^)(BOOL finished))completionHandler {
+    cloud_device_cam_pb_seek_file((void *)self.playerModel.nvr_h,[self.playerModel.cam_id UTF8String], (int)ds);
+    [self.commonControl.functionControl zl_playerDraggedEnd];
+//    [self.commonControl  autoFadeOutControlView];
+}
 - (NSData *)takeSnapshot {
     GLKView *glk_view = (GLKView *)self.glvc.view;
     return  UIImageJPEGRepresentation([glk_view snapshot], 0.5f);
@@ -531,7 +565,8 @@ typedef NS_ENUM(NSInteger, PanDirection){
         if (self.isFullScreen &&  ZLPlayerShared.isLockScreen && !self.commonControl.isHidden) {
             [self.commonControl setHidden:YES];
         }else {
-            [self.commonControl setHidden:!self.commonControl.isHidden];
+//            self.commonControl.alpha == 1 ? (self.commonControl.alpha  = 0) : (self.commonControl.alpha = 1);
+            self.commonControl.hidden = !self.commonControl.isHidden;
         }
         
     }
@@ -735,6 +770,8 @@ typedef NS_ENUM(NSInteger, PanDirection){
         }];
         self.commonControl.delegate = self;
         self.commonControl.functionControl.delegate = self;
+        [self.commonControl resetCommonControl];
+        [self.commonControl.functionControl resetFuncControl];
 
     }
 }

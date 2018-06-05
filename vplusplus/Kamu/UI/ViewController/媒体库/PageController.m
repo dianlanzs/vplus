@@ -95,10 +95,8 @@
         [playbackVc.playerModel setNvr_status:self.cDevice.nvr_status];
         [self.cDevice setAvDelegate:playbackVc.vp];
         
-        cloud_device_cam_pb_play_file((void *)playbackVc.playerModel.nvr_h,[playbackVc.playerModel.cam_id UTF8String], [[medias[indexPath.row] fileName] UTF8String]);
-        NSLog(@"🙂%lu,%zd,%@",playbackVc.playerModel.nvr_h,playbackVc.playerModel.cam_id, [medias[indexPath.row] fileName]);
+        NSLog(@"🙂%zd,%@,%@",playbackVc.playerModel.nvr_h,playbackVc.playerModel.cam_id, [medias[indexPath.row] fileName]);
         [self.navigationController pushViewController:playbackVc animated:YES];
-        //1. add 进度条
     };
     return  mediaCell;
     

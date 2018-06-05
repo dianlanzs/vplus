@@ -38,7 +38,7 @@
 @implementation QRResultCell
 
 int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *param,void *context) {
-
+    
     Device *d = [Device new];
     QRResultCell *ctx = (__bridge QRResultCell *)context;
     
@@ -47,22 +47,19 @@ int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *para
         dispatch_async(dispatch_get_main_queue(), ^{
             NSLog(@"设备状态改变");
             [RLM transactionWithBlock:^{
-                   ctx.nvrModel.nvr_status = state;
+                ctx.nvrModel.nvr_status = state;
             }];
-
+            
         });
     }
     
     else if (type == CLOUD_CB_VIDEO || type == CLOUD_CB_AUDIO ){
+    
         [ctx.nvrModel.avDelegate device:ctx.nvrModel sendAvData:param dataType:type];
+
     }
     
     else if (type == CLOUD_CB_RECORD_LIST) {
-//        record_filelist_t *info = (record_filelist_t *)param;
-//        int i;
-//        for (i=0;i<info->num;i++) {
-//            printf("id %d: %s - %d \n",i,info->blocks[i].filename,info->blocks[i].createtime);
-//        }
         dispatch_sync(dispatch_get_main_queue(), ^{
             [ctx.nvrModel.listDelegate device:ctx.nvrModel sendListData:param dataType:type];
             
@@ -96,9 +93,8 @@ int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *para
         [self.contentView addSubview:self.footer];
         [self.contentView addSubview:self.QRcv];
         [self.footer mas_makeConstraints:^(MASConstraintMaker *make) {
-            make.leading.equalTo(self.contentView);
-            make.bottom.equalTo(self.contentView);
-            make.size.mas_equalTo(CGSizeMake(CGRectGetWidth(self.contentView.bounds), 40.f));
+            make.leading.bottom.trailing.equalTo(self.contentView);
+            make.height.mas_equalTo(40);
         }];
         [self.QRcv mas_makeConstraints:^(MASConstraintMaker *make) {
             make.top.equalTo(self.contentView).offset(0.f);
@@ -111,7 +107,7 @@ int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *para
     }
     [self setSelectionStyle:UITableViewCellSelectionStyleNone];
     [self shadow];
-
+    
     return self;
 }
 - (void)shadow {

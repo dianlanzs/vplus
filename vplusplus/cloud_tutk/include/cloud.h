@@ -121,10 +121,6 @@ typedef struct cb_audio_info_s {
     int sample_length;
 } cb_audio_info_t;
 
-    
-    
-    
-    
 typedef struct cb_video_bs_info_s {
     cloud_device_handle device;
     char camdid[32]; //rf_id
@@ -266,9 +262,6 @@ int cloud_device_cam_list_files(cloud_device_handle handle,const char* cam_did, 
 int cloud_device_cam_pb_play_file(cloud_device_handle handle,const char* cam_did, const char *filename);
 int cloud_device_cam_pb_play_time(cloud_device_handle handle,const char* cam_did, int time);
 int cloud_device_cam_pb_stop(cloud_device_handle handle,const char* cam_did);
-    
-    
-    
 int cloud_device_cam_pb_seek_file(cloud_device_handle handle,const char* cam_did, int offset);
 int cloud_device_cam_pb_pause(cloud_device_handle handle,const char* cam_did);
 int cloud_device_cam_pb_resume(cloud_device_handle handle,const char* cam_did);

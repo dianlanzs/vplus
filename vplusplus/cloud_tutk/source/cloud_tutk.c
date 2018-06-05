@@ -2305,7 +2305,6 @@ static void *thread_ReceiveAudio(void *arg)
 	    avIndex = device->avIndex;
 
 		ret = avRecvAudioData(avIndex, buf, AUDIO_BUF_SIZE, (char *)&frameInfo, sizeof(FRAMEINFO_t), &frmNo);
-
 		// show Frame Info at 1st frame
 		if(frmNo == 0)
 		{
@@ -2446,7 +2445,7 @@ static void device_audio_dec(cloud_device_t *device, char* buf, int size)
     device->audio_packet.data += decodeLen;
     if(frameFinished > 0)//成功解码
     {
-        if (device->_data_callback && device->seeking) {
+        if (device->_data_callback && device->seeking == 0) {
             cb_audio_info_t info;
             memset(&info,0,sizeof(cb_audio_info_t));
             info.device = device;

@@ -1441,6 +1441,8 @@
 		B8409FC11FFE5F120069C776 /* View */ = {
 			isa = PBXGroup;
 			children = (
+				B8409FBD1FFE5F040069C776 /* ZLPlayerView.h */,
+				B8409FBE1FFE5F040069C776 /* ZLPlayerView.m */,
 				B835D68A20C118B600B91109 /* PlayerControl.h */,
 				B835D68B20C118B600B91109 /* PlayerControl.m */,
 				B86524A920BE943F006247A3 /* Asist */,
@@ -1451,12 +1453,8 @@
 				B835D68220C0EA2800B91109 /* LivePlayControl.m */,
 				B835D68420C0EC6D00B91109 /* CommonPlayerControl.h */,
 				B835D68520C0EC6D00B91109 /* CommonPlayerControl.m */,
-				B8409FBD1FFE5F040069C776 /* ZLPlayerView.h */,
-				B8409FBE1FFE5F040069C776 /* ZLPlayerView.m */,
 				B8758C1220C4E0250085E380 /* UIView+PlayerControl.h */,
 				B8758C1320C4E0250085E380 /* UIView+PlayerControl.m */,
-				B81ABB61200F5F8D0023BCD2 /* FunctionView.h */,
-				B81ABB62200F5F8D0023BCD2 /* FunctionView.m */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -2277,6 +2275,8 @@
 				B81018A32005E46A007B17C3 /* LoginView.m */,
 				B85C215D204811430065D557 /* MediaLibCell.h */,
 				B85C215E204811430065D557 /* MediaLibCell.m */,
+				B81ABB61200F5F8D0023BCD2 /* FunctionView.h */,
+				B81ABB62200F5F8D0023BCD2 /* FunctionView.m */,
 			);
 			path = View;
 			sourceTree = "<group>";
