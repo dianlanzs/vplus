@@ -7,11 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
-
-
-
-#import "UIView+PlayerControl.h"
-
+#import "CommonPlayerControl.h"
 
 
 
@@ -19,7 +15,7 @@
 
 
 
-@interface LivePlayControl : UIView
+@interface LivePlayControl :CommonPlayerControl
 
 
 @property (nonatomic, strong) UIButton                *muteBtn;
@@ -35,7 +31,7 @@
 @property (nonatomic, strong) UIButton                *resolutionBtn;
 @property (nonatomic, strong) UIView                  *resolutionView;
 
-
+@property (nonatomic, strong) UIView                  *functionBar;
 
 
 

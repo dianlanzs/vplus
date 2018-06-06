@@ -14,46 +14,51 @@
 #import "PlayerControl.h"
 #import "CommonPlayerControl.h"
 @interface PlaybackControl () <UIGestureRecognizerDelegate>
-@property (nonatomic, strong) CommonPlayerControl *commonControl;
+//@property (nonatomic, strong) CommonPlayerControl *commonControl;
 
 @end
 
 
 @implementation PlaybackControl
 #pragma mark -  life circle
-- (CommonPlayerControl *)commonControl {
-    if (!_commonControl) {
-        UIResponder *next = self.nextResponder;
-        while (next != nil) {
-            if ([next isKindOfClass:[CommonPlayerControl class]]) {
-                _commonControl = (CommonPlayerControl *)next;
-            }
-            next = next.nextResponder;
-        }
-    }
- return _commonControl;
-    
-}
+//- (CommonPlayerControl *)commonControl {
+//    if (!_commonControl) {
+//        UIResponder *next = self.nextResponder;
+//        while (next != nil) {
+//            if ([next isKindOfClass:[CommonPlayerControl class]]) {
+//                _commonControl = (CommonPlayerControl *)next;
+//            }
+//            next = next.nextResponder;
+//        }
+//    }
+// return _commonControl;
+//    
+//}
 - (instancetype)init {
     
     self = [super init];
     if (self) {
         
-        [self addSubview:self.startBtn];
+        //add new 
+        [self.fullScreenBtn mas_updateConstraints:^(MASConstraintMaker *make) {
+            make.trailing.equalTo(self.bottomImageView).offset(-5);
+        }];
+        
+        [self.bottomImageView addSubview:self.startBtn];
         [self.startBtn mas_makeConstraints:^(MASConstraintMaker *make) {
-            make.leading.equalTo(self).offset(5);
-            make.centerY.equalTo(self);
+            make.leading.equalTo(self.bottomImageView).offset(5);
+            make.centerY.equalTo(self.bottomImageView);
             make.width.height.mas_equalTo(30);
         }];
        
-        [self addSubview:self.currentTimeLabel];
+        [self.bottomImageView addSubview:self.currentTimeLabel];
         [self.currentTimeLabel mas_makeConstraints:^(MASConstraintMaker *make) {
             make.leading.equalTo(self.startBtn.mas_trailing).offset(-3);
             make.centerY.equalTo(self.startBtn.mas_centerY);
             make.width.mas_equalTo(43);
         }];
-        [self addSubview:self.progressView];
-        [self addSubview:self.totalTimeLabel];
+        [self.bottomImageView addSubview:self.progressView];
+        [self.bottomImageView addSubview:self.totalTimeLabel];
 
         [self.progressView mas_makeConstraints:^(MASConstraintMaker *make) {
             make.leading.equalTo(self.currentTimeLabel.mas_trailing).offset(4);
@@ -61,12 +66,12 @@
             make.centerY.equalTo(self.startBtn.mas_centerY);
         }];
         [self.totalTimeLabel mas_makeConstraints:^(MASConstraintMaker *make) {
-            make.trailing.equalTo(self).offset(3);
+            make.trailing.equalTo(self.fullScreenBtn.mas_leading).offset(3);
             make.centerY.equalTo(self.startBtn.mas_centerY);
             make.width.mas_equalTo(43);
         }];
 
-        [self addSubview:self.videoSlider];
+        [self.bottomImageView addSubview:self.videoSlider];
         [self.videoSlider mas_makeConstraints:^(MASConstraintMaker *make) {
             make.leading.equalTo(self.currentTimeLabel.mas_trailing).offset(4);
             make.trailing.equalTo(self.totalTimeLabel.mas_leading).offset(-4);
@@ -74,13 +79,25 @@
             make.height.mas_equalTo(10);
         }];
        
-        [self addSubview:self.bottomProgressView];
+        [self.bottomImageView addSubview:self.bottomProgressView];
         [self.bottomProgressView mas_makeConstraints:^(MASConstraintMaker *make) {
-            make.leading.trailing.mas_offset(0);
-            make.bottom.mas_offset(0);
+            make.leading.trailing.bottom.mas_offset(0);
         }];
         
-      
+        
+        [self addSubview:self.repeatBtn];
+        [self.repeatBtn mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.center.equalTo(self);
+        }];
+        
+        
+        [self addSubview:self.fastView];
+        [self.fastView mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.width.mas_equalTo(125);
+            make.height.mas_equalTo(80);
+            make.center.equalTo(self);
+        }];
+        
               
     }
     return self;
@@ -98,7 +115,7 @@
     NSString *currentTimeStr = [NSString stringWithFormat:@"%02lu:%02zd", (long)proMin, proSec];
     [self.videoSlider setImage:image];
     [self.videoSlider setText:currentTimeStr];
-    self.commonControl.fastView.hidden = YES;
+    self.fastView.hidden = YES;
 }
 - (void)zl_playerDraggedTime:(NSInteger)draggedTime totalTime:(NSInteger)totalTime isForward:(BOOL)forawrd hasPreview:(BOOL)preview {
     //    [self.activity stopAnimating];
@@ -116,13 +133,13 @@
     self.currentTimeLabel.text        = currentTimeStr;
     self.dragged = YES;  //Middle UI
     if (forawrd) {
-          self.commonControl.fastImageView.image = ZLPlayerImage(@"ZFPlayer_fast_forward");
+          self.fastImageView.image = ZLPlayerImage(@"ZFPlayer_fast_forward");
     } else {
-         self.commonControl.fastImageView.image = ZLPlayerImage(@"ZFPlayer_fast_backward");
+         self.fastImageView.image = ZLPlayerImage(@"ZFPlayer_fast_backward");
     }
-    self.commonControl.fastView.hidden           = preview;
-    self.commonControl.fastTimeLabel.text        = timeStr;
-    self.commonControl.fastProgressView.progress = draggedValue;
+    self.fastView.hidden           = preview;
+    self.fastTimeLabel.text        = timeStr;
+    self.fastProgressView.progress = draggedValue;
 }
 
 
@@ -145,7 +162,7 @@
 #pragma mark - Public Method
 - (void)zl_playerDraggedEnd {
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-          self.commonControl.fastView.hidden = YES;
+          self.fastView.hidden = YES;
     });
     [self setDragged:NO];
 
@@ -172,9 +189,62 @@
 
 
 
+#pragma mark - fast view
+- (UIView *)fastView {
+    if (!_fastView) {
+        _fastView                     = [[UIView alloc] init];
+        _fastView.backgroundColor     = RGBA(0, 0, 0, 0.8);
+        [_fastView addSubview:self.fastImageView];
+        [_fastView addSubview:self.fastTimeLabel];
+        [_fastView addSubview:self.fastProgressView];
+        
+        [self.fastImageView mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.width.mas_offset(32);
+            make.height.mas_offset(32);
+            make.top.mas_equalTo(5);
+            make.centerX.mas_equalTo(self.fastView.mas_centerX);
+        }];
+        [self.fastTimeLabel mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.leading.with.trailing.mas_equalTo(0);
+            make.top.mas_equalTo(self.fastImageView.mas_bottom).offset(2);
+        }];
+        [self.fastProgressView mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.leading.mas_equalTo(12);
+            make.trailing.mas_equalTo(-12);
+            make.top.mas_equalTo(self.fastTimeLabel.mas_bottom).offset(10);
+        }];
+    }
+    return _fastView;
+}
+- (UIImageView *)fastImageView {
+    if (!_fastImageView) {
+        _fastImageView = [[UIImageView alloc] init];
+    }
+    return _fastImageView;
+}
+- (UIProgressView *)fastProgressView {
+    if (!_fastProgressView) {
+        _fastProgressView                   = [[UIProgressView alloc] init];
+        _fastProgressView.progressTintColor = [UIColor whiteColor];
+        _fastProgressView.trackTintColor    = [[UIColor lightGrayColor] colorWithAlphaComponent:0.4];
+    }
+    return _fastProgressView;
+}
+- (UILabel *)fastTimeLabel {
+    if (!_fastTimeLabel) {
+        _fastTimeLabel               = [[UILabel alloc] init];
+        _fastTimeLabel.textColor     = [UIColor whiteColor];
+        _fastTimeLabel.textAlignment = NSTextAlignmentCenter;
+        _fastTimeLabel.font          = [UIFont systemFontOfSize:14.0];
+    }
+    return _fastTimeLabel;
+}
 
 
-#pragma mark - getter
+
+
+
+
 - (UIButton *)startBtn {
     if (!_startBtn) {
         _startBtn = [UIButton buttonWithType:UIButtonTypeCustom];
@@ -286,11 +356,57 @@
     return _currentTimeLabel;
 }
 
+//repeat play
+- (UIButton *)repeatBtn {
+    if (!_repeatBtn) {
+        _repeatBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        [_repeatBtn setImage:ZLPlayerImage(@"ZLPlayer_repeat_video") forState:UIControlStateNormal];
+        [_repeatBtn addTarget:self action:@selector(repeatBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+        
+    }
+    return _repeatBtn;
+}
+- (void)repeatBtnClick:(UIButton *)sender {
+    [self resetControl];
+    [self.delegate zl_controlView:self repeatPlayAction:sender];
+}
 
 
+- (void)showControl {
+    
+    [super showControl];
+    self.bottomProgressView.alpha = 0;
+    [self setShowing:YES];
 
+}
+- (void)hideControl {
+    
+    [super hideControl];
+    if (self.playerEnd) {
+        self.backgroundColor  = [UIColor colorWithRed:0 green:0 blue:0 alpha:0.6];
+        [self.repeatBtn setHidden:NO];
+        self.topImageView.alpha       = 1;
+        [self.startBtn setSelected:NO];
+        self.bottomProgressView.alpha = 0;
+        [ZLBrightnessView sharedBrightnessView].isStatusBarHidden = NO;
 
-- (void)resetFuncControl {
+    }else {
+        self.bottomProgressView.alpha = 1;
+    }
+
+    // 隐藏resolutionView
+    //    self.resolutionBtn.selected = YES;
+    //    [self resolutionBtnClick:self.resolutionBtn];
+    //    if (self.isFullScreen && !self.playeEnd && !self.isShrink) {
+    //        ZFPlayerShared.isStatusBarHidden = YES;
+    //    }
+    [self setShowing:NO];
+}
+- (void)resetControl {
+    [super resetControl];
+    
+    self.fastView.hidden             = YES;
+    self.repeatBtn.hidden            = YES;
     self.videoSlider.value = 0;
     self.bottomProgressView.progress = 0;
     self.progressView.progress       = 0;
@@ -299,19 +415,14 @@
   
     [self.startBtn setSelected:YES];
 }
-- (void)zl_playEnd {
+
+
+- (void)setFullScreen:(BOOL)fullScreen {
     
-    [self.startBtn setSelected:NO];
-    [self.commonControl.repeatBtn setHidden:NO];
-//    [self hideCommonControl]; /// MARK: turn out : no effect!!!!!!!
-    [self.commonControl.bottomImageView setHidden:YES];
-    [self.commonControl.topImageView setHidden:YES];
-    self.commonControl.backgroundColor  = [UIColor colorWithRed:0 green:0 blue:0 alpha:0.6];
-    [ZLBrightnessView sharedBrightnessView].isStatusBarHidden = NO;
-    self.bottomProgressView.alpha = 0;
+    [super setFullScreen:fullScreen];
+    
+    
 }
-
-
 //
 //- (CommonPlayerControl *)getRootControl{
 //

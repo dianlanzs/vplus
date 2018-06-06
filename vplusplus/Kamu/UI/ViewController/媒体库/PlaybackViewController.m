@@ -50,8 +50,8 @@
 - (ZLPlayerView *)vp {
     if (!_vp) {
         
-        CommonPlayerControl *commonControl = [[CommonPlayerControl alloc] initWithFunction:[PlaybackControl new]];
-        _vp = [[ZLPlayerView alloc] initWithModel:self.playerModel control:commonControl  controller:self];
+      
+        _vp = [[ZLPlayerView alloc] initWithModel:self.playerModel control:[PlaybackControl new]  controller:self];
     }
     return _vp;
 }

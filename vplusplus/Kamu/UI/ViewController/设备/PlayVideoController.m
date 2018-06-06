@@ -43,7 +43,6 @@
 // player的单例
 #define ZLPlayerShared                      [ZLBrightnessView sharedBrightnessView]
 
-static CGFloat FunctionbarH = 40;
 
 typedef int (^mydevice_data_callback)(int type, void *param, void *context);
 mydevice_data_callback callBack;
@@ -208,38 +207,7 @@ mydevice_data_callback callBack;
 
 
 #pragma mark - PlayerView 的代理
-- (void)orientation:(UIInterfaceOrientation )Orientation{
-    
-    UIWindow *keyW =  [[UIApplication sharedApplication] keyWindow];
-    if (Orientation == UIInterfaceOrientationPortrait) {
 
-        [self.navigationController setNavigationBarHidden:NO animated:NO];
-        [self.vp mas_remakeConstraints:^(MASConstraintMaker *make) {
-            make.top.mas_equalTo(self.funcBar.mas_bottom);
-            make.leading.trailing.equalTo(self.view);
-            make.height.mas_equalTo(211);
-        }];
-        [self.navigationController.view bringSubviewToFront:self.navigationController.navigationBar];
-        
-        [UIView animateWithDuration:0.5 animations:^{
-            [keyW setTransform:CGAffineTransformIdentity];
-        }];
-        
-        keyW.bounds = CGRectMake(0, 0, AM_SCREEN_HEIGHT, AM_SCREEN_WIDTH); //cuz  width already changed when transform view
-    }else {
-            [self.vp mas_remakeConstraints:^(MASConstraintMaker *make) {
-            make.edges.mas_equalTo(self.view); //fill the container
-        }];
-        [self.navigationController.view sendSubviewToBack:self.navigationController.navigationBar];
-        [UIView animateWithDuration:0.5 animations:^{
-            [keyW setTransform:CGAffineTransformMakeRotation( M_PI_2)];
-        }];
-        keyW.bounds =  CGRectMake(0, 0, AM_SCREEN_HEIGHT, AM_SCREEN_WIDTH);
-        
-        [self.navigationController setNavigationBarHidden:YES animated:NO];
-
-    }
-}
 
 - (NSString *)getDate{
     NSDate* date = [NSDate date];
@@ -253,13 +221,10 @@ mydevice_data_callback callBack;
 #pragma mark - getter
 - (ZLPlayerView *)vp {
     if (!_vp) {
-        CommonPlayerControl *commonControl = [[CommonPlayerControl alloc] initWithFunction:[LivePlayControl new]];
-        _vp = [[ZLPlayerView alloc] initWithModel:self.playerModel control:commonControl  controller:self];
+        _vp = [[ZLPlayerView alloc] initWithModel:self.playerModel control:[LivePlayControl new]  controller:self];
     }
     return _vp;
 }
-
-
 - (ZLPlayerModel *)playerModel {
     
     if (!_playerModel) {

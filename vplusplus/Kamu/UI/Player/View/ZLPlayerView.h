@@ -65,7 +65,6 @@ typedef NS_ENUM(NSInteger, ZLPlayerState) {
 @interface ZLPlayerView : UIView <ZLPlayerDelegate>
 
 @property (nonatomic, strong) NSTimer *timer;
-@property (nonatomic, assign) BOOL isFullScreen;
 @property (nonatomic, assign) NSInteger chekingFlag;
 @property (nonatomic, assign) BOOL  hasDownload;
 @property (nonatomic, assign) BOOL hasPreviewView;

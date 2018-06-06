@@ -10,13 +10,58 @@
 
 
 
-#import "UIView+PlayerControl.h"
+@protocol PlayerControlDelegate <NSObject>
+@optional
 
+
+//Common Control
+- (void)zl_controlView:(UIView *)controlView backAction:(UIButton *)sender;
+- (void)zl_controlView:(UIView *)controlView fullScreenAction:(UIButton *)sender;
+- (void)zl_controlView:(UIView *)controlView lockScreenAction:(UIButton *)sender;
+- (void)zl_controlView:(UIView *)controlView failAction:(UIButton *)sender;
+
+
+
+
+
+
+//Live Control
+- (void)zl_controlView:(UIView *)controlView muteAction:(UIButton *)sender;
+- (void)zl_controlView:(UIView *)controlView speakerAction:(UIButton *)sender;
+- (void)zl_controlView:(UIView *)controlView snapAction:(UIButton *)sender;
+- (void)zl_controlView:(UIView *)controlView recordVideoAction:(UIButton *)sender;
+- (void)recordStart:(UIButton *)sender;
+- (void)recordEnd:(UIButton *)sender;
+- (void)recordCancel:(UIButton *)sender;
+
+
+//Playback Control
+- (void)zl_controlView:(UIView *)controlView progressSliderTap:(CGFloat)value;
+- (void)zl_controlView:(UIView *)controlView progressSliderTouchBegan:(UISlider *)slider;
+- (void)zl_controlView:(UIView *)controlView progressSliderValueChanged:(UISlider *)slider;
+- (void)zl_controlView:(UIView *)controlView progressSliderTouchEnded:(UISlider *)slider;
+
+- (void)zl_controlView:(UIView *)controlView playAction:(UIButton *)sender;
+- (void)zl_controlView:(UIView *)controlView repeatPlayAction:(UIButton *)sender;
+
+@end
 
 @interface CommonPlayerControl : UIView
+
+@property (nonatomic, weak) id<PlayerControlDelegate> delegate;
+
+
+
+
+
+@property (nonatomic, assign) UIInterfaceOrientation  orientation;
+
+
+
+
 @property (nonatomic, strong) UIButton                *lockBtn;
 @property (nonatomic, strong) UIImageView             *topImageView;
-@property (nonatomic, assign) UIInterfaceOrientation  orientation;
+@property (nonatomic, strong) UIImageView             *bottomImageView;
 
 @property (nonatomic, strong) UILabel                 *titleLabel;
 
@@ -26,23 +71,42 @@
 @property (nonatomic, strong) UIButton                *failBtn;
 
 @property (nonatomic, assign, getter=isShowing) BOOL  showing;
-@property (nonatomic, strong) UIImageView             *bottomImageView;
-
-//middle
-@property (nonatomic, strong) UIButton                *repeatBtn;
-@property (nonatomic, strong) UIView                  *fastView;
-
-@property (nonatomic, strong) UIProgressView          *fastProgressView;
-@property (nonatomic, strong) UILabel                 *fastTimeLabel;
-@property (nonatomic, strong) UIImageView             *fastImageView;
 
 
 
 
-@property (nonatomic, strong) UIView                 *functionControl;
+
+
+
+
+
+@property (nonatomic, assign) BOOL                   playerEnd;
+@property (nonatomic, assign, getter=isFullScreen) BOOL                   fullScreen;
+
+
+
+
+
+
+
 
 - (void)autoFadeOutControlView;
-- (void)hideCommonControl;
-- (void)showCommonControl;
-- (instancetype)initWithFunction:(UIView *)function;
+
+
+
+
+
+- (void)resetControl;
+
+- (void)hideControl;
+- (void)showControl;
+
+
+
+//playback
+- (void)zl_playerCurrentTime:(NSInteger)currentTime totalTime:(NSInteger)totalTime sliderValue:(CGFloat)value;
+- (void)zl_playerDraggedTime:(NSInteger)draggedTime totalTime:(NSInteger)totalTime isForward:(BOOL)forawrd hasPreview:(BOOL)preview;
+- (void)zl_playerDraggedTime:(NSInteger)draggedTime sliderImage:(UIImage *)image;
+- (void)zl_playerDraggedEnd;
+
 @end

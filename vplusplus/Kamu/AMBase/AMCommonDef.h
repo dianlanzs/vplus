@@ -184,3 +184,6 @@ static CGFloat const kBottomBtnHeight = 300;
 static CGFloat const kBtnH = 40; 
 static CGFloat const kTextFieldH = 40;
 
+
+static CGFloat FunctionbarH = 40;
+

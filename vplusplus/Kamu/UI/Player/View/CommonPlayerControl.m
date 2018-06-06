@@ -7,9 +7,8 @@
 //
 
 #import "CommonPlayerControl.h"
-#import "UIView+ViewController.h"
 #import "PlaybackControl.h"
-
+#import "ZLBrightnessView.h"
 
 @interface CommonPlayerControl()
 @end
@@ -17,8 +16,21 @@
 
 @implementation CommonPlayerControl
 
+- (void)setFullScreen:(BOOL)fullScreen {
+    
+    _fullScreen = fullScreen;
+    if (fullScreen) {
+        [self.topImageView setHidden:NO];
+        [self.lockBtn setHidden:NO];
+    }else {
+        [self.topImageView setHidden:YES];
+        [self.lockBtn setHidden:YES];
+  
+    }
+}
 
-- (instancetype)initWithFunction:(UIView *)function {
+
+- (instancetype)init{
     
     self = [super init];
     if (self) {
@@ -28,6 +40,7 @@
             make.top.equalTo(self.mas_top).offset(0);
             make.height.mas_equalTo(60);
         }];
+        
         [self addSubview:self.lockBtn];
         [self.lockBtn mas_makeConstraints:^(MASConstraintMaker *make) {
             make.leading.equalTo(self.mas_leading).offset(15);
@@ -47,38 +60,32 @@
             make.height.mas_equalTo(60);
         }];
     }
-    
-    [self addSubview:self.fastView];
-    [self.fastView mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.width.mas_equalTo(125);
-        make.height.mas_equalTo(80);
-        make.center.equalTo(self);
+    [self.bottomImageView addSubview:self.fullScreenBtn];
+    [self.fullScreenBtn mas_remakeConstraints:^(MASConstraintMaker *make) {
+        make.centerY.equalTo(self.bottomImageView);
+        make.width.height.mas_equalTo(30);
     }];
-    [self addSubview:self.repeatBtn];
-    [self.repeatBtn mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.center.equalTo(self);
-//        make.size.mas_equalTo(CGSizeMake(40, 40));
-    }];
+  
+ 
             [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidEnterBackground) name:UIApplicationWillResignActiveNotification object:nil];
             [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidEnterPlayground) name:UIApplicationDidBecomeActiveNotification object:nil];
     //        //监听 设备朝向 通知！
     //        [self listeningOrientation];
-    [self setFunctionControl:function];
 
     return self;
     
 }
-- (void)setFunctionControl:(UIView *)functionControl {
-    if (_functionControl != functionControl) {
-        _functionControl = functionControl;
-        [self.bottomImageView addSubview:_functionControl];
-        [_functionControl mas_makeConstraints:^(MASConstraintMaker *make) {
-            make.top.leading.bottom.equalTo(self.bottomImageView);
-            make.trailing.equalTo(self.fullScreenBtn.mas_leading);
-        }];
-        [self resetFuncControl];
-    }
-}
+//- (void)setFunctionControl:(UIView *)functionControl {
+//    if (_functionControl != functionControl) {
+//        _functionControl = functionControl;
+//        [self.bottomImageView addSubview:_functionControl];
+//        [_functionControl mas_makeConstraints:^(MASConstraintMaker *make) {
+//            make.top.leading.bottom.equalTo(self.bottomImageView);
+//            make.trailing.equalTo(self.fullScreenBtn.mas_leading);
+//        }];
+//        [self resetFuncControl];
+//    }
+//}
 - (UIImageView *)topImageView {
     if (!_topImageView) {
         _topImageView                        = [[UIImageView alloc] init];
@@ -156,7 +163,7 @@
     return _backBtn;
 }
 - (void)backBtnClick:(UIButton *)sender {
-    [self.vc.navigationController popViewControllerAnimated:YES];
+    [self.delegate zl_controlView:self backAction:sender];
 }
 //fail Button
 - (UIButton *)failBtn {
@@ -192,73 +199,9 @@
     return _bottomImageView;
 }
 
-//repeat play
-- (UIButton *)repeatBtn {
-    if (!_repeatBtn) {
-        _repeatBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-        [_repeatBtn setImage:ZLPlayerImage(@"ZLPlayer_repeat_video") forState:UIControlStateNormal];
-        [_repeatBtn addTarget:self action:@selector(repeatBtnClick:) forControlEvents:UIControlEventTouchUpInside];
-
-    }
-    return _repeatBtn;
-}
-- (void)repeatBtnClick:(UIButton *)sender {
-    [self resetCommonControl];
-    [self.functionControl resetFuncControl];
-    [self.delegate zl_controlView:self repeatPlayAction:sender];
-}
 
 
-#pragma mark - fast view
-- (UIView *)fastView {
-    if (!_fastView) {
-        _fastView                     = [[UIView alloc] init];
-        _fastView.backgroundColor     = RGBA(0, 0, 0, 0.8);
-        [_fastView addSubview:self.fastImageView];
-        [_fastView addSubview:self.fastTimeLabel];
-        [_fastView addSubview:self.fastProgressView];
-        
-        [self.fastImageView mas_makeConstraints:^(MASConstraintMaker *make) {
-            make.width.mas_offset(32);
-            make.height.mas_offset(32);
-            make.top.mas_equalTo(5);
-            make.centerX.mas_equalTo(self.fastView.mas_centerX);
-        }];
-        [self.fastTimeLabel mas_makeConstraints:^(MASConstraintMaker *make) {
-            make.leading.with.trailing.mas_equalTo(0);
-            make.top.mas_equalTo(self.fastImageView.mas_bottom).offset(2);
-        }];
-        [self.fastProgressView mas_makeConstraints:^(MASConstraintMaker *make) {
-            make.leading.mas_equalTo(12);
-            make.trailing.mas_equalTo(-12);
-            make.top.mas_equalTo(self.fastTimeLabel.mas_bottom).offset(10);
-        }];
-    }
-    return _fastView;
-}
-- (UIImageView *)fastImageView {
-    if (!_fastImageView) {
-        _fastImageView = [[UIImageView alloc] init];
-    }
-    return _fastImageView;
-}
-- (UIProgressView *)fastProgressView {
-    if (!_fastProgressView) {
-        _fastProgressView                   = [[UIProgressView alloc] init];
-        _fastProgressView.progressTintColor = [UIColor whiteColor];
-        _fastProgressView.trackTintColor    = [[UIColor lightGrayColor] colorWithAlphaComponent:0.4];
-    }
-    return _fastProgressView;
-}
-- (UILabel *)fastTimeLabel {
-    if (!_fastTimeLabel) {
-        _fastTimeLabel               = [[UILabel alloc] init];
-        _fastTimeLabel.textColor     = [UIColor whiteColor];
-        _fastTimeLabel.textAlignment = NSTextAlignmentCenter;
-        _fastTimeLabel.font          = [UIFont systemFontOfSize:14.0];
-    }
-    return _fastTimeLabel;
-}
+
 
 - (void)autoFadeOutControlView {
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(hideCommonControl) object:nil];
@@ -267,25 +210,57 @@
 - (void)zl_playerCancelAutoFadeOutControlView {
     [NSObject cancelPreviousPerformRequestsWithTarget:self];
 }
-- (void)hideCommonControl {
-//    [self.bottomImageView setAlpha:0];
-//    [self.topImageView setAlpha:0];
-    [self setHidden:YES];
 
-}
-- (void)showCommonControl {
-//    [self.bottomImageView setAlpha:1];
-//    [self.topImageView setAlpha:1];
-    [self setHidden:NO];
 
-}
-- (void)resetCommonControl {
+
+
+
+
+- (void)hideControl {
     
-    self.failBtn.hidden              = YES;
-    self.fastView.hidden             = YES;
-    self.repeatBtn.hidden             = YES;
-    self.backgroundColor             = [UIColor clearColor];
-    //    self.commonControl.lockBtn.hidden              = !self.isFullScreen; //全屏不隐藏
+    self.lockBtn.alpha            = 0;
+    self.topImageView.alpha       = 0;
+    self.bottomImageView.alpha    = 0;
+}
+- (void)showControl {
+    
+
+    self.lockBtn.alpha             = 1;
+    if (!self.lockBtn.isSelected) {
+        self.topImageView.alpha    = 1;
+        self.bottomImageView.alpha = 1;
+    }
+    else {
+        self.topImageView.alpha    = 0;
+        self.bottomImageView.alpha = 0;
+    }
+    
+    [ZLBrightnessView sharedBrightnessView].isStatusBarHidden = NO;
+
+
 }
 
+
+- (void)resetControl {
+    [self setFullScreen:NO];
+    self.failBtn.hidden              = YES;
+    self.backgroundColor             = [UIColor clearColor];
+    self.lockBtn.hidden              = !self.fullScreen; 
+}
+
+
+
+//playback imp
+- (void)zl_playerCurrentTime:(NSInteger)currentTime totalTime:(NSInteger)totalTime sliderValue:(CGFloat)value {
+    ;
+}
+- (void)zl_playerDraggedTime:(NSInteger)draggedTime totalTime:(NSInteger)totalTime isForward:(BOOL)forawrd hasPreview:(BOOL)preview {
+    ;
+}
+- (void)zl_playerDraggedTime:(NSInteger)draggedTime sliderImage:(UIImage *)image {
+    ;
+}
+- (void)zl_playerDraggedEnd {
+    ;
+}
 @end

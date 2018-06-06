@@ -7,16 +7,15 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "UIView+PlayerControl.h"
+
 #import "ASValueTrackingSlider.h"
+#import "CommonPlayerControl.h"
 
 
 
 
 
-
-
-@interface PlaybackControl : UIView
+@interface PlaybackControl : CommonPlayerControl
 
 
 
@@ -32,5 +31,17 @@
 /** 控制层消失时候在底部显示的播放进度progress */
 @property (nonatomic, strong) UIProgressView          *bottomProgressView;
 
+
+@property (nonatomic, strong) UIButton                *repeatBtn;
+
+
+
+@property (nonatomic, strong) UIView                  *fastView;
+
+
+
+@property (nonatomic, strong) UIProgressView          *fastProgressView;
+@property (nonatomic, strong) UILabel                 *fastTimeLabel;
+@property (nonatomic, strong) UIImageView             *fastImageView;
 
 @end

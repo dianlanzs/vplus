@@ -10,42 +10,12 @@
 
 @implementation LivePlayControl
 
-- (instancetype)init {
-    
-    if (self = [super init]) {
-        [self addSubview:self.captureBtn];
-        [self.captureBtn mas_remakeConstraints:^(MASConstraintMaker *make) {
-            make.centerY.equalTo(self.mas_centerY);
-            make.width.height.mas_equalTo(30);
-        }];
-        [self addSubview:self.speakerBtn_vertical];
-        [self.speakerBtn_vertical mas_makeConstraints:^(MASConstraintMaker *make) {
-            make.centerY.equalTo(self).offset(260);
-            make.height.width.mas_equalTo(60);
-        }];
-        
-        [self addSubview:self.muteBtn];
-        [self.muteBtn mas_remakeConstraints:^(MASConstraintMaker *make) {
-            make.centerY.equalTo(self.mas_centerY);
-            make.width.height.mas_equalTo(30);
-        }];
-        [self addSubview:self.recordBtn];
-        [self.recordBtn mas_remakeConstraints:^(MASConstraintMaker *make) {
-            make.centerY.equalTo(self.mas_centerY);
-            make.width.height.mas_equalTo(30);
-        }];
-        
-        [self distributeSpacingHorizontallyWith:@[self.captureBtn,self.speakerBtn_vertical,self.muteBtn,self.recordBtn]];
-    }
-    
-    return self;
-}
 
 - (UIButton *)recordBtn {
     if (!_recordBtn) {
         _recordBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-        [_recordBtn setImage:[UIImage imageNamed:@"button_recordScreen"] forState:UIControlStateNormal];
-        [_recordBtn setImage:[UIImage imageNamed:@"button_recording"] forState:UIControlStateSelected];
+        [_recordBtn setImage:ZLPlayerImage(@"button_recordScreen") forState:UIControlStateNormal];
+        [_recordBtn setImage:ZLPlayerImage(@"button_recording") forState:UIControlStateSelected];
         
         [_recordBtn addTarget:self action:@selector(recordBtnClick:) forControlEvents:UIControlEventTouchUpInside];
     }
@@ -99,6 +69,7 @@
     
     if (!_speakerBtn_vertical) {
         _speakerBtn_vertical = [[MRoundedButton alloc] initWithFrame:CGRectZero buttonStyle:MRoundedButtonCentralImage];
+        [_speakerBtn_vertical setTag:1001];
         [_speakerBtn_vertical setSelected:NO];
         [_speakerBtn_vertical setBorderColor:[UIColor lightGrayColor]];
         [_speakerBtn_vertical setCornerRadius:FLT_MAX];
@@ -128,99 +99,89 @@
     [self.delegate recordCancel:sender];
 }
 
+- (void)remakeConstrints {
+    [self.bottomImageView addSubview:self.captureBtn];
+    [self.captureBtn mas_remakeConstraints:^(MASConstraintMaker *make) {
+        make.centerY.equalTo(self.bottomImageView);
+        make.width.height.mas_equalTo(30);
+    }];
+    
+    [self.bottomImageView addSubview:self.speakerBtn_vertical];
+    
+    
+    [self.bottomImageView addSubview:self.muteBtn];
+    [self.muteBtn mas_remakeConstraints:^(MASConstraintMaker *make) {
+        make.centerY.equalTo(self.bottomImageView);
+        make.width.height.mas_equalTo(30);
+    }];
+    [self.bottomImageView addSubview:self.recordBtn];
+    [self.recordBtn mas_remakeConstraints:^(MASConstraintMaker *make) {
+        make.centerY.equalTo(self.bottomImageView);
+        make.width.height.mas_equalTo(30);
+    }];
+}
+- (void)setFullScreen:(BOOL)fullScreen {
+    
+    [super setFullScreen:fullScreen];
+    if (fullScreen) {
+        [self remakeConstrints];
+        [self.speakerBtn_vertical mas_remakeConstraints:^(MASConstraintMaker *make) {
+            make.centerY.equalTo(self.bottomImageView).offset(0);
+            make.height.width.mas_equalTo(60);
+        }];
+         [self.bottomImageView distributeSpacingHorizontallyWith:@[self.recordBtn,self.captureBtn,self.speakerBtn_vertical,self.muteBtn,self.fullScreenBtn]];
+        
+       
+    }else {
+        [self remakeConstrints];
+        [self.bottomImageView distributeSpacingHorizontallyWith:@[self.recordBtn,self.captureBtn,self.muteBtn,self.fullScreenBtn]];
+        
+        
+        
+        [self.speakerBtn_vertical mas_remakeConstraints:^(MASConstraintMaker *make) {
+            make.centerY.equalTo(self.bottomImageView).offset(260);
+            make.centerX.equalTo(self.bottomImageView).offset(0);
+            make.height.width.mas_equalTo(60);
+        }];
+    }
+   
+     [self showControl];
+}
 
 
-//- (void)ms {
-//    [self.superview addSubview:self.speakerBtn_vertical];
-//
-//    [RACObserve(self, orientation) subscribeNext:^(NSNumber  *x) {
-//        if (x.integerValue == UIInterfaceOrientationPortrait || x.integerValue == UIInterfaceOrientationUnknown) {
-//
-//
-//            [self.speakerBtn_horizental setHidden:YES];
-//            [self.speakerBtn_vertical setHidden:NO];
-//            //录制按钮
-//            [self.recordBtn mas_remakeConstraints:^(MASConstraintMaker *make) {
-//                make.centerY.equalTo(self.bottomImageView.mas_centerY);
-//                make.centerX.equalTo(self.bottomImageView).offset(AM_SCREEN_WIDTH * -0.3);
-//                make.width.height.mas_equalTo(30);
-//            }];
-//            //截图按钮
-//            [self.captureBtn mas_remakeConstraints:^(MASConstraintMaker *make) {
-//                make.centerY.equalTo(self.bottomImageView.mas_centerY);
-//                make.centerX.equalTo(self.bottomImageView).offset(AM_SCREEN_WIDTH * -0.1);
-//                make.width.height.mas_equalTo(30);
-//            }];
-//
-//
-//            //垂直方向 的对讲按钮
-//            [self.speakerBtn_vertical mas_makeConstraints:^(MASConstraintMaker *make) {
-//                make.centerX.equalTo(self.superview);
-//                make.centerY.equalTo(self.superview).offset(260);
-//                make.height.width.mas_equalTo(60);
-//            }];
-//
-//
-//            //声音按钮
-//            [self.muteBtn mas_remakeConstraints:^(MASConstraintMaker *make) {
-//                make.centerY.equalTo(self.bottomImageView.mas_centerY);
-//                make.centerX.equalTo(self.bottomImageView).offset(AM_SCREEN_WIDTH * 0.1);
-//                make.width.height.mas_equalTo(30);
-//            }];
-//
-//            //全屏按钮
-//            [self.fullScreenBtn mas_remakeConstraints:^(MASConstraintMaker *make) {
-//                make.centerY.equalTo(self.bottomImageView.mas_centerY);
-//                make.centerX.equalTo(self.bottomImageView).offset(AM_SCREEN_WIDTH * 0.3);
-//                make.width.height.mas_equalTo(30);
-//            }];
-//
-//        }else {
-//
-//            [self.speakerBtn_horizental setHidden:NO];
-//            [self.speakerBtn_vertical setHidden:YES];
-//            //录制按钮
-//            [self.recordBtn mas_remakeConstraints:^(MASConstraintMaker *make) {
-//                make.centerY.equalTo(self.bottomImageView.mas_centerY);
-//                make.centerX.equalTo(self.bottomImageView).offset(AM_SCREEN_WIDTH * -0.1667 * 2);
-//                make.width.height.mas_equalTo(30);
-//            }];
-//
-//            //截图按钮
-//            [self.captureBtn mas_remakeConstraints:^(MASConstraintMaker *make) {
-//                make.centerY.equalTo(self.bottomImageView.mas_centerY);
-//                make.centerX.equalTo(self.bottomImageView).offset(AM_SCREEN_WIDTH * -0.1667);
-//                make.width.height.mas_equalTo(30);
-//            }];
-//
-//            //水平方向 的对讲按钮
-//            [self.speakerBtn_horizental mas_remakeConstraints:^(MASConstraintMaker *make) {
-//                make.centerY.equalTo(self.bottomImageView.mas_centerY).offset(0);
-//                make.centerX.equalTo(self.bottomImageView);
-//                make.width.height.mas_equalTo(40);
-//            }];
-//
-//            //声音按钮
-//            [self.muteBtn mas_remakeConstraints:^(MASConstraintMaker *make) {
-//                make.centerY.equalTo(self.bottomImageView.mas_centerY);
-//                make.centerX.equalTo(self.bottomImageView).offset(AM_SCREEN_WIDTH * 0.1667);
-//                make.width.height.mas_equalTo(30);
-//            }];
-//
-//            //全屏按钮
-//            [self.fullScreenBtn mas_remakeConstraints:^(MASConstraintMaker *make) {
-//                make.centerY.equalTo(self.bottomImageView.mas_centerY);
-//                make.centerX.equalTo(self.bottomImageView).offset(AM_SCREEN_WIDTH * 0.1667 * 2);
-//                make.width.height.mas_equalTo(30);
-//            }];
-//
-//
-//
-//        }
-//    }];
-//}
+- (void)resetControl {
+    [super resetControl];
+    [self.muteBtn setSelected:YES];
+}
 
-- (void)resetFuncControl {
-    [self.muteBtn setSelected:NO];
+- (void)hideControl {
+    
+    if (!self.isFullScreen) {
+        [self setOtherButtonsAlpha:0];
+    }else {
+        [super hideControl];
+    }
+    [self setShowing:NO];
+}
+
+- (void)showControl {
+    if (!self.isFullScreen) {
+        [self setOtherButtonsAlpha:1];
+    }else {
+         [super showControl];
+    }
+     [self setShowing:YES];
+}
+
+
+
+
+- (void)setOtherButtonsAlpha:(CGFloat)alpha {
+    for (UIButton *subButton in self.bottomImageView.subviews) {
+        if (subButton.tag != 1001) {
+            NSLog(@"%@",subButton);
+            [subButton setAlpha:alpha];
+        }
+    }
 }
 @end
