@@ -65,9 +65,9 @@
 //#import "DeviceManager.h"
 
 #import "UIView+EqualMargin.h"
+#import "AMNavigationController.h"
 
-
-
+#import "Alert.h"
 
 #endif
 #endif

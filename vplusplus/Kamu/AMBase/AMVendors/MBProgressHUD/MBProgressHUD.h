@@ -72,7 +72,7 @@ typedef NS_ENUM(NSInteger, MBProgressHUDBackgroundStyle) {
 typedef void (^MBProgressHUDCompletionBlock)(void);
 
 
-NS_ASSUME_NONNULL_BEGIN
+//NS_ASSUME_NONNULL_BEGIN
 
 
 /** 
@@ -280,7 +280,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * View covering the entire HUD area, placed behind bezelView.
  */
-@property (strong, nonatomic, readonly) MBBackgroundView *backgroundView;
+@property (strong, nonatomic) MBBackgroundView *backgroundView;
 
 /**
  * The UIView (e.g., a UIImageView) to be shown when the HUD is in MBProgressHUDModeCustomView.
@@ -406,4 +406,4 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-NS_ASSUME_NONNULL_END
+//NS_ASSUME_NONNULL_END

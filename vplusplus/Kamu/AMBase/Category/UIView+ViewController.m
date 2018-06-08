@@ -11,7 +11,8 @@
 
 @implementation UIView (ViewController)
 
-- (UIViewController *)viewController{
+
+- (UIViewController *)getViewController{
     
     //用循环+类别判断 -> 查找视图所在控制器
     
@@ -31,6 +32,9 @@
     return nil;
 }
 
+
+
+//key  -value
 - (void)setVc:(UIViewController *)vc {
     objc_setAssociatedObject(self, @selector(vc), vc, OBJC_ASSOCIATION_RETAIN);
 }

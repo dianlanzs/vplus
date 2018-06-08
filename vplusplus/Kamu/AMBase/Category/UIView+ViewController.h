@@ -11,4 +11,6 @@
 
 @interface UIView (ViewController)
 @property (strong, nonatomic) UIViewController *vc;
+
+- (UIViewController *)getViewController;
 @end

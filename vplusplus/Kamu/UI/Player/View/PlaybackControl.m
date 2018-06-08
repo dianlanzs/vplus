@@ -50,11 +50,17 @@
             make.centerY.equalTo(self.bottomImageView);
             make.width.height.mas_equalTo(30);
         }];
-       
+//        [self.bottomImageView  addSubview:self.startBtn];
+//        [self.startBtn mas_makeConstraints:^(MASConstraintMaker *make) {
+//            make.center.equalTo(self);
+//            make.width.height.mas_equalTo(60);
+//        }];
+        
+        
         [self.bottomImageView addSubview:self.currentTimeLabel];
         [self.currentTimeLabel mas_makeConstraints:^(MASConstraintMaker *make) {
-            make.leading.equalTo(self.startBtn.mas_trailing).offset(-3);
-            make.centerY.equalTo(self.startBtn.mas_centerY);
+            make.leading.equalTo(self.startBtn.mas_trailing).offset(5);
+            make.centerY.equalTo(self.bottomImageView);
             make.width.mas_equalTo(43);
         }];
         [self.bottomImageView addSubview:self.progressView];
@@ -63,11 +69,11 @@
         [self.progressView mas_makeConstraints:^(MASConstraintMaker *make) {
             make.leading.equalTo(self.currentTimeLabel.mas_trailing).offset(4);
             make.trailing.equalTo(self.totalTimeLabel.mas_leading).offset(-4);
-            make.centerY.equalTo(self.startBtn.mas_centerY);
+            make.centerY.equalTo(self.currentTimeLabel);
         }];
         [self.totalTimeLabel mas_makeConstraints:^(MASConstraintMaker *make) {
             make.trailing.equalTo(self.fullScreenBtn.mas_leading).offset(3);
-            make.centerY.equalTo(self.startBtn.mas_centerY);
+            make.centerY.equalTo(self.currentTimeLabel);
             make.width.mas_equalTo(43);
         }];
 
@@ -75,7 +81,7 @@
         [self.videoSlider mas_makeConstraints:^(MASConstraintMaker *make) {
             make.leading.equalTo(self.currentTimeLabel.mas_trailing).offset(4);
             make.trailing.equalTo(self.totalTimeLabel.mas_leading).offset(-4);
-            make.centerY.equalTo(self.currentTimeLabel.mas_centerY).offset(-1);
+            make.centerY.equalTo(self.currentTimeLabel).offset(-1);
             make.height.mas_equalTo(10);
         }];
        
@@ -133,9 +139,9 @@
     self.currentTimeLabel.text        = currentTimeStr;
     self.dragged = YES;  //Middle UI
     if (forawrd) {
-          self.fastImageView.image = ZLPlayerImage(@"ZFPlayer_fast_forward");
+          self.fastImageView.image = ZLPlayerImage(@"ZLPlayer_fast_forward");
     } else {
-         self.fastImageView.image = ZLPlayerImage(@"ZFPlayer_fast_backward");
+         self.fastImageView.image = ZLPlayerImage(@"ZLPlayer_fast_backward");
     }
     self.fastView.hidden           = preview;
     self.fastTimeLabel.text        = timeStr;
@@ -371,7 +377,6 @@
     [self.delegate zl_controlView:self repeatPlayAction:sender];
 }
 
-
 - (void)showControl {
     
     [super showControl];
@@ -380,19 +385,8 @@
 
 }
 - (void)hideControl {
-    
     [super hideControl];
-    if (self.playerEnd) {
-        self.backgroundColor  = [UIColor colorWithRed:0 green:0 blue:0 alpha:0.6];
-        [self.repeatBtn setHidden:NO];
-        self.topImageView.alpha       = 1;
-        [self.startBtn setSelected:NO];
-        self.bottomProgressView.alpha = 0;
-        [ZLBrightnessView sharedBrightnessView].isStatusBarHidden = NO;
-
-    }else {
-        self.bottomProgressView.alpha = 1;
-    }
+    self.bottomProgressView.alpha = 1;
 
     // 隐藏resolutionView
     //    self.resolutionBtn.selected = YES;
@@ -403,8 +397,8 @@
     [self setShowing:NO];
 }
 - (void)resetControl {
-    [super resetControl];
     
+    [super resetControl];
     self.fastView.hidden             = YES;
     self.repeatBtn.hidden            = YES;
     self.videoSlider.value = 0;
@@ -423,6 +417,33 @@
     
     
 }
+- (void)setState:(ZLPlayerState)state {
+    
+    [super setState:state];
+    if (state == ZLPlayerStatePlaying) {
+        [(ZLPlayerView *)self.superview createPanGesture];
+    }
+    
+    else if (state == ZLPlayerStateEnd) {
+            [self hideControl];
+        [self.startBtn setSelected:NO];
+
+            self.backgroundColor  = [UIColor colorWithRed:0 green:0 blue:0 alpha:0.6];
+            [self.repeatBtn setHidden:NO];
+            self.topImageView.alpha       = 1;
+            self.bottomProgressView.alpha = 0;
+            [ZLBrightnessView sharedBrightnessView].isStatusBarHidden = NO;
+    }
+    
+    else if (state == ZLPlayerStatePause) {
+        [self showControl];
+    }
+    
+
+
+}
+
+
 //
 //- (CommonPlayerControl *)getRootControl{
 //

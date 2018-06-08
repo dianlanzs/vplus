@@ -12,4 +12,6 @@
 
 @interface MainViewController : UIViewController
 @property (nonatomic, strong) UIRefreshControl *pullRefresh;
+
+- (void)deleteNvr:(NSIndexPath *)path;
 @end

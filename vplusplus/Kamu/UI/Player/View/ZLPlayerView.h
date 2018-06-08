@@ -50,15 +50,6 @@
 
 
 
-// 播放器的几种状态
-typedef NS_ENUM(NSInteger, ZLPlayerState) {
-    ZLPlayerStateUnknwon,
-    ZLPlayerStateFailed,     // 播放失败
-    ZLPlayerStateBuffering,  // 缓冲中
-    ZLPlayerStatePlaying,    // 播放中
-    ZLPlayerStateStopped,    // 停止播放
-    ZLPlayerStatePause       // 暂停播放
-};
 
 
 
@@ -69,12 +60,14 @@ typedef NS_ENUM(NSInteger, ZLPlayerState) {
 @property (nonatomic, assign) BOOL  hasDownload;
 @property (nonatomic, assign) BOOL hasPreviewView;
 @property (nonatomic, weak) id<ZLPlayerDelegate> delegate;
-@property (nonatomic, assign) ZLPlayerState          state;
-@property (nonatomic, strong) RTSpinKitView *spinner;
+
 @property (strong, nonatomic) GLDrawController *glvc;
 @property (nonatomic, strong) void (^snapshot)();
 @property (nonatomic, strong) void (^recordVideo)(BOOL isRecord);
 @property (nonatomic, strong) ZLPlayerModel *playerModel;
+
+
+@property (nonatomic, strong) CommonPlayerControl *functionControl;  //父类指针指向子类对象
 
 - (NSData *)takeSnapshot;
 - (instancetype)initWithModel: (ZLPlayerModel *)vp_model control:(CommonPlayerControl *)control controller:(UIViewController *)vc;
@@ -82,9 +75,13 @@ typedef NS_ENUM(NSInteger, ZLPlayerState) {
 - (void)lv_stop;
 - (void)lv_start;
 
-- (void)pb_stop;
+- (void)pb_end;
 - (void)pb_start;
+- (void)pb_pause;
 
 - (void)fireTimer;
 - (void)invalidTimer;
+
+
+- (void)createPanGesture;
 @end

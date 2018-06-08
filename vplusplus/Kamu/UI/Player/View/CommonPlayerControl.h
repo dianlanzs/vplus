@@ -46,8 +46,22 @@
 
 @end
 
+// 播放器的几种状态
+typedef NS_ENUM(NSInteger, ZLPlayerState) {
+    
+    ZLPlayerStateUnknwon,
+    ZLPlayerStateFailed,     // 播放失败
+    ZLPlayerStateBuffering,  // 缓冲中
+    ZLPlayerStatePlaying,    // 播放中
+    ZLPlayerStateEnd,    // 停止播放
+    ZLPlayerStatePause       // 暂停播放
+};
 @interface CommonPlayerControl : UIView
 
+
+
+@property (nonatomic, assign) ZLPlayerState          state;
+@property (nonatomic, strong) RTSpinKitView *spinner;
 @property (nonatomic, weak) id<PlayerControlDelegate> delegate;
 
 

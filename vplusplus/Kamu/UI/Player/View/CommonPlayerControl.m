@@ -34,6 +34,13 @@
     
     self = [super init];
     if (self) {
+        
+        [self addSubview:self.spinner];
+        [self.spinner mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.center.equalTo(self);
+        }];
+        
+
         [self addSubview:self.topImageView];
         [self.topImageView mas_makeConstraints:^(MASConstraintMaker *make) {
             make.leading.trailing.equalTo(self);
@@ -66,9 +73,9 @@
         make.width.height.mas_equalTo(30);
     }];
   
- 
-            [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidEnterBackground) name:UIApplicationWillResignActiveNotification object:nil];
-            [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidEnterPlayground) name:UIApplicationDidBecomeActiveNotification object:nil];
+//
+//            [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidEnterBackground) name:UIApplicationWillResignActiveNotification object:nil];
+//            [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidEnterPlayground) name:UIApplicationDidBecomeActiveNotification object:nil];
     //        //监听 设备朝向 通知！
     //        [self listeningOrientation];
 
@@ -199,7 +206,14 @@
     return _bottomImageView;
 }
 
-
+- (RTSpinKitView *)spinner {
+    if (!_spinner) {
+        _spinner = [[RTSpinKitView alloc] initWithStyle:RTSpinKitViewStyleThreeBounce color:[UIColor whiteColor] spinnerSize:40.f];
+        [_spinner hidesWhenStopped];
+    }
+    
+    return _spinner;
+}
 
 
 
@@ -248,7 +262,27 @@
     self.lockBtn.hidden              = !self.fullScreen; 
 }
 
-
+- (void)setState:(ZLPlayerState)state {
+    
+    if (state != _state) {
+        _state = state;
+        if (state == ZLPlayerStateFailed) {
+            [self.spinner stopAnimating];
+            [self.failBtn setHidden:NO];
+        } else {
+            
+            
+            [self.failBtn setHidden:YES];
+            if (state == ZLPlayerStateBuffering) {
+                [self.spinner startAnimating];
+            } else if (state == ZLPlayerStatePlaying || state == ZLPlayerStateEnd ) {
+                [self.spinner stopAnimating];
+            }
+            
+        }
+        
+    }
+}
 
 //playback imp
 - (void)zl_playerCurrentTime:(NSInteger)currentTime totalTime:(NSInteger)totalTime sliderValue:(CGFloat)value {

@@ -9,13 +9,14 @@
 #import "AMNavigationController.h"
 #import "UIBarButtonItem+Item.h"
 
-
+#import "MainViewController.h"
 
 
 #import "AppDelegate.h"
 @interface AMNavigationController () <UINavigationControllerDelegate ,UIGestureRecognizerDelegate >
 
 @property (strong, nonatomic) AppDelegate *appDelegate;
+@property (nonatomic, strong) Alert *statusAlert;
 
 @end
 
@@ -23,14 +24,11 @@
 
 #pragma mark - 全局设置 navigationBar 界面
 +(void)initialize {
-    
     //父类的方法会被优先调用一次不需要显式的调用父类的initialize，子类的+initialize将要调用时会激发父类调用的+initialize方法，所以也不需要在子类写明[super initialize]。
     UINavigationBar *navigationBarAppearance = [UINavigationBar appearance];
     UIBarButtonItem *barButtonAppearance = [UIBarButtonItem appearance];
-    
     //字体格式
     NSDictionary *textAttributes = nil;
-    
     textAttributes = @{
                        NSFontAttributeName: [UIFont boldSystemFontOfSize:18],
                        NSForegroundColorAttributeName: [UIColor whiteColor],
@@ -38,38 +36,53 @@
     
     //统一设置 navigation bar 字体样式
     [navigationBarAppearance setTitleTextAttributes:textAttributes];
-    
-    
     //顶部 状态栏样式
     [navigationBarAppearance setBarStyle:UIBarStyleDefault];
-    
-    
-    
     //渲染颜色
     navigationBarAppearance.barTintColor = [UIColor blueColor];
     navigationBarAppearance.tintColor = [UIColor whiteColor];  //视图层级 从底层开始渲染
-    
-    
     //设置背景图片
 //    [navigationBarAppearance setBackgroundImage:[UIImage imageNamed:@"mb_black"] forBarMetrics:UIBarMetricsDefault];
-    
-    
     //设置阴影 图片 为 透明
 //    [navigationBarAppearance setShadowImage:[UIImage imageNamed:@"transparent"]];
-    //设置字体 富文本 ，白色：前景色   、、 17pt ： 字体
-    
-    
-    
-    
-    //barButtonItem,字体样式   、、 14pt ： 字体（上面的button 的字体大小）
     [barButtonAppearance setTitleTextAttributes:[NSDictionary dictionaryWithObjectsAndKeys:[UIColor whiteColor], NSForegroundColorAttributeName, [UIFont systemFontOfSize:14.0], NSFontAttributeName, nil] forState:UIControlStateNormal];
     [barButtonAppearance setTintColor: [UIColor whiteColor]];
-    
-    
-    
 }
 
 #pragma mark - 视图生命周期
+- (Alert *)statusAlert {
+    if (!_statusAlert) {
+        _statusAlert = [[Alert alloc] initWithTitle:nil inidicator:nil completion:nil];
+
+    }
+    
+    return _statusAlert;
+}
+
+- (void)stateNotification:(NSNotification *)notification {
+    
+    Device *stateChangedDevice = notification.object;
+    if (stateChangedDevice.nvr_status == CLOUD_DEVICE_STATE_CONNECTED ) {
+        [self.statusAlert dismissAlert]; //need to play cam !
+       
+    }else {
+        cloud_connect_device((void *)self.pushedDevice.nvr_h, "admin", "123");
+        [self.statusAlert.titleLabel setText:@"connnecting..."];
+        [self.statusAlert showAlert];
+    
+    }
+}
+
+
+- (void)setPushedDevice:(Device *)pushedDevice {
+    
+    if (pushedDevice != _pushedDevice && ![self.topViewController isKindOfClass:[MainViewController class]]) {
+        _pushedDevice = pushedDevice;
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(stateNotification:) name:@"CLOUD_DEVICE_STATE" object:pushedDevice];
+    }
+}
+
+
 - (void)viewDidLoad {
     
     [super viewDidLoad];
@@ -77,8 +90,7 @@
     [self.navigationBar setTranslucent:NO];
     [self.appDelegate.tabBarController setTabBarHidden:YES];
     
-    
-    
+
     
     if ([self respondsToSelector:@selector(interactivePopGestureRecognizer)]) {
         //重新签代理
@@ -120,6 +132,15 @@
     return [self.topViewController supportedInterfaceOrientations];;
 }
 #pragma mark - 拦截‘push'操作 统一设置 返回按钮
+
+- (void)pushVc:(UIViewController *)vc withDevice:(Device *)pushedDevice {
+    
+    [self pushViewController:vc animated:YES];
+    if (pushedDevice) {
+        [self setPushedDevice:pushedDevice];
+    }
+}
+
 - (void)pushViewController:(UIViewController *)viewController animated:(BOOL)animated {
 
 

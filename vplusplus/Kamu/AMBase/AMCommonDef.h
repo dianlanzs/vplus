@@ -160,7 +160,7 @@
 //#define WS(weakSelf)  __weak __typeof(&*self)weakSelf = self;
 //#define WeakObj(o) autoreleasepool{} __weak typeof(o) o##Weak = o;
 //#define WO(strongObj)__weak typeof(strongObj) strongObj##weakObj = weakObj;
-#define WeakObj(strongObj) __weak typeof(strongObj) weakObj = strongObj;
+#define WeakObj(strongObj) __weak typeof(strongObj) ws = strongObj;
 
 
 

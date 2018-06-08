@@ -173,7 +173,6 @@
 		B85C2131204553580065D557 /* ScrollableDatepicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85C2126204553570065D557 /* ScrollableDatepicker.swift */; };
 		B85C2133204553580065D557 /* ScrollableDatepicker.xib in Resources */ = {isa = PBXBuildFile; fileRef = B85C2127204553570065D557 /* ScrollableDatepicker.xib */; };
 		B85C2136204558F20065D557 /* SwiftInOC.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85C2134204558F20065D557 /* SwiftInOC.swift */; };
-		B85C21552047E6800065D557 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B85C21542047E6800065D557 /* Images.xcassets */; };
 		B85C21592047F6BA0065D557 /* MediaLibCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = B85C21582047F6BA0065D557 /* MediaLibCell.xib */; };
 		B85C215F204811430065D557 /* MediaLibCell.m in Sources */ = {isa = PBXBuildFile; fileRef = B85C215E204811430065D557 /* MediaLibCell.m */; };
 		B85C216120491B1A0065D557 /* more@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = B85C216020491B1A0065D557 /* more@2x.png */; };
@@ -181,6 +180,7 @@
 		B86524AE20BE943F006247A3 /* ASValuePopUpView.m in Sources */ = {isa = PBXBuildFile; fileRef = B86524AB20BE943F006247A3 /* ASValuePopUpView.m */; };
 		B86524AF20BE943F006247A3 /* ASValueTrackingSlider.m in Sources */ = {isa = PBXBuildFile; fileRef = B86524AD20BE943F006247A3 /* ASValueTrackingSlider.m */; };
 		B86BA55820B53E9600E3E8D4 /* PlaybackViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B86BA55720B53E9600E3E8D4 /* PlaybackViewController.m */; };
+		B8758C1B20CA5F2A0085E380 /* Alert.m in Sources */ = {isa = PBXBuildFile; fileRef = B8758C1A20CA5F290085E380 /* Alert.m */; };
 		B876A986206B6E03004427EF /* nav_add@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = B876A985206B6E03004427EF /* nav_add@2x.png */; };
 		B877B4F42020923000D77B9D /* GLDrawController.m in Sources */ = {isa = PBXBuildFile; fileRef = B877B4F12020923000D77B9D /* GLDrawController.m */; };
 		B877B4F82022F9B600D77B9D /* ShareCamController.m in Sources */ = {isa = PBXBuildFile; fileRef = B877B4F62022F9B500D77B9D /* ShareCamController.m */; };
@@ -196,7 +196,6 @@
 		B87B39491FBD391D00290B3F /* libstdc++.6.0.9.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = E28B8FEB1FB540070076CE5E /* libstdc++.6.0.9.tbd */; };
 		B87B394A1FBD391D00290B3F /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = E28B8FF81FB544070076CE5E /* libresolv.tbd */; };
 		B87B394C1FBD391D00290B3F /* Shader.fsh in Resources */ = {isa = PBXBuildFile; fileRef = E2124FB01FB5CEEC0000F66C /* Shader.fsh */; };
-		B87B394E1FBD391D00290B3F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E28B8FA71FB531FB0076CE5E /* Assets.xcassets */; };
 		B87B394F1FBD391D00290B3F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E28B8FA41FB531FB0076CE5E /* Main.storyboard */; };
 		B87B39511FBD391D00290B3F /* Shader.vsh in Resources */ = {isa = PBXBuildFile; fileRef = E2124FAF1FB5CEEC0000F66C /* Shader.vsh */; };
 		B87B396F1FBD3E5900290B3F /* AMTabBarController.m in Sources */ = {isa = PBXBuildFile; fileRef = B87B396D1FBD3E5900290B3F /* AMTabBarController.m */; };
@@ -247,6 +246,7 @@
 		B8825A931FCFB10500531271 /* UINavigationItem+Custom.m in Sources */ = {isa = PBXBuildFile; fileRef = B8825A6D1FCFB10400531271 /* UINavigationItem+Custom.m */; };
 		B8825A951FCFB10500531271 /* UIView+Frame.m in Sources */ = {isa = PBXBuildFile; fileRef = B8825A6F1FCFB10400531271 /* UIView+Frame.m */; };
 		B8825ABC1FD15AE500531271 /* NSString+StringFrame.m in Sources */ = {isa = PBXBuildFile; fileRef = B8825ABA1FD15AE500531271 /* NSString+StringFrame.m */; };
+		B88C0AD920CA7ACB00F27C1D /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B88C0AD820CA7ACB00F27C1D /* Images.xcassets */; };
 		B88C6B911FF1028200217E94 /* AddCamsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B88C6B8F1FF1028200217E94 /* AddCamsViewController.m */; };
 		B89330C11FD4F05100D1B7E6 /* UIScrollView+EmptyDataSet.m in Sources */ = {isa = PBXBuildFile; fileRef = B89330BD1FD4F05100D1B7E6 /* UIScrollView+EmptyDataSet.m */; };
 		B89330C31FD4F05100D1B7E6 /* UIColor+Hexadecimal.m in Sources */ = {isa = PBXBuildFile; fileRef = B89330BF1FD4F05100D1B7E6 /* UIColor+Hexadecimal.m */; };
@@ -740,7 +740,6 @@
 		B85C2126204553570065D557 /* ScrollableDatepicker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScrollableDatepicker.swift; sourceTree = "<group>"; };
 		B85C2127204553570065D557 /* ScrollableDatepicker.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ScrollableDatepicker.xib; sourceTree = "<group>"; };
 		B85C2134204558F20065D557 /* SwiftInOC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftInOC.swift; sourceTree = "<group>"; };
-		B85C21542047E6800065D557 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		B85C21582047F6BA0065D557 /* MediaLibCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = MediaLibCell.xib; sourceTree = "<group>"; };
 		B85C215D204811430065D557 /* MediaLibCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MediaLibCell.h; sourceTree = "<group>"; };
 		B85C215E204811430065D557 /* MediaLibCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MediaLibCell.m; sourceTree = "<group>"; };
@@ -753,6 +752,8 @@
 		B86524AD20BE943F006247A3 /* ASValueTrackingSlider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ASValueTrackingSlider.m; sourceTree = "<group>"; };
 		B86BA55620B53E9600E3E8D4 /* PlaybackViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PlaybackViewController.h; sourceTree = "<group>"; };
 		B86BA55720B53E9600E3E8D4 /* PlaybackViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PlaybackViewController.m; sourceTree = "<group>"; };
+		B8758C1920CA5F290085E380 /* Alert.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Alert.h; sourceTree = "<group>"; };
+		B8758C1A20CA5F290085E380 /* Alert.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Alert.m; sourceTree = "<group>"; };
 		B876A985206B6E03004427EF /* nav_add@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "nav_add@2x.png"; sourceTree = "<group>"; };
 		B877B4F12020923000D77B9D /* GLDrawController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GLDrawController.m; sourceTree = "<group>"; };
 		B877B4F22020923000D77B9D /* GLDrawController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GLDrawController.h; sourceTree = "<group>"; };
@@ -847,6 +848,8 @@
 		B8825A6F1FCFB10400531271 /* UIView+Frame.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIView+Frame.m"; sourceTree = "<group>"; };
 		B8825AB91FD15AE500531271 /* NSString+StringFrame.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSString+StringFrame.h"; sourceTree = "<group>"; };
 		B8825ABA1FD15AE500531271 /* NSString+StringFrame.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSString+StringFrame.m"; sourceTree = "<group>"; };
+		B88C0AD620CA7A8300F27C1D /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = SOURCE_ROOT; };
+		B88C0AD820CA7ACB00F27C1D /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		B88C6B8E1FF1028200217E94 /* AddCamsViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AddCamsViewController.h; sourceTree = "<group>"; };
 		B88C6B8F1FF1028200217E94 /* AddCamsViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AddCamsViewController.m; sourceTree = "<group>"; };
 		B89330BC1FD4F05100D1B7E6 /* UIScrollView+EmptyDataSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIScrollView+EmptyDataSet.h"; sourceTree = "<group>"; };
@@ -976,7 +979,6 @@
 		E28B8F9E1FB531FB0076CE5E /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		E28B8F9F1FB531FB0076CE5E /* AppDelegate.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AppDelegate.mm; sourceTree = "<group>"; wrapsLines = 1; };
 		E28B8FA51FB531FB0076CE5E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		E28B8FA71FB531FB0076CE5E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E28B8FAC1FB531FB0076CE5E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		E28B8FAD1FB531FB0076CE5E /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		E28B8FB31FB531FB0076CE5E /* KamuTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KamuTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1457,6 +1459,7 @@
 		B8429CAD205A13DF006BD7FD /* FFmpeg-iOS */ = {
 			isa = PBXGroup;
 			children = (
+				B88C0AD620CA7A8300F27C1D /* Images.xcassets */,
 				B8429CAE205A13DF006BD7FD /* fdk-aac-iOS */,
 				B8429CB8205A13DF006BD7FD /* include */,
 				B8429D30205A13DF006BD7FD /* lib */,
@@ -1765,6 +1768,15 @@
 			path = Kamu/UI/Player/Asist;
 			sourceTree = SOURCE_ROOT;
 		};
+		B8758C1820CA5F290085E380 /* Alert */ = {
+			isa = PBXGroup;
+			children = (
+				B8758C1920CA5F290085E380 /* Alert.h */,
+				B8758C1A20CA5F290085E380 /* Alert.m */,
+			);
+			path = Alert;
+			sourceTree = "<group>";
+		};
 		B87B39571FBD3D7100290B3F /* AMBase */ = {
 			isa = PBXGroup;
 			children = (
@@ -1858,6 +1870,7 @@
 		B87B39651FBD3D7100290B3F /* AMVendors */ = {
 			isa = PBXGroup;
 			children = (
+				B8758C1820CA5F290085E380 /* Alert */,
 				B85C2121204553570065D557 /* DateScroll */,
 				B837C0E0201B33C3003B993D /* QuickSettings */,
 				B837C0D42019C843003B993D /* Waver */,
@@ -2309,12 +2322,12 @@
 		E28B8F921FB531FA0076CE5E = {
 			isa = PBXGroup;
 			children = (
+				B88C0AD820CA7ACB00F27C1D /* Images.xcassets */,
+				B8B26C6F1FC82D7B006D4061 /* PrefixHeader.pch */,
 				B897FBDB208ED35500F88F79 /* cloud_tutk */,
 				B8429CAD205A13DF006BD7FD /* FFmpeg-iOS */,
-				B85C21542047E6800065D557 /* Images.xcassets */,
 				B85C2134204558F20065D557 /* SwiftInOC.swift */,
 				B8A64B5C20294F6F00D9C621 /* 测试Demo.entitlements */,
-				B8B26C6F1FC82D7B006D4061 /* PrefixHeader.pch */,
 				B87B39571FBD3D7100290B3F /* AMBase */,
 				E28B8F9D1FB531FB0076CE5E /* Kamu */,
 				E28B8FB61FB531FB0076CE5E /* KamuTests */,
@@ -2349,7 +2362,6 @@
 				E2124FB01FB5CEEC0000F66C /* Shader.fsh */,
 				E2124FAF1FB5CEEC0000F66C /* Shader.vsh */,
 				E28B8FA41FB531FB0076CE5E /* Main.storyboard */,
-				E28B8FA71FB531FB0076CE5E /* Assets.xcassets */,
 				E28B8FAC1FB531FB0076CE5E /* Info.plist */,
 				E28B8FAD1FB531FB0076CE5E /* main.m */,
 			);
@@ -2546,7 +2558,6 @@
 				B881A78120B2AE3F009B56CB /* wifi_40_70@2x.png in Resources */,
 				B837C0BE2018944D003B993D /* step1.png in Resources */,
 				B810189D2005A757007B17C3 /* button_torch_normal@2x.png in Resources */,
-				B85C21552047E6800065D557 /* Images.xcassets in Resources */,
 				B81ABB6D200F72090023BCD2 /* button_battery_normal@2x.png in Resources */,
 				B876A986206B6E03004427EF /* nav_add@2x.png in Resources */,
 				B87B39A91FBECB6700290B3F /* tabbar_selected_bg@2x.png in Resources */,
@@ -2574,7 +2585,6 @@
 				B837C0BC2018944D003B993D /* step2.png in Resources */,
 				B87B399D1FBECA7300290B3F /* album_unselected@2x.png in Resources */,
 				B8C3B715207F57BE007A1589 /* black_bg_ip5@2x.png in Resources */,
-				B87B394E1FBD391D00290B3F /* Assets.xcassets in Resources */,
 				B8B26C4C1FC67D4C006D4061 /* Error@3x.png in Resources */,
 				B837C209201B33C4003B993D /* jsonadvancedsample.json in Resources */,
 				B837C0D32019976D003B993D /* button_micophone_normal@2x.png in Resources */,
@@ -2594,6 +2604,7 @@
 				B85C212D204553580065D557 /* DayCell.xib in Resources */,
 				B8B26C4A1FC67D4C006D4061 /* Error@2x.png in Resources */,
 				B87B39511FBD391D00290B3F /* Shader.vsh in Resources */,
+				B88C0AD920CA7ACB00F27C1D /* Images.xcassets in Resources */,
 				B8C3B71A207F57CC007A1589 /* wave70x117@2x.png in Resources */,
 				B8B26C0F1FC46809006D4061 /* button_lan@2x.png in Resources */,
 				B815B8C4200E225600431D14 /* button_scan_normal@2x.png in Resources */,
@@ -2882,6 +2893,7 @@
 				B81C4FE71FC3C2EA00305CB1 /* UIImage+MDQRCode.m in Sources */,
 				B837C1E3201B33C3003B993D /* QuickDialogController+Helpers.m in Sources */,
 				B87B39771FBD6F0C00290B3F /* AMViewController.m in Sources */,
+				B8758C1B20CA5F2A0085E380 /* Alert.m in Sources */,
 				B837C1F7201B33C3003B993D /* QMapAnnotation.m in Sources */,
 				B8825A851FCFB10500531271 /* UIDevice+Identifier.m in Sources */,
 				B881A77A20AE72F4009B56CB /* FilterController.m in Sources */,

@@ -13,7 +13,8 @@
 
 @property (nonatomic, assign) SEL selector;
 @property (nonatomic, copy) NSString *navTitle;
-
+@property (nonatomic, strong) Device *pushedDevice;
 
 - (void)backPrevious:(id)sender;
+- (void)pushVc:(UIViewController *)vc withDevice:(Device *)pushedDevice;
 @end

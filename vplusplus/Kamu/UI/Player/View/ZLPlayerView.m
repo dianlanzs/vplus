@@ -36,7 +36,7 @@ typedef NS_ENUM(NSInteger, PanDirection){
 
 @property (nonatomic, assign) PanDirection           panDirection;
 @property (nonatomic, assign) BOOL                   isLocked;
-@property (nonatomic, assign) BOOL                   isVolume;
+@property (nonatomic, assign) BOOL                   ajustVolume;
 @property (nonatomic, assign) BOOL                   didEnterBackground;
 @property (nonatomic, strong) UITapGestureRecognizer *singleTap;
 @property (nonatomic, strong) UITapGestureRecognizer *doubleTap;
@@ -48,8 +48,9 @@ typedef NS_ENUM(NSInteger, PanDirection){
 //@property (nonatomic, strong) CommonPlayerControl *commonControl;
 /** 亮度view */
 //@property (nonatomic, strong) ZLBrightnessView       *brightnessView;
-@property (nonatomic, strong) CommonPlayerControl *functionControl;  //父类指针指向子类对象
 @property (nonatomic, strong)  UIViewController *rootVc;
+
+@property (nonatomic, assign) CGFloat                sumTime;
 
 
 @end
@@ -69,7 +70,7 @@ typedef NS_ENUM(NSInteger, PanDirection){
         cb_video_info_t *info = (cb_video_info_t *)data;
         if (info->end_flag) {
             dispatch_async(dispatch_get_main_queue(), ^{
-                [self pb_stop];
+                [self pb_end];
             });
         } else {
             AVFrame *pFrame_ = info->pFrame;
@@ -80,8 +81,8 @@ typedef NS_ENUM(NSInteger, PanDirection){
             
             
             dispatch_async(dispatch_get_main_queue(), ^{
-                if (self.state != ZLPlayerStatePlaying) {
-                    [self setState:ZLPlayerStatePlaying];
+                if (self.functionControl.state != ZLPlayerStatePlaying) {
+                    [self.functionControl setState:ZLPlayerStatePlaying];
                 }
                 if ([self.functionControl isKindOfClass:[PlaybackControl class]]) {
                     CGFloat valuePercent = timestamp / self.playerModel.cam_entity.timelength;
@@ -99,18 +100,19 @@ typedef NS_ENUM(NSInteger, PanDirection){
     }
 }
 - (void)checking {
+    
     [self setChekingFlag:0];
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        if (self.chekingFlag == 0 && self.playerModel.nvr_status == CLOUD_DEVICE_STATE_CONNECTED) {
-            [self setState:ZLPlayerStateBuffering];
-        }
-        else if (self.chekingFlag == 0 && self.playerModel.nvr_status == CLOUD_DEVICE_STATE_DISCONNECTED) {
-            [self setState:ZLPlayerStateFailed];
-        }
-        else if (self.chekingFlag == 1 && self.playerModel.nvr_status == CLOUD_DEVICE_STATE_CONNECTED) {
-            [self setState:ZLPlayerStatePlaying];
-        }
-    });
+    if (self.timer.isValid) {
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            if (self.chekingFlag == 0 && self.playerModel.nvr_status == CLOUD_DEVICE_STATE_CONNECTED) {
+                [self.functionControl setState:ZLPlayerStateBuffering];
+            }
+            else if (self.chekingFlag == 0 && self.playerModel.nvr_status == CLOUD_DEVICE_STATE_DISCONNECTED) {
+                [self.functionControl setState:ZLPlayerStateFailed];
+            }
+        });
+    }
+  
 }
 
 //耳机插入、拔出事件
@@ -122,25 +124,6 @@ typedef NS_ENUM(NSInteger, PanDirection){
 
 
 #pragma mark - Getter,Setter
-- (void)setState:(ZLPlayerState)state {
-    if (state != _state) {
-        _state = state;
-        if (state == ZLPlayerStateFailed) {
-            [self.functionControl.failBtn setHidden:NO];
-            [self.spinner stopAnimating];
-        } else {
-            [self.functionControl.failBtn setHidden:YES];
-            if (state == ZLPlayerStateBuffering) {
-                [self.spinner startAnimating];
-            } else if (state == ZLPlayerStatePlaying) {
-                [self.spinner stopAnimating];
-            } else if (state == ZLPlayerStateStopped) {
-                [self.spinner stopAnimating];
-            }
-        }
-        
-    }
-}
 
 - (GLDrawController *)glvc {
     if (!_glvc) {
@@ -150,14 +133,7 @@ typedef NS_ENUM(NSInteger, PanDirection){
     return _glvc;
 }
 
-- (RTSpinKitView *)spinner {
-    if (!_spinner) {
-        _spinner = [[RTSpinKitView alloc] initWithStyle:RTSpinKitViewStyleThreeBounce color:[UIColor whiteColor] spinnerSize:40.f];
-        [_spinner hidesWhenStopped];
-    }
-    
-    return _spinner;
-}
+
 //设置Model、、2. 在设置model
 //- (void)setPlayerModel:(ZLPlayerModel *)playerModel {
 //    _playerModel = playerModel;
@@ -377,7 +353,7 @@ typedef NS_ENUM(NSInteger, PanDirection){
 #pragma mark - 播放,暂停,静音,重连
 - (void)reconnect {
      cloud_connect_device((void *)self.playerModel.nvr_h, "admin", "123");
-    [self lv_start];
+    [self lv_start]; //play a  cam
 }
 
 
@@ -403,7 +379,8 @@ typedef NS_ENUM(NSInteger, PanDirection){
     cloud_device_stop_audio((void *)self.playerModel.nvr_h, [self.playerModel.cam_id UTF8String]);
     [AUTOOL stopService];
     [self invalidTimer];
-    [self setState:ZLPlayerStateStopped];
+    
+    [self.functionControl setState:ZLPlayerStateEnd]; //did disappear already called!
 
 }
 
@@ -413,37 +390,27 @@ typedef NS_ENUM(NSInteger, PanDirection){
     [self fireTimer];
     [self.functionControl setPlayerEnd:NO];
     
-    [self createPanGesture];
   
 }
-- (void)createPanGesture {
-    // 加载完成后，再添加平移手势
-    if (self.state == ZLPlayerStatePlaying) {
-        // 添加平移手势，用来控制音量、亮度、快进快退
-        UIPanGestureRecognizer *panRecognizer = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(panDirection:)];
-        panRecognizer.delegate = self;
-        [panRecognizer setMaximumNumberOfTouches:1];
-        [panRecognizer setDelaysTouchesBegan:YES];
-        [panRecognizer setDelaysTouchesEnded:YES];
-        [panRecognizer setCancelsTouchesInView:YES];
-        [self addGestureRecognizer:panRecognizer];
-    }
-}
-- (void)pb_stop {
+
+- (void)pb_end {
 
     cloud_device_cam_pb_stop((void *)self.playerModel.nvr_h,[self.playerModel.cam_id UTF8String]);
     [AUTOOL stopService];
     [self invalidTimer];
-    [self setState:ZLPlayerStateStopped];
-    
-    
-    //UI Change
-    [self.functionControl setPlayerEnd:YES];
-    [self.functionControl hideControl];
-
+    [self.functionControl setState:ZLPlayerStateEnd];
+}
+- (void)pb_pause {
+    cloud_device_cam_pb_pause((void *)self.playerModel.nvr_h,[self.playerModel.cam_id UTF8String]);
+    [self invalidTimer];
+    [self.functionControl setState:ZLPlayerStatePause];
+}
+- (void)pb_resume {
+    cloud_device_cam_pb_resume((void *)self.playerModel.nvr_h,[self.playerModel.cam_id UTF8String]);
+    [self fireTimer];
+    [self.functionControl setState:ZLPlayerStateBuffering];
 
 }
-
 - (void)zl_controlView:(UIView *)controlView muteAction:(UIButton *)muteButton {
     if (muteButton.isSelected) {
         cloud_device_stop_audio((void *)self.playerModel.nvr_h, [self.playerModel.cam_id UTF8String]);
@@ -481,9 +448,9 @@ typedef NS_ENUM(NSInteger, PanDirection){
 - (void)zl_controlView:(UIView *)controlView playAction:(UIButton *)sender {
     
     if (sender.isSelected) {
-        cloud_device_cam_pb_resume((void *)self.playerModel.nvr_h,[self.playerModel.cam_id UTF8String]);
+        [self pb_pause];
     }else {
-        cloud_device_cam_pb_pause((void *)self.playerModel.nvr_h,[self.playerModel.cam_id UTF8String]);
+        [self pb_resume];
     }
 }
 
@@ -586,22 +553,33 @@ typedef NS_ENUM(NSInteger, PanDirection){
 
 
 
-#pragma mark - 手势识别 & 代理
+#pragma mark - Gesture & Action
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch {
     /*在view上加了UITapGestureRecognizer之后，这个view上的所有触摸事件都被UITapGestureRecognizer给吸收了，所以要解决这个bug，要给这个手势代理加一些事件过滤，对button事件就不要拦截独吞了*/
-//    if ([touch.view isKindOfClass:[UIControl class]]) {
-//        return NO;
-//    }
+    if ([touch.view isKindOfClass:[UIControl class]]) {
+        return NO;
+    }
     return YES;
 }
-- (void)createGesture {
+
+//playerview --single tap gesture
+- (void)createTapGesture {
     self.singleTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(singleTapAction:)];
     self.singleTap.delegate                = self;
     self.singleTap.numberOfTouchesRequired = 1;
     self.singleTap.numberOfTapsRequired    = 1;
     [self addGestureRecognizer:self.singleTap];
 }
-
+//playerview --single Pan gesture
+- (void)createPanGesture {
+    
+        UIPanGestureRecognizer *panRecognizer = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(panDirection:)];
+        panRecognizer.delegate = self;
+        [panRecognizer setMaximumNumberOfTouches:1];
+        [panRecognizer setCancelsTouchesInView:YES];
+        [self addGestureRecognizer:panRecognizer];
+    
+}
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
     UITouch *touch = [touches anyObject];
     if(touch.tapCount == 1) {
@@ -629,12 +607,9 @@ typedef NS_ENUM(NSInteger, PanDirection){
     return;
 }
 
- 
 - (void)panDirection:(UIPanGestureRecognizer *)pan {
-    
-    //根据在view上Pan的位置，确定是调音量还是亮度
     CGPoint locationPoint = [pan locationInView:self];
-    CGPoint veloctyPoint = [pan velocityInView:self];
+    CGPoint veloctyPoint =  [pan velocityInView:self];
     
     switch (pan.state) {
         case UIGestureRecognizerStateBegan: {
@@ -642,19 +617,13 @@ typedef NS_ENUM(NSInteger, PanDirection){
             CGFloat y = fabs(veloctyPoint.y);
             if (x > y) {
                 self.panDirection = PanDirectionHorizontalMoved;
-                // 给sumTime初值
-                CMTime time       = self.player.currentTime;
-                self.sumTime      = time.value/time.timescale;
-            }
-            
-            else if (x < y) {
-                
+                self.sumTime = ((PlaybackControl *)self.functionControl).videoSlider.value * self.playerModel.cam_entity.timelength;
+            }else if (x < y) {
                 self.panDirection = PanDirectionVerticalMoved;
                 if (locationPoint.x > self.bounds.size.width / 2) {
-                    self.isVolume = YES;
-                }
-                else {
-                    self.isVolume = NO;
+                    [self setAjustVolume:YES];
+                }else {
+                    [self setAjustVolume:NO];
                 }
             }
             break;
@@ -685,11 +654,10 @@ typedef NS_ENUM(NSInteger, PanDirection){
             switch (self.panDirection) {
                 case PanDirectionHorizontalMoved:{
                     [self seekToTime:self.sumTime completionHandler:nil];
-                    self.sumTime = 0;
                     break;
                 }
                 case PanDirectionVerticalMoved:{
-                    self.isVolume = NO;
+                    [self setAjustVolume:NO];
                     break;
                 }
                 default:
@@ -704,25 +672,34 @@ typedef NS_ENUM(NSInteger, PanDirection){
 
 
 - (void)verticalMoved:(CGFloat)value {
-    self.isVolume ? (self.volumeViewSlider.value -= value / 10000) : ([UIScreen mainScreen].brightness -= value / 10000);
+//    self.ajustVolume ? (self.volumeViewSlider.value -= value / 10000) : ([UIScreen mainScreen].brightness -= value / 10000);
 }
 
 
 - (void)horizontalMoved:(CGFloat)value {
-    self.sumTime += value / 200;
-    // 需要限定sumTime的范围
-    CMTime totalTime           = self.playerItem.duration;
-    CGFloat totalMovieDuration = (CGFloat)totalTime.value/totalTime.timescale;
-    if (self.sumTime > totalMovieDuration) { self.sumTime = totalMovieDuration;}
-    if (self.sumTime < 0) { self.sumTime = 0; }
     
-    BOOL style = false;
-    if (value > 0) { style = YES; }
-    if (value < 0) { style = NO; }
-    if (value == 0) { return; }
+    self.sumTime += value / 200;  //pan velocty_value ~> 1500 ~ 2500 points/s
+    CGFloat totalMovieDuration = self.playerModel.cam_entity.timelength;
+    if (self.sumTime > totalMovieDuration) {
+        self.sumTime = totalMovieDuration;
+    }
+    else if (self.sumTime < 0) {
+        self.sumTime = 0;
+    }
     
-    self.isDragged = YES;
-    [self.controlView zl_playerDraggedTime:self.sumTime totalTime:totalMovieDuration isForward:style hasPreview:NO];
+    
+ 
+    BOOL forward = false;
+    if (value > 0) {
+        forward = YES;
+    }else if (value < 0) {
+        forward = NO;
+    }if (value == 0) {
+        return;
+    }
+    
+    
+    [self.functionControl zl_playerDraggedTime:self.sumTime totalTime:totalMovieDuration isForward:forward hasPreview:NO];
     
 }
 
@@ -747,17 +724,13 @@ typedef NS_ENUM(NSInteger, PanDirection){
     if (self) {
 
         self.playerModel = vp_model;
-        [self addSubview:self.spinner];
-        [self.spinner mas_makeConstraints:^(MASConstraintMaker *make) {
-            make.center.equalTo(self);
-        }];
         
-        [self setState:ZLPlayerStateUnknwon];
+        [self.functionControl setState:ZLPlayerStateUnknwon];
         [self setHasPreviewView:NO];
         
         
         [self addNotifications];
-        [self createGesture];
+        [self createTapGesture];
         
         
         self.delegate = (id)vc;
@@ -818,6 +791,7 @@ typedef NS_ENUM(NSInteger, PanDirection){
 - (void)processAppNotification:(NSNotification *)notification{
     if (notification.name == UIApplicationWillResignActiveNotification ) {
         [self setDidEnterBackground:YES];
+        
     }
     else if (notification.name == UIApplicationDidBecomeActiveNotification) {
         [self setDidEnterBackground:NO];

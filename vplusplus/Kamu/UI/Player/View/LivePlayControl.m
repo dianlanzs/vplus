@@ -57,14 +57,6 @@
 }
 
 
-- (UIButton *)speakerBtn_horizental {
-    if (!_speakerBtn_horizental) {
-        _speakerBtn_horizental = [UIButton buttonWithType:UIButtonTypeCustom];
-        [_speakerBtn_horizental setImage:ZLPlayerImage(@"speaker") forState:UIControlStateNormal];
-        [self setActionForSpeaker:(UIButton *)_speakerBtn_horizental];
-    }
-    return _speakerBtn_horizental;
-}
 - (MRoundedButton *)speakerBtn_vertical {
     
     if (!_speakerBtn_vertical) {
@@ -173,7 +165,9 @@
      [self setShowing:YES];
 }
 
-
+- (void)setState:(ZLPlayerState)state {
+    [super setState:state];
+}
 
 
 - (void)setOtherButtonsAlpha:(CGFloat)alpha {

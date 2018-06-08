@@ -738,7 +738,7 @@ static BOOL isProduction = NO;
                 [MBProgressHUD showPromptWithText:@"当前使用的是wifi模式"];
                 break;
             case AFNetworkReachabilityStatusNotReachable:
-                [MBProgressHUD showPromptWithText:@"断网了"];
+                [MBProgressHUD showError:@"断网了"];
                 break;
             case AFNetworkReachabilityStatusUnknown:
                 [MBProgressHUD showPromptWithText:@"变成了未知网络状态"];

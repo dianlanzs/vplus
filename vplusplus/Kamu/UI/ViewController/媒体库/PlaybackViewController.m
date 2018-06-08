@@ -24,12 +24,6 @@
 
 }
 
-
-
-
-
-
-
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     [self.vp pb_start];
@@ -37,20 +31,24 @@
 
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
-    [self.vp pb_stop];
+   
+  
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
     [super viewDidDisappear:animated];
-    [self.vp setState:ZLPlayerStateStopped];
+    
+    if (self.navigationController && self.vp.functionControl.state != ZLPlayerStateEnd) {
+        [self.vp pb_pause];
+    } else if (!self.navigationController) {
+        [self.vp pb_end];
+    }
 }
 
 
 #pragma mark - getter
 - (ZLPlayerView *)vp {
     if (!_vp) {
-        
-      
         _vp = [[ZLPlayerView alloc] initWithModel:self.playerModel control:[PlaybackControl new]  controller:self];
     }
     return _vp;

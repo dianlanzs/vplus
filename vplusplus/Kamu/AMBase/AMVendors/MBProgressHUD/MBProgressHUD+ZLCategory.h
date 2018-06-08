@@ -40,7 +40,7 @@
 
 
 //======================= SpinKit =====================================
-
++ (void)showStatusWithText:(NSString *)text inView:(UIView *)view;
 
 + (MBProgressHUD *)showIndicator:(RTSpinKitView *)spinner onView:(UIView *)view;
 

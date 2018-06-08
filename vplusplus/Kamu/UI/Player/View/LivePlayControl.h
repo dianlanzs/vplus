@@ -20,7 +20,6 @@
 
 @property (nonatomic, strong) UIButton                *muteBtn;
 
-@property (nonatomic, strong) UIButton          *speakerBtn_horizental;
 @property (nonatomic, strong) MRoundedButton          *speakerBtn_vertical;
 
 @property (nonatomic, strong) UIButton                *recordBtn;

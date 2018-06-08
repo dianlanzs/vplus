@@ -36,5 +36,7 @@
 @property (nonatomic, strong)Popup *p_alarm;
 @property (nonatomic, copy)NSString *str_param;
 @property (nonatomic, assign) BOOL showedPopup;
+
+@property (nonatomic, strong) NSIndexPath *path;
 - (void)upadteCams;
 @end

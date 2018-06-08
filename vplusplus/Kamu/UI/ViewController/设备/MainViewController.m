@@ -72,23 +72,9 @@
     }else {
         [self deviceInterface];
     }
-    
     self.navigationItem.title = @"设备";
     [self.view setBackgroundColor:[UIColor groupTableViewBackgroundColor]];
     [self.view addSubview:self.tableView];
-    
-    
-    
-    
-    
-    /*
-     add 设备  的时候 没有监听 这个设备 ，view did load 已经过了 ，添加一个设备 就监听一次 该设备！！
-     
-     
-     */
-    
-    
-    
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(addNew:) name:@"addNew" object:nil];
 }
 
@@ -169,59 +155,10 @@
     Device *nonCams_device = self.results[indexPath.section];
     if (nonCams_device.nvr_type == CLOUD_DEVICE_TYPE_GW) {
         QRResultCell *nvrCell = [[QRResultCell alloc] init];
-//        tableView.rowHeight = 300; //110*2 + 60 （itemH *2  + topBar ）
         [nvrCell setNvrModel:nonCams_device];
-        __weak typeof (self) weakself = self;
-        __weak typeof (nvrCell) weakNvrCell = nvrCell;
-        
-        //play cam
-        weakNvrCell.play = ^(QRResultCell *nvrCell, NSIndexPath *indexPath) {
-            PlayVideoController *playVc = [PlayVideoController new];
-            playVc.cam = nvrCell.nvrModel.nvr_cams[indexPath.row];
-            playVc.indexpath = indexPath;
-            playVc.nvrCell = nvrCell;
-            [weakself.navigationController pushViewController:playVc animated:YES];
-        };
-        //add cam
-        weakNvrCell.add = ^(QRResultCell *cell, NSIndexPath *path) {
-            AddCamsViewController *addCamVc = [AddCamsViewController new];
-            addCamVc.nvrCell = cell;
-            addCamVc.indexPath = path;
-            [addCamVc.view setBackgroundColor:[UIColor whiteColor]];
-            [self.navigationController pushViewController:addCamVc animated:YES];
-        };
-//        nvrCell.delegate = self;
-        
-        
-        
-        
-        
-        // ==== footer
-        weakNvrCell.footer.setNvr = ^(DeviceFooter *footer){
-            QRootElement *rootForm = [[DataBuilder new] createForNvrSettings:weakNvrCell]; //创建数据
-            NvrSettingsController *nvrSettingsVc = [[NvrSettingsController alloc] initWithRoot:rootForm];
-            [self.navigationController pushViewController:nvrSettingsVc  animated:YES];
-            
-            nvrSettingsVc .deleteNvr = ^{
-                Popup *p = [[Popup alloc] initWithTitle:@"提示" subTitle:@"请确认是否需要删除该设备？" cancelTitle:@"取消" successTitle:@"确认" cancelBlock:nil successBlock:^{
-                    [self deleteNvr:[NSIndexPath indexPathForRow:0 inSection:indexPath.section]];
-                }];
-                [p setBackgroundBlurType:PopupBackGroundBlurTypeDark];
-                [p setIncomingTransition:PopupIncomingTransitionTypeEaseFromCenter];
-                [p showPopup];
-            };
-        };
-        
-        
-        weakNvrCell.footer.entryMedias = ^(DeviceFooter *footer) {
-            LibraryController *libVc = [[LibraryController alloc] initWithDevice:weakNvrCell.nvrModel]; //state need refresh
-            [self.navigationController pushViewController:libVc  animated:YES];
-        };
+        [nvrCell setPath:indexPath];
         return nvrCell;
-    }
-    //ipc
-    if (nonCams_device.nvr_type == CLOUD_DEVICE_TYPE_IPC) {
-        
+    } else if (nonCams_device.nvr_type == CLOUD_DEVICE_TYPE_IPC) {
         tableView.rowHeight = 200;
         DeviceListCell *ipcCell = [self.tableView dequeueReusableCellWithIdentifier:NSStringFromClass([DeviceListCell class]) forIndexPath:indexPath];
         ipcCell.ipcModel = nonCams_device;

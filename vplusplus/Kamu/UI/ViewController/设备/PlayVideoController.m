@@ -116,12 +116,12 @@ mydevice_data_callback callBack;
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
     [self.navigationController setNavigationBarHidden:NO animated:YES];
-    [self.vp lv_stop];
+
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
     [super viewDidDisappear:YES];
-    [self.vp setState:ZLPlayerStateStopped];//maybe 2s dealay
+    [self.vp lv_stop];//maybe NSTimer has 2s dealay
 }
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
