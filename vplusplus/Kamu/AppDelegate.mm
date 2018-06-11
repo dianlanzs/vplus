@@ -27,6 +27,9 @@
 
 #import "VPPRequest.h"
 #import "AFNetworkActivityIndicatorManager.h"
+
+
+#import "MainViewController.h"
 static NSString *appKey = @"ab43e34db3569dc318b8fc47";
 static NSString *channel = @"AppStore";
 static BOOL isProduction = NO;
@@ -54,21 +57,39 @@ static BOOL isProduction = NO;
 -(void)dealloc{
     [[NSNotificationCenter defaultCenter]removeObserver:self name:@"netWorkChangeEventNotification" object:nil];
 }
+
+
+- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
+    
+}
+
+-(void)sendNotation:(NSDictionary *)launchOptions{
+    
+    if (launchOptions) {
+        
+        NSDictionary *remoteNotification = [launchOptions objectForKey: UIApplicationLaunchOptionsRemoteNotificationKey];
+        
+        if (remoteNotification) {
+            AMNavigationController *nav = (AMNavigationController *)self.tabBarController.selectedViewController  ;
+
+                [nav jumpToViewctroller:remoteNotification];
+            
+        }
+        
+    }
+    
+}
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     
     cloud_init();
-    
-    
+
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     self.window.backgroundColor = [UIColor whiteColor];
     [self.window makeKeyAndVisible];
-    
-    
     [self.window setRootViewController:self.tabBarController];
-    
-    [self registerAPNsFor:application];
-    //网络监控
-    [self monitorNetworkStatus];
+    [self registerAPNsFor:application]; //more time regisetered ？？
+    [self monitorNetwork];
+  
   
     //Steve
 //    self.y_data = new Byte[1920 * 1080 * 1]; //数组容量  ptr[m]
@@ -100,11 +121,11 @@ static BOOL isProduction = NO;
     //        self.token = @"haveToken && valid";
     //    }
     //
-    
-//    [self configJpushWith:launchOptions];
-    //设置MRButton外观
     [self setMRButtonAppearance];
-    
+    [self configJpushWith:launchOptions];
+
+    [self performSelector:@selector(sendNotation:) withObject:launchOptions afterDelay:1.5];
+
     
     
     return YES;
@@ -112,29 +133,16 @@ static BOOL isProduction = NO;
 
 #pragma mark - APNs 推送
 - (void)registerAPNsFor:(UIApplication *)app {
-    //注册远程通知服务
     [app registerUserNotificationSettings:[UIUserNotificationSettings
                                                    settingsForTypes:(UIUserNotificationTypeSound | UIUserNotificationTypeAlert | UIUserNotificationTypeBadge)
                                                    categories:nil]];
     [[UIApplication sharedApplication] registerForRemoteNotifications];
-    
 }
+
 - (void)configJpushWith:(NSDictionary *)launchOptions {
         [self setup_APNs];
         [self setup_JpushdidFinishLaunchingWithOptions:launchOptions];
 }
-//本机app注册APNs 成功回调
-- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
-//    [self configTutkPushWith:deviceToken];
-    /// Required - 上报DeviceToken给极光服务器
-    [JPUSHService registerDeviceToken:deviceToken];
-}
-//本机注册 APNs 失败回调
-- (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
-    //Optional
-    NSLog(@"did Fail To Register For Remote Notifications With Error: %@", error);
-}
-//添加初始化APNs代码
 - (void)setup_APNs{
     JPUSHRegisterEntity * entity = [[JPUSHRegisterEntity alloc] init];
     entity.types = JPAuthorizationOptionAlert|JPAuthorizationOptionBadge|JPAuthorizationOptionSound;
@@ -146,7 +154,7 @@ static BOOL isProduction = NO;
     }
     [JPUSHService registerForRemoteNotificationConfig:entity delegate:self];
 }
-//添加初始化JPush代码
+
 - (void)setup_JpushdidFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     //    NSString *advertisingId = [[[ASIdentifierManager sharedManager] advertisingIdentifier] UUIDString];
     [JPUSHService setupWithOption:launchOptions
@@ -157,14 +165,27 @@ static BOOL isProduction = NO;
     
 }
 
+//token 回调
+- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
+//    [self configTutkPushWith:deviceToken];
+    [JPUSHService registerDeviceToken:deviceToken];// Required - 上报DeviceToken给极光服务器
+
+}
+- (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
+    //Optional
+    NSLog(@"did Fail To Register For Remote Notifications With Error: %@", error);
+}
+
+
+
 #pragma mark- JPUSHRegisterDelegate
 //#ifdef NSFoundationVersionNumber_iOS_9_x_Max
 #pragma mark- JPUSHRegisterDelegate
 - (void)jpushNotificationCenter:(UNUserNotificationCenter *)center willPresentNotification:(UNNotification *)notification withCompletionHandler:(void (^)(NSInteger))completionHandler {
-    NSDictionary * userInfo = notification.request.content.userInfo;
-    
     UNNotificationRequest *request = notification.request; // 收到推送的请求
     UNNotificationContent *content = request.content; // 收到推送的消息内容
+    NSDictionary * userInfo = notification.request.content.userInfo;
+   
     
     NSNumber *badge = content.badge;  // 推送消息的角标
     NSString *body = content.body;    // 推送消息体
@@ -184,6 +205,7 @@ static BOOL isProduction = NO;
     completionHandler(UNNotificationPresentationOptionBadge|UNNotificationPresentationOptionSound|UNNotificationPresentationOptionAlert); // 需要执行这个方法，选择是否提醒用户，有Badge、Sound、Alert三种类型可以设置
 }
 
+//点击
 - (void)jpushNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(UNNotificationResponse *)response withCompletionHandler:(void (^)())completionHandler {
     
     NSDictionary * userInfo = response.notification.request.content.userInfo;
@@ -619,9 +641,9 @@ static BOOL isProduction = NO;
         NSString *title = [[self.dict valueForKey:@"navTitles"] objectAtIndex:index];
         UIViewController *vc = [NSClassFromString( [[self.dict valueForKey:@"vcNames"] objectAtIndex:index]) new];
         
-        AMNavigationController *navigationVc = [[AMNavigationController alloc] initWithRootViewController:vc];
+        AMNavigationController *navigationVc = [[AMNavigationController alloc] initWithRootViewController:vc];//Convenience method pushes the root view controller without animation.
         
-        [vc setTitle:title];  // 如果nav 和 tab  没有设置标题 ， 该设置 可以同时设置 上下 和 vc的标题！
+        [vc setTitle:title];  // 如果nav 和 tab  没有设置标题 ， 该设置 可以同时设置 上下 和 vc 的标题！
         //        [vc.navigationItem setTitle:title];
         [navigationControllers addObject:navigationVc];
         
@@ -718,7 +740,7 @@ static BOOL isProduction = NO;
 }
 
 #pragma mark - 检测网络状态变化
-- (void)monitorNetworkStatus {
+- (void)monitorNetwork {
     
     
     [[AFNetworkActivityIndicatorManager sharedManager] setEnabled:YES];

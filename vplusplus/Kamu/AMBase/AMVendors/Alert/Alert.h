@@ -43,15 +43,15 @@ typedef NS_ENUM(NSUInteger, AlertType) {
 @protocol AlertDelegate;
 
 @interface Alert : UIView
-
+@property (nonatomic, assign) BOOL showing;
 @property (nonatomic, weak) id <AlertDelegate> delegate;
 
 @property (nonatomic, strong)   UILabel *titleLabel;
 @property (nonatomic, assign)   UIView *indicator;
-
+@property (nonatomic, strong) UIViewController * vc;
 - (instancetype)initWithTitle:(NSString *)title
-                   inidicator:(UIView *)indicator
-                   completion:(void (^)(void))completion;
+                   inidicator:(UIActivityIndicatorView *)indicator
+                       rootVc:(UIViewController *)vc;
 
 //Does Alert bounce when it is transitioning in?
 @property (nonatomic, assign) BOOL bounces;
@@ -69,6 +69,7 @@ typedef NS_ENUM(NSUInteger, AlertType) {
 @property (nonatomic, assign) AlertOutgoingTransitionType outgoingTransition;
 
 @property (nonatomic, assign) AlertType alertType;
+@property (nonatomic, strong)   UIView *alertView;
 
 - (void)showAlert;
 - (void)dismissAlert;

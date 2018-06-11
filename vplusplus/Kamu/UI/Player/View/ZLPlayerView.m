@@ -566,8 +566,8 @@ typedef NS_ENUM(NSInteger, PanDirection){
 - (void)createTapGesture {
     self.singleTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(singleTapAction:)];
     self.singleTap.delegate                = self;
-    self.singleTap.numberOfTouchesRequired = 1;
-    self.singleTap.numberOfTapsRequired    = 1;
+    self.singleTap.numberOfTouchesRequired = 1; //fingers
+    self.singleTap.numberOfTapsRequired    = 1; //tap
     [self addGestureRecognizer:self.singleTap];
 }
 //playerview --single Pan gesture

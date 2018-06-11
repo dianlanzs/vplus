@@ -14,4 +14,5 @@
 @property (nonatomic, strong) UIRefreshControl *pullRefresh;
 
 - (void)deleteNvr:(NSIndexPath *)path;
+
 @end

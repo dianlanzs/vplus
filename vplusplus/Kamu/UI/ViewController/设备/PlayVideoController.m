@@ -71,15 +71,14 @@ mydevice_data_callback callBack;
 - (void)viewDidLoad {
     [super viewDidLoad];
     [self.view setBackgroundColor:[UIColor whiteColor]];//消除Animated的残影
-    [self setNavgation];
-    
-    [self.view addSubview:self.funcBar];//使用_funcBar，不显示，  cuz 没有走get 方法 self.funcBar!!
+  
     self.nvrCell.nvrModel.avDelegate = self.vp;    //translucent:    + 64
+    [self setNavgation];
+    [self.view addSubview:self.funcBar];//使用_funcBar，不显示，  cuz 没有走get 方法 self.funcBar!!
 }
 
 - (void)setNavgation {
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"nav_back"] style:UIBarButtonItemStylePlain target:self action:@selector(back:)];
-    
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"button_settings"] style:UIBarButtonItemStylePlain target:self action:@selector(camSetting:)];
 }
 - (void)back:(id)sender {
@@ -107,7 +106,6 @@ mydevice_data_callback callBack;
     [self.funcBar setWifiProgress:cloud_device_cam_get_signal((void *)self.nvrCell.nvrModel.nvr_h,[self.cam.cam_id UTF8String])];
     [self.vp lv_start];
     self.navigationItem.title = self.cam.cam_name? [self.cam.cam_name uppercaseString] : [self.cam.cam_id uppercaseString];
-
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -159,31 +157,9 @@ mydevice_data_callback callBack;
 //- (void)executeCameraCtrl:(int)param value:(NSInteger)value{
 //}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#pragma mark - Player View ， 系统方法
-//是否支持旋转
 - (BOOL)shouldAutorotate {
     return NO;
 }
-// 支持哪些屏幕方向
 - (UIInterfaceOrientationMask)supportedInterfaceOrientations {
     return UIInterfaceOrientationMaskPortrait;
 }
@@ -208,7 +184,7 @@ mydevice_data_callback callBack;
 
 #pragma mark - PlayerView 的代理
 
-
+/*
 - (NSString *)getDate{
     NSDate* date = [NSDate date];
     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
@@ -216,7 +192,7 @@ mydevice_data_callback callBack;
     NSString *dateString = [formatter stringFromDate:date];
     return dateString;
 }
-
+*/
 
 #pragma mark - getter
 - (ZLPlayerView *)vp {
@@ -235,8 +211,6 @@ mydevice_data_callback callBack;
         [_playerModel setCam_id:self.cam.cam_id];
         [_playerModel setNvr_h:self.nvrCell.nvrModel.nvr_h];
     }
-    
-    [_playerModel setNvr_status:self.nvrCell.nvrModel.nvr_status]; //每次访问 获取最新的 设备状态！
     
     return _playerModel;
 }

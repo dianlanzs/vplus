@@ -16,5 +16,6 @@
 @property (nonatomic, strong) Device *pushedDevice;
 
 - (void)backPrevious:(id)sender;
-- (void)pushVc:(UIViewController *)vc withDevice:(Device *)pushedDevice;
+- (void)pushViewController:(UIViewController *)vc withDevice:(Device *)pushedDevice;
+-(void)jumpToViewctroller:(NSDictionary *)remoteNotification;
 @end

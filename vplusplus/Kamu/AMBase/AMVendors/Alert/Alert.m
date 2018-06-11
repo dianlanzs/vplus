@@ -11,7 +11,6 @@
 BOOL doesBounce = NO;
 
 @interface Alert ()
-@property (nonatomic, strong)   UIView *alertView;
 
 @property (nonatomic, assign)   AlertOutgoingTransitionType outgoingType;
 @property (nonatomic, assign)   AlertIncomingTransitionType incomingType;
@@ -26,13 +25,14 @@ BOOL doesBounce = NO;
 #pragma mark Instance Types
 
 - (instancetype)initWithTitle:(NSString *)title
-                   inidicator:(UIView *)indicator
-                   completion:(void (^)(void))completion {
+                   inidicator:(UIActivityIndicatorView *)indicator
+                   rootVc:(UIViewController *)vc{
     
     if (self = [super init] ) {
         
         [self.titleLabel setText:title];
         [self setIndicator:indicator];
+        self.vc = vc;
   
     }
     
@@ -46,16 +46,20 @@ BOOL doesBounce = NO;
 
 - (UILabel *)titleLabel {
     if (!_titleLabel) {
-        CGRect rect = [self alertRect];
+//        CGRect rect = [self alertRect];
         
-        _titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(30, rect.origin.y + 44, rect.size.width - 60, 24)];
+//        _titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(30, rect.origin.y + 44, rect.size.width - 60, 24)];
+        _titleLabel = [[UILabel alloc] init];
         [_titleLabel setTextAlignment:NSTextAlignmentCenter];
         [_titleLabel setTextColor:[UIColor whiteColor]];
         [_titleLabel setFont:[UIFont fontWithName:@"HelveticaNeue" size:16.0]];
-        [_titleLabel setMinimumScaleFactor:14.0/16.0]; //??
+        [_titleLabel setMinimumScaleFactor:16.0/18.0]; //?? 字体大小是 16 希望收缩 后 最小字体大小为14
         
         CGSize size = [_titleLabel.text sizeWithAttributes:@{NSFontAttributeName : _titleLabel.font}];
         [self.alertView addSubview:_titleLabel];
+        [_titleLabel mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.center.equalTo(self.alertView);
+        }];
     }
     
     return _titleLabel;
@@ -73,10 +77,11 @@ BOOL doesBounce = NO;
 
 - (void)setIndicator:(UIView *)indicator {
     
-    if (indicator) {
+    if (indicator != _indicator) {
+        _indicator = indicator;
         [self.alertView addSubview:_indicator];
         [_indicator mas_makeConstraints:^(MASConstraintMaker *make) {
-            make.trailing.equalTo(self.titleLabel.mas_leading).offset(-5);
+            make.trailing.equalTo(self.titleLabel.mas_leading);
             make.centerY.equalTo(self.alertView);
             make.size.mas_equalTo(CGSizeMake(40, 40));
         }];
@@ -101,7 +106,9 @@ BOOL doesBounce = NO;
         [_alertView setBackgroundColor:[UIColor colorWithRed:0.91 green:0.302 blue:0.235 alpha:1] /*#e84d3c*/];
     }
     else if (alertType == AlertTypeSuccess) {
-        [_alertView setBackgroundColor:[UIColor colorWithRed:0.196 green:0.576 blue:0.827 alpha:1] /*#3293d3*/];
+//        [_alertView setBackgroundColor:[UIColor colorWithRed:0.196 green:0.576 blue:0.827 alpha:1] /*#3293d3*/];
+        [_alertView setBackgroundColor:[UIColor greenColor] /*#3293d3*/];
+
     }
     else if (alertType == AlertTypeWarning) {
         [_alertView setBackgroundColor:[UIColor colorWithRed:1 green:0.804 blue:0 alpha:1] /*#ffcd00*/];
@@ -139,6 +146,7 @@ BOOL doesBounce = NO;
 
 - (void)showAlert {
     [[[UIApplication sharedApplication] keyWindow] addSubview:self];
+//    [self.vc.view addSubview:self];
     [self addSubview:self.alertView];
 
     
@@ -152,6 +160,7 @@ BOOL doesBounce = NO;
     else {
         [self configureIncomingAnimationFor:AlertIncomingTransitionTypeSlideFromTop];
     }
+    [self setShowing:YES];
 }
 
 - (void)dismissAlert {
@@ -167,6 +176,8 @@ BOOL doesBounce = NO;
     else {
         [self configureOutgoingAnimationFor:AlertOutgoingTransitionTypeSlideToTop];
     }
+    
+        [self setShowing:NO];
 }
 
 #pragma mark Transition Methods
@@ -435,7 +446,9 @@ BOOL doesBounce = NO;
 
 - (CGRect)alertRect {
     UIScreen *mainScreen = [UIScreen mainScreen];
-    return CGRectMake(-20, -10, mainScreen.bounds.size.width + 40, 74);  //2 边 + 20  上   +10
+//    return CGRectMake(-20, -10, mainScreen.bounds.size.width + 40, 74);  //2 边 + 20  上   +10
+    return CGRectMake(0, 0, mainScreen.bounds.size.width , 64);
+
 }
 
 @end
