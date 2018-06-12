@@ -70,8 +70,7 @@ static BOOL isProduction = NO;
         NSDictionary *remoteNotification = [launchOptions objectForKey: UIApplicationLaunchOptionsRemoteNotificationKey];
         
         if (remoteNotification) {
-            AMNavigationController *nav = (AMNavigationController *)self.tabBarController.selectedViewController  ;
-
+            AMNavigationController *nav = (AMNavigationController *)self.tabBarController.selectedViewController;
                 [nav jumpToViewctroller:remoteNotification];
             
         }
@@ -175,6 +174,13 @@ static BOOL isProduction = NO;
     //Optional
     NSLog(@"did Fail To Register For Remote Notifications With Error: %@", error);
 }
+//- (void)userNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(UNNotificationResponse *)response withCompletionHandler:(void(^)())completionHandler{
+//    
+//    
+//    NSDictionary * userInfo = response.notification.request.content.userInfo;
+//    
+//}
+    
 
 
 

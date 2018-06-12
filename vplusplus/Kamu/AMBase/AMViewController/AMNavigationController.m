@@ -14,11 +14,15 @@
 #import "PlaybackControl.h"
 
 #import "AppDelegate.h"
+
 @interface AMNavigationController () <UINavigationControllerDelegate ,UIGestureRecognizerDelegate >
 
 @property (strong, nonatomic) AppDelegate *appDelegate;
 @property (nonatomic, strong) Alert *statusAlert;
 @property (nonatomic, strong) UIActivityIndicatorView * activityIndicator;
+
+
+
 @end
 
 @implementation AMNavigationController
@@ -51,7 +55,6 @@
 }
 
 #pragma mark - 视图生命周期
-
 - (UIActivityIndicatorView *)activityIndicator {
     
     if (!_activityIndicator) {
@@ -80,7 +83,7 @@
 - (void)stateNotification:(NSNotification *)notification {
    
     Device *stateChangedDevice = notification.object;
-    if ([self.topViewController isKindOfClass:[MainViewController class]] || ![stateChangedDevice.nvr_id  isEqualToString:self.pushedDevice.nvr_id]) {
+    if ([self.topViewController isKindOfClass:[MainViewController class]] || ![stateChangedDevice.nvr_id  isEqualToString:self.operatingDevice.nvr_id]) {
         return;
     }
 //    UIGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapToReconnect:)];
@@ -99,7 +102,7 @@
         [UIView animateWithDuration:0.5 animations:^{
             [self.statusAlert setAlertType:AlertTypeError];
             [self.statusAlert showAlert];
-            cloud_connect_device((void *)self.pushedDevice.nvr_h, "admin", "123");
+            cloud_connect_device((void *)self.operatingDevice.nvr_h, "admin", "123");
             [self.statusAlert.titleLabel setText:@"CONNECTING..."];
             [self.activityIndicator startAnimating];
 //            [self.statusAlert.alertView addGestureRecognizer:tap];
@@ -114,13 +117,8 @@
 }
 
 
-- (void)setPushedDevice:(Device *)pushedDevice {
-    
-    if (pushedDevice != _pushedDevice ) {
-        _pushedDevice = pushedDevice;
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(stateNotification:) name:@"CLOUD_DEVICE_STATE" object:nil];
-    }
-}
+
+
 
 
 - (void)viewDidLoad {
@@ -172,15 +170,20 @@
     return [self.topViewController supportedInterfaceOrientations];;
 }
 #pragma mark - 拦截‘push'操作 统一设置 返回按钮
-
-- (void)pushVc:(UIViewController *)vc withDevice:(Device *)pushedDevice {
-    
+- (void)pushViewController:(UIViewController *)vc deviceID:(NSString *)deviceID camID:(NSString *)camID {
     [self pushViewController:vc animated:YES];
-    if (pushedDevice) {
-        [self setPushedDevice:pushedDevice];
+    if (deviceID && self.viewControllers.count == 2) {
+
+        self.operatingDevice = RLM_R_NVR(deviceID);
+//        self.pushedDevice = RLM_R_NVR(deviceID);
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(stateNotification:) name:@"CLOUD_DEVICE_STATE" object:nil];
+
+    }
+    
+    if (camID) {
+        self.operatingCam = RLM_R_CAM(camID);
     }
 }
-
 - (void)pushViewController:(UIViewController *)viewController animated:(BOOL)animated {
 
 
@@ -277,11 +280,12 @@
 //跳转方法
 -(void)jumpToViewctroller:(NSDictionary *)remoteNotification{
     int jumpIndex = (int) [remoteNotification[@"type"] integerValue];
+    NSString *device_id =  remoteNotification[@"device_id"];
+    NSString *cam_id =  remoteNotification[@"cam_id"];
+
+
     if (jumpIndex == 1) {
-        
-        PlayVideoController *livePlayVc = [PlayVideoController new];
-        [self.view setUserInteractionEnabled:NO];
-        [self pushViewController:livePlayVc withDevice:nil];
+        [self pushViewController:[PlayVideoController new] deviceID:device_id camID:cam_id];
        
         
         /*
@@ -311,7 +315,7 @@
     }
     
     else if (jumpIndex == 2) {
-        
+        ;
     }
     
 }

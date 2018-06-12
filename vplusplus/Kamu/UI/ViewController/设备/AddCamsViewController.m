@@ -112,11 +112,11 @@
 - (void)add:(id)sender {
     
     
-    ProbeDoneViewController *probDoneVc = [[ProbeDoneViewController alloc] init];
+//    ProbeDoneViewController *probDoneVc = [[ProbeDoneViewController alloc] init];
     
-    probDoneVc.nvrCell = self.nvrCell;
-    probDoneVc.indexPath = self.indexPath;
-    [self.navigationController pushViewController:probDoneVc animated:YES];
+//    probDoneVc.nvrCell = self.nvrCell;
+//    probDoneVc.indexPath = self.indexPath;
+    [self.navigationController pushViewController:[ProbeDoneViewController new] animated:YES];
     
 }
 

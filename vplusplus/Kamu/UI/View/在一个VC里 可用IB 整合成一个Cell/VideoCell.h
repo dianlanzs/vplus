@@ -14,10 +14,13 @@
 
 //设置数据 model
 @property (nonatomic, strong) Cam *cam;
+
+@property (nonatomic, strong) UIButton *playBtn;
 @property (nonatomic, strong) UIImageView *playableView;
 @property (nonatomic, strong) UILabel *camLabel;
-@property (nonatomic, assign) int nvr_status;
+//@property (nonatomic, assign) int nvr_status;
 @property (nonatomic, strong) UIImageView *bgView;
 
+//@property (nonatomic, copy)   void(^deleteCam)(Cam *cam);
 
 @end

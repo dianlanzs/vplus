@@ -13,8 +13,8 @@
 @interface VideoCell()
 
 
-@property (nonatomic, strong) UIButton *playBtn;
 
+@property (nonatomic, strong) RLMNotificationToken *cam_token;
 @end
 
 
@@ -42,25 +42,56 @@
 #pragma mark - setter
 - (void)setCam:(Cam *)cam {
     
-    if (cam) {
+    if (cam  && cam != _cam ) {
+        
         _cam = cam;
-        if (self.nvr_status == CLOUD_DEVICE_STATE_CONNECTED) {
-            [self.playBtn setHidden:NO];
-        }
+        _cam_token = [cam addNotificationBlock:^(BOOL deleted, NSArray<RLMPropertyChange *> * _Nullable changes, NSError * _Nullable error) {
+            if (deleted) {
+                NSLog(@"Cam已经删除!");
+//                self.deleteCam(_cam);
+            }else {
+                
+                for (RLMPropertyChange *property in changes) {
+                    if ([property.name isEqualToString:@"cam_name"] ) {
+                        [self.camLabel setText:property.value];
+                    }
+                    
+                    else if ([property.name isEqualToString:@"cam_cover"]) {
+                        [self.playableView setImage:[UIImage imageWithData:property.value]];
+                    }
+                    
+                    else if ([property.name isEqualToString:@"cam_state"]) {
+                        if ([property.value intValue] == 1) {
+                            [self.playBtn setHidden:NO];
+                        }
+                    }
+                    
+                }
+  
+            }
+        }];
+        
+        
+        
+        
+        
+        [RLM transactionWithBlock:^{
+            [self.cam setCam_state:0];
+        }];
+        
         self.camLabel.text = cam.cam_name ? [cam.cam_name uppercaseString] :[cam.cam_id uppercaseString];
         [self.playableView setImage:[UIImage imageWithData:cam.cam_cover]];
-        
-        
-        
-        
         [self.contentView addSubview:self.playableView];
         [self setupConstraints];
-
-    }else {
+        
+        
+    }
+    
+    else if (!cam) {
         [self.playableView removeFromSuperview];
     }
     
-   
+    
 }
 #pragma mark - 设置约束
 - (void)setupConstraints {

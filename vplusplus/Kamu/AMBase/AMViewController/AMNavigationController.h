@@ -15,7 +15,29 @@
 @property (nonatomic, copy) NSString *navTitle;
 @property (nonatomic, strong) Device *pushedDevice;
 
+
+
+
+
+
+
+
+
+//
+//
+//
+//@property (nonatomic, strong) NSString *device_id;
+//@property (nonatomic, strong) NSString *cam_id;
+//
+//
+//@property (nonatomic, strong) Device *device;
+//@property (nonatomic, strong) Device *cam;
+
 - (void)backPrevious:(id)sender;
-- (void)pushViewController:(UIViewController *)vc withDevice:(Device *)pushedDevice;
+//- (void)pushViewController:(UIViewController *)vc withDevice:(Device *)device;
+
+
+
+- (void)pushViewController:(UIViewController *)vc deviceID:(NSString *)deviceID camID:(NSString *)camID;
 -(void)jumpToViewctroller:(NSDictionary *)remoteNotification;
 @end

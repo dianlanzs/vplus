@@ -30,6 +30,6 @@
 @property (nonatomic, copy) NSString *camName;
 @property (nonatomic, strong) Device *nvrModel;
 
-- (QRootElement *)createForCamSettings:(VideoCell *)videoCell nvrCell:(QRResultCell *)nvrCell;
-- (QRootElement *)createForNvrSettings:(QRResultCell *)nvrCell;
+- (QRootElement *)createForCamSettings:(Cam *)cam device:(Device *)device;
+- (QRootElement *)createForNvrSettings:(Device *)device;
 @end

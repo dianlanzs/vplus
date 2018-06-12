@@ -17,6 +17,6 @@
 
 //@property (nonatomic,strong) Cam *cam;
 //@property (nonatomic,strong) Device *nvr;
-@property (nonatomic, strong) QRResultCell *nvrCell;
-@property (nonatomic, strong) NSIndexPath *indexPath;
+//@property (nonatomic, strong) QRResultCell *nvrCell;
+//@property (nonatomic, strong) NSIndexPath *indexPath;
 @end

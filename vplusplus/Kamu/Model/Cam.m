@@ -11,7 +11,7 @@
 @implementation Cam
 
 //+ (NSArray *)ignoredProperties {
-//    return @[@"cam_videoTool"];
+//    return @[@"cam_state"];
 //}
 @end
 

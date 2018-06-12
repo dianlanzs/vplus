@@ -127,9 +127,6 @@
     }else {
         [self remakeConstrints];
         [self.bottomImageView distributeSpacingHorizontallyWith:@[self.recordBtn,self.captureBtn,self.muteBtn,self.fullScreenBtn]];
-        
-        
-        
         [self.speakerBtn_vertical mas_remakeConstraints:^(MASConstraintMaker *make) {
             make.centerY.equalTo(self.bottomImageView).offset(260);
             make.centerX.equalTo(self.bottomImageView).offset(0);
@@ -173,7 +170,6 @@
 - (void)setOtherButtonsAlpha:(CGFloat)alpha {
     for (UIButton *subButton in self.bottomImageView.subviews) {
         if (subButton.tag != 1001) {
-            NSLog(@"%@",subButton);
             [subButton setAlpha:alpha];
         }
     }

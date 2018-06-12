@@ -369,7 +369,7 @@ typedef NS_ENUM(NSInteger, PanDirection){
 
 
 - (void)lv_start {
-    cloud_device_play_video((void *)self.playerModel.nvr_h,[self.playerModel.cam_id UTF8String]);
+    cloud_device_play_video((void *)self.playerModel.nvr_h,[self.playerModel.cam_id UTF8String]); //c : nil will crash
     cloud_device_play_audio((void *)self.playerModel.nvr_h, [self.playerModel.cam_id UTF8String]);
     [AUTOOL startService:self.playerModel.nvr_h cam:self.playerModel.cam_id];
     [self fireTimer];
@@ -732,7 +732,8 @@ typedef NS_ENUM(NSInteger, PanDirection){
         [self addNotifications];
         [self createTapGesture];
         
-        
+        [vc.navigationController.operatingDevice setAvDelegate:self];
+
         self.delegate = (id)vc;
         [self setRootVc:vc];
         [vc.view addSubview:self];

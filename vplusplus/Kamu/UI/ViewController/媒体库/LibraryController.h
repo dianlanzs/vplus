@@ -25,9 +25,9 @@
 
 //@property (nonatomic, weak)   id<mediaLibControllerDelegate> delegate;
 @property (nonatomic, strong)  ScrollableDatepicker* datepicker;
-@property (nonatomic, strong) Device *cloudDevice;
+//@property (nonatomic, strong) Device *cloudDevice;
 
 
-- (instancetype)initWithDevice:(Device *)cloudDevice;
+//- (instancetype)initWithDevice:(Device *)cloudDevice;
 
 @end

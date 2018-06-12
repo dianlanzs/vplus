@@ -43,6 +43,11 @@
     return _formFooter;
 }
 - (void)delete:(id)sender {
-    self.deleteCam();
+//    self.deleteCam();
+    cloud_device_del_cam((void *)self.navigationController.operatingDevice.nvr_h, [self.navigationController.operatingCam.cam_id UTF8String]);
+    [RLM transactionWithBlock:^{
+        [self.navigationController.operatingDevice.nvr_cams removeObjectAtIndex:self.navigationController.operatingCam.cam_index];
+    }];
+    [self.navigationController popToRootViewControllerAnimated:YES];
 }
 @end

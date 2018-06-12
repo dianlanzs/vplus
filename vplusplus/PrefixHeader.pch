@@ -69,5 +69,6 @@
 
 #import "Alert.h"
 
+#import "UIViewController+Device.h"
 #endif
 #endif

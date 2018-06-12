@@ -13,8 +13,15 @@
 @interface PlayVideoController : UIViewController
 
 
-@property (nonatomic,strong)  Cam *cam;
-@property (nonatomic, strong) QRResultCell *nvrCell;
-@property (nonatomic, strong) NSIndexPath *indexpath;
+
+//
+//@property (nonatomic,strong)  NSString *cam_id;
+//@property (nonatomic,strong)  NSString *device_id;
+
+
+
+
+//@property (nonatomic, strong) QRResultCell *nvrCell;
+//@property (nonatomic, strong) NSIndexPath *indexpath;
 
 @end

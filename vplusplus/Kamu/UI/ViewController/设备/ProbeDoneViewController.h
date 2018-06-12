@@ -13,6 +13,6 @@
 
 @property (nonatomic,strong) Cam *probedCam;
 
-@property (nonatomic, strong) QRResultCell *nvrCell;
-@property (nonatomic, strong) NSIndexPath *indexPath;
+//@property (nonatomic, strong) QRResultCell *nvrCell;
+//@property (nonatomic, strong) NSIndexPath *indexPath;
 @end

@@ -29,14 +29,14 @@ static NSString  *rootControllerName = @"NvrSettingsController";
 
 
 #pragma mark - 创建 CAM settings 界面
-- (QRootElement *)createForCamSettings:(VideoCell *)videoCell nvrCell:(QRResultCell *)nvrCell {
+- (QRootElement *)createForCamSettings:(Cam *)cam device:(Device *)device {
     
     QRootElement *camRoot = [[QRootElement alloc] init];
     [camRoot setGrouped:YES];
     camRoot.title =  @"设置CAM";
     
     QSection *section0 = [[QSection alloc] initWithTitle:@"CAM_Header"];
-    section0.elements = [NSMutableArray arrayWithArray:@[[self changeCamNameElm:videoCell nvrCell:nvrCell],[self camSwitchElm],[self remainingBatteryElm],[self videoSettingsElm],[self audioSettingsElm],[self camInfoElm]]];
+    section0.elements = [NSMutableArray arrayWithArray:@[[self changeCamNameElm:cam device:device],[self camSwitchElm],[self remainingBatteryElm],[self videoSettingsElm],[self audioSettingsElm],[self camInfoElm]]];
     
     [camRoot addSection:section0];
     [self  setAppearance];
@@ -55,11 +55,11 @@ static NSString  *rootControllerName = @"NvrSettingsController";
     return remainingBattery;
 }
 
-- (QElement *)changeCamNameElm:(VideoCell *)videoCell nvrCell:(QRResultCell *)nvrCell {
+- (QElement *)changeCamNameElm:(Cam *)cam device:(Device *)device {
     
     //prepare data
-    NSString *s = videoCell.cam.cam_name ? videoCell.cam.cam_name : videoCell.cam.cam_id;
-    NSIndexPath *path = [nvrCell.QRcv indexPathForCell:videoCell];
+    NSString *s = cam.cam_name ? cam.cam_name :cam.cam_id;
+//    NSIndexPath *path = [nvrCell.QRcv indexPathForCell:videoCell];
     
     
     
@@ -79,10 +79,11 @@ static NSString  *rootControllerName = @"NvrSettingsController";
             return ;
         }
         
-        [videoCell.camLabel setText:tf.text];
+//        [cam.cam_name setText:tf.text];
+//        cam.cam_name = tf.text;
         [RLM transactionWithBlock:^{
-            [nvrCell.nvrModel.nvr_cams[path.item] setCam_name:tf.text];
-            [videoCell.cam setCam_name:tf.text];  // Cam* Unmanaged!
+            [cam setCam_name:tf.text];
+//            [cam setCam_name:tf.text];  // Cam* Unmanaged!
         }];
     }];
     
@@ -147,7 +148,7 @@ static NSString  *rootControllerName = @"NvrSettingsController";
 
 #pragma mark - 创建 NVR settings 界面
 
-- (QRootElement *)createForNvrSettings:(QRResultCell *)nvrCell {
+- (QRootElement *)createForNvrSettings:(Device *)device {
     
     
     QRootElement *nvrRoot = [[QRootElement alloc] init];
@@ -157,7 +158,7 @@ static NSString  *rootControllerName = @"NvrSettingsController";
     
     //嵌套section
     QSection *section0 = [[QSection alloc] init];
-    section0.elements = [NSMutableArray arrayWithArray:@[[self changeNvrNameElm:nvrCell],[self recordElm],[self authorityElm],[self infoElm:nvrCell]]];
+    section0.elements = [NSMutableArray arrayWithArray:@[[self changeNvrNameElm:device],[self recordElm],[self authorityElm],[self infoElm:device]]];
     
     
 
@@ -204,9 +205,9 @@ static NSString  *rootControllerName = @"NvrSettingsController";
 
 
 
-- (QElement *)changeNvrNameElm:(QRResultCell *)nvrCell {
+- (QElement *)changeNvrNameElm:(Device *)device {
     
-    NSString *s = nvrCell.nvrModel.nvr_name ? nvrCell.nvrModel.nvr_name : nvrCell.nvrModel.nvr_id;
+    NSString *s = device.nvr_name ? device.nvr_name : device.nvr_id;
 
     
     
@@ -219,7 +220,7 @@ static NSString  *rootControllerName = @"NvrSettingsController";
     
     //嵌套section
     QSection *section0 = [[QSection alloc] initWithTitle:@"Modify_NvrName"];
-    QEntryElement *entryElm = [[QEntryElement alloc] initWithTitle:@"修改" Value:nvrCell.nvrModel.nvr_name Placeholder:@"修改中继名称"];
+    QEntryElement *entryElm = [[QEntryElement alloc] initWithTitle:@"修改" Value:device.nvr_name Placeholder:@"修改中继名称"];
     [entryElm setKey:@"rename"];
 //    entryElm.delegate = self; //0x0000000131d76e10  指针 2个字节 ,此时设置代理 ，view 还没有出现！不会被调用代理方法
     [entryElm setTf_endEditing:^(UITextField *tf) {
@@ -227,9 +228,9 @@ static NSString  *rootControllerName = @"NvrSettingsController";
         if (tf.text == s) {
             return ;
         }
-        [nvrCell.footer.deviceLb setText:tf.text];
+//        [nvrCell.footer.deviceLb setText:tf.text];
         [RLM transactionWithBlock:^{
-            nvrCell.nvrModel.nvr_name = tf.text;
+            device.nvr_name = tf.text;
         }];
     }];
    
@@ -242,7 +243,7 @@ static NSString  *rootControllerName = @"NvrSettingsController";
 }
 
 //info
-- (QElement *)infoElm:(QRResultCell *)nvrCell {
+- (QElement *)infoElm:(Device *)device {
     
     QRootElement *infoElm = [[QRootElement alloc] init];
     infoElm.grouped = YES;
@@ -253,7 +254,7 @@ static NSString  *rootControllerName = @"NvrSettingsController";
     
     QSection *section_0 = [[QSection alloc] initWithTitle:@"Device"];
     QLabelElement *versionInfo = [[QLabelElement alloc] initWithTitle:@"序列号" Value:@"0.12"];
-    QLabelElement *deviceNum = [[QLabelElement alloc] initWithTitle:@"设备标识" Value:nvrCell.nvrModel.nvr_id];
+    QLabelElement *deviceNum = [[QLabelElement alloc] initWithTitle:@"设备标识" Value:device.nvr_id];
     section_0.elements = [NSMutableArray arrayWithArray:@[versionInfo,deviceNum]];
     
     

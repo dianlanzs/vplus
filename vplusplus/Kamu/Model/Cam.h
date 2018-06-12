@@ -19,7 +19,13 @@
 @property  NSString * _Nonnull cam_id;
 @property  NSString * _Nullable cam_name;
 @property  NSData * _Nullable cam_cover;
-@property NSString * _Nullable cam_tag;
+@property  NSString * _Nullable cam_tag;
+
+
+@property  int cam_index;
+@property  int cam_state;
+
+
 
 
 //@property (nonatomic, strong) NSDate * _Nullable date;
