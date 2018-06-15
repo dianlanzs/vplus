@@ -68,7 +68,8 @@
 #import "AMNavigationController.h"
 
 #import "Alert.h"
+#import "UIView+ViewController.h"
+#import "AMViewController.h"
 
-#import "UIViewController+Device.h"
 #endif
 #endif

@@ -35,8 +35,10 @@ static NSString  *rootControllerName = @"NvrSettingsController";
     [camRoot setGrouped:YES];
     camRoot.title =  @"设置CAM";
     
+    [camRoot setObject:[NSDictionary dictionaryWithObjectsAndKeys:cam,@"camModel",device,@"deviceModel" ,nil]];
+    
     QSection *section0 = [[QSection alloc] initWithTitle:@"CAM_Header"];
-    section0.elements = [NSMutableArray arrayWithArray:@[[self changeCamNameElm:cam device:device],[self camSwitchElm],[self remainingBatteryElm],[self videoSettingsElm],[self audioSettingsElm],[self camInfoElm]]];
+    section0.elements = [NSMutableArray arrayWithArray:@[[self changeCamNameElm:cam],[self camSwitchElm],[self remainingBatteryElm],[self videoSettingsElm],[self audioSettingsElm],[self camInfoElm]]];
     
     [camRoot addSection:section0];
     [self  setAppearance];
@@ -55,7 +57,7 @@ static NSString  *rootControllerName = @"NvrSettingsController";
     return remainingBattery;
 }
 
-- (QElement *)changeCamNameElm:(Cam *)cam device:(Device *)device {
+- (QElement *)changeCamNameElm:(Cam *)cam {
     
     //prepare data
     NSString *s = cam.cam_name ? cam.cam_name :cam.cam_id;

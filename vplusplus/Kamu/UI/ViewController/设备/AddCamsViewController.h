@@ -10,7 +10,7 @@
 #import "QRCScanner.h"
 #import "QRResultCell.h"
 
-@interface AddCamsViewController : UIViewController
+@interface AddCamsViewController : AMViewController
 
 
 @property (nonatomic, copy) void(^signal_addBtn)(AddCamsViewController *addCam);

@@ -45,7 +45,7 @@
     if (cam  && cam != _cam ) {
         
         _cam = cam;
-        _cam_token = [cam addNotificationBlock:^(BOOL deleted, NSArray<RLMPropertyChange *> * _Nullable changes, NSError * _Nullable error) {
+        self.cam_token = [cam addNotificationBlock:^(BOOL deleted, NSArray<RLMPropertyChange *> * _Nullable changes, NSError * _Nullable error) {
             if (deleted) {
                 NSLog(@"Cam已经删除!");
 //                self.deleteCam(_cam);

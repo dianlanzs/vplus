@@ -8,8 +8,10 @@
 
 #import <UIKit/UIKit.h>
 #import "ZLPlayerView.h"
-@interface PlaybackViewController : UIViewController
+@interface PlaybackViewController : AMViewController
 
 @property (strong, nonatomic) ZLPlayerView *vp;
 @property (nonatomic, strong) ZLPlayerModel *playerModel;
+
+
 @end

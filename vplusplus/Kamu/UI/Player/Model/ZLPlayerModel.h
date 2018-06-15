@@ -65,14 +65,14 @@
 @property (nonatomic, assign) NSInteger    fatherViewTag;
 
 
-@property (nonatomic, strong) Device *nvrModel;
+//@property (nonatomic, strong) Device *nvrModel;
 
-@property (nonatomic,assign) long nvr_h;
+//@property (nonatomic,assign) long nvr_h;
 
-@property(nonatomic,strong) MediaEntity *cam_entity;
-@property  NSString *cam_id;
+//@property(nonatomic,strong) MediaEntity *cam_entity;
+//@property  NSString *cam_id;
 
-@property  int nvr_status;
+//@property  int nvr_status;
 
 
 

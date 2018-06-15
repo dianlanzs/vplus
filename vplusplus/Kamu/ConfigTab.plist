@@ -23,8 +23,6 @@
 	<key>vcNames</key>
 	<array>
 		<string>MainViewController</string>
-		<string>LibraryController</string>
-		<string>MineViewController</string>
 	</array>
 	<key>bg_item_blue</key>
 	<string>tab_bg_selected</string>

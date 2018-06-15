@@ -20,7 +20,7 @@
 
 
 
-@interface LibraryController : UIViewController
+@interface LibraryController : AMViewController
 
 
 //@property (nonatomic, weak)   id<mediaLibControllerDelegate> delegate;

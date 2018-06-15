@@ -8,11 +8,14 @@
 
 #import <UIKit/UIKit.h>
 #import "QRResultCell.h"
+#import "ZLPlayerView.h"
+#import "FunctionView.h"
 
 
-@interface PlayVideoController : UIViewController
+@interface PlayVideoController : AMViewController
 
-
+@property (strong, nonatomic) ZLPlayerView *vp;
+@property (nonatomic, strong) FunctionView *funcBar;
 
 //
 //@property (nonatomic,strong)  NSString *cam_id;

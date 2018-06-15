@@ -87,16 +87,23 @@
     mediaCell.playcallback = ^(MediaLibCell *cell) {
         
         PlaybackViewController *playbackVc = [[PlaybackViewController alloc] init];
-        [playbackVc.playerModel setCam_id:[self.cDevice.nvr_cams[indexPath.section] cam_id]];
-        [playbackVc.playerModel setNvr_h:self.cDevice.nvr_h];
-        [playbackVc.playerModel setCam_entity:cell.entity];
-
-        [playbackVc.playerModel setTitle:[medias[indexPath.row] fileName]];
-        [playbackVc.playerModel setNvr_status:self.cDevice.nvr_status];
-        [self.cDevice setAvDelegate:playbackVc.vp];
+        LibraryController *libVc = (LibraryController *)self.parentViewController;
+        [(AMNavigationController *)self.navigationController pushViewController:playbackVc deviceModel:libVc.operatingDevice camModel:libVc.operatingCam];
         
-        NSLog(@"🙂%zd,%@,%@",playbackVc.playerModel.nvr_h,playbackVc.playerModel.cam_id, [medias[indexPath.row] fileName]);
-        [self.navigationController pushViewController:playbackVc animated:YES];
+        
+        
+        [playbackVc.operatingCam setCam_id:[libVc.operatingDevice.nvr_cams[indexPath.section] cam_id]];
+        [playbackVc setOperatingMedia:cell.entity];
+
+//        [playbackVc.playerModel setCam_id:[self.cDevice.nvr_cams[indexPath.section] cam_id]];
+//        [playbackVc.playerModel setNvr_h:self.cDevice.nvr_h];
+//        [playbackVc.playerModel setCam_entity:cell.entity];
+
+//        [playbackVc.playerModel setTitle:[medias[indexPath.row] fileName]];
+//        [playbackVc.playerModel setNvr_status:self.cDevice.nvr_status];
+//        [self.cDevice setAvDelegate:playbackVc.vp];
+        
+//        NSLog(@"🙂%@,%@",((AMNavigationController *)playbackVc.navigationController).operatingCam.cam_id ,cell.entity.fileName);
     };
     return  mediaCell;
     
@@ -120,8 +127,8 @@
         media.filelength = (block+i) -> filelength;
         media.recordType = (block+i) -> recordtype;
         media.timelength = (block+i) -> timelength;
-        NSLog(@"create time : %@",[NSString stringWithFormat:@"createtime == %d", (block+i) -> createtime]);
-        NSLog(@"filename : %@",[NSString stringWithFormat:@"filename == %s", (block+i) -> filename]);
+//        NSLog(@"create time : %@",[NSString stringWithFormat:@"createtime == %d", (block+i) -> createtime]);
+//        NSLog(@"filename : %@",[NSString stringWithFormat:@"filename == %s", (block+i) -> filename]);
         Cam *db_cam =  [[selectedNvr.nvr_cams objectsWhere:[NSString stringWithFormat:@"cam_id = '%@'",[NSString stringWithUTF8String:(block+i) -> camdid]]] firstObject];
         MediaEntity *db_media = [[db_cam.cam_medias objectsWhere:[NSString stringWithFormat:@"createtime == %d", (block+i) -> createtime]] firstObject];
         if (db_cam && !db_media) {
@@ -131,7 +138,7 @@
         }
     }
     self.cDevice = selectedNvr;
-    NSLog(@"pageVC 当前线程: %@",[NSThread currentThread]);
+//    NSLog(@"pageVC 当前线程: %@",[NSThread currentThread]);
     [MBProgressHUD hideHUDForView:self.view animated:YES]; //data already got
 //    [MBProgressHUD hideHUD]; //data already got
 

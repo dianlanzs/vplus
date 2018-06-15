@@ -163,7 +163,7 @@
 }
 
 - (void)setState:(ZLPlayerState)state {
-    [super setState:state];
+    [super setState:state]; //show failed btn 
 }
 
 

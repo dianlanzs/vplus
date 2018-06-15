@@ -71,7 +71,7 @@
 
 - (NSData *)takeSnapshot;
 - (instancetype)initWithModel: (ZLPlayerModel *)vp_model control:(CommonPlayerControl *)control controller:(UIViewController *)vc;
-
+- (void)reconnect;
 - (void)lv_stop;
 - (void)lv_start;
 

@@ -69,7 +69,7 @@
         for (RegionModel *region in regionList) {
 
             for (ItemModel *item in region.itemList) {
-                if (item.selected == YES && cloud_get_device_status((void *)self.navigationController.operatingDevice.nvr_h) == CLOUD_DEVICE_STATE_CONNECTED) {
+                if (item.selected == YES && cloud_get_device_status((void *)self.operatingDevice.nvr_h) == CLOUD_DEVICE_STATE_CONNECTED) {
 //                    cloud_device_cam_list_files((void *)self.cloudDevice.nvr_h,item.cam_id,SEC_00,SEC_24,RECORD_TYPE_ALL);
                 }
             }
@@ -109,7 +109,7 @@
 
     
     NSMutableArray *items = [NSMutableArray array];
-    for (Cam *cloudCam in self.navigationController.operatingDevice.nvr_cams) {
+    for (Cam *cloudCam in self.operatingDevice.nvr_cams) {
         ItemModel *item = [ItemModel new];
         [item setItemName:cloudCam.cam_name ? [cloudCam.cam_name uppercaseString] : [cloudCam.cam_id uppercaseString]];
         item.cam_id = cloudCam.cam_id;
@@ -295,13 +295,13 @@
         PageController *page = [self.childViewControllers  objectAtIndex:0];
 
         [page setStart_daySec:sec];
-        if (cloud_get_device_status((void *)self.navigationController.operatingDevice.nvr_h) == CLOUD_DEVICE_STATE_CONNECTED) { //get status
-            self.navigationController.operatingDevice.listDelegate = page;
+        if (cloud_get_device_status((void *)self.operatingDevice.nvr_h) == CLOUD_DEVICE_STATE_CONNECTED) { //get status
+            self.operatingDevice.listDelegate = page;
             
                         [MBProgressHUD showSpinningWithMessage:@"downloding..." toView:page.tableView];
 //            [MBProgressHUD showSpinningWithMessage:@"downloding..." ];
             
-            cloud_device_cam_list_files((void *)self.navigationController.operatingDevice.nvr_h,NULL,  sec,sec + 24 * 3600,RECORD_TYPE_ALL);
+            cloud_device_cam_list_files((void *)self.operatingDevice.nvr_h,NULL,  sec,sec + 24 * 3600,RECORD_TYPE_ALL);
             
             
             

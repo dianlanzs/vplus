@@ -27,19 +27,12 @@
 #import "ReactiveObjC.h"
 
 
-
-#import "DataBuilder.h"
-#import "NvrSettingsController.h"
-
-#import "DeviceFooter.h"
-
-#import "LibraryController.h"
 @interface MainViewController() <UITableViewDelegate,UITableViewDataSource,MGSwipeTableCellDelegate>
 
 @property (nonatomic, strong) UIView *emptyView;
 @property (nonatomic, strong) UITableView *tableView;
 
-@property (nonatomic, strong) RLMResults<Device *> *results;
+//@property (nonatomic, strong) RLMResults<Device *> *results;
 
 
 @end
@@ -67,7 +60,7 @@
 }
 - (void)viewDidLoad {
     [super viewDidLoad];
-    if (self.results.count == 0) {
+    if (((AMNavigationController *)self.navigationController).results.count == 0) {
         [self emptyInterface];
     }else {
         [self deviceInterface];
@@ -80,7 +73,7 @@
 
 - (void)addNew:(NSNotification *)notification {
     
-    if (self.results.count == 0) {
+    if (((AMNavigationController *)self.navigationController).results.count == 0) {
         [self deviceInterface];
     }
 
@@ -97,17 +90,17 @@
          */
     }];
    
-    [self.tableView insertSections:[NSIndexSet indexSetWithIndex:self.results.count - 1] withRowAnimation:UITableViewRowAnimationFade];
+    [self.tableView insertSections:[NSIndexSet indexSetWithIndex:((AMNavigationController *)self.navigationController).results.count - 1] withRowAnimation:UITableViewRowAnimationFade];
 
 }
 
 - (void)deleteNvr:(NSIndexPath *)path {
-   if (self.results.count == 1) {
+   if (((AMNavigationController *)self.navigationController).results.count == 1) {
         [self emptyInterface];
     }
-    cloud_close_device((void *)[self.results objectAtIndex:path.section].nvr_h);
+    cloud_close_device((void *)[((AMNavigationController *)self.navigationController).results objectAtIndex:path.section].nvr_h);
     [RLM transactionWithBlock:^{
-        [RLM deleteObject:[self.results objectAtIndex:path.section]];
+        [RLM deleteObject:[((AMNavigationController *)self.navigationController).results objectAtIndex:path.section]];
     }];
     
     [self.tableView deleteSections:[NSIndexSet indexSetWithIndex:path.section] withRowAnimation:UITableViewRowAnimationTop];
@@ -123,6 +116,13 @@
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
+    
+}
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+}
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -141,18 +141,15 @@
 #pragma mark - Table view 数据源回调方法
 //swipe  删除会调用 numberOfSection  ，和 numberOfRows 方法
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    NSLog(@"section %lu",self.results.count);
-    return self.results.count;
+    return ((AMNavigationController *)self.navigationController).results.count;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    NSLog(@"row - 1");
     return 1;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-     NSLog(@"**CELL**");
-    Device *nonCams_device = self.results[indexPath.section];
+    Device *nonCams_device = ((AMNavigationController *)self.navigationController).results[indexPath.section];
     if (nonCams_device.nvr_type == CLOUD_DEVICE_TYPE_GW) {
         QRResultCell *nvrCell = [[QRResultCell alloc] init];
         [nvrCell setNvrModel:nonCams_device];
@@ -168,6 +165,8 @@
     
     return nil;
 }
+
+
 
 - (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section {
     return 39;
@@ -352,10 +351,10 @@
 }
 
 #pragma mark - getter
-
-- (RLMResults<Device *> *)results {
-    return [Device allObjects];
-}
+//
+//- (RLMResults<Device *> *)results {
+//    return [Device allObjects];
+//}
 
 
 

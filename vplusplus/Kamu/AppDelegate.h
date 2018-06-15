@@ -32,6 +32,7 @@
 
 //    self.m_pYUVData = new Byte[1920 * 1080 * 3 / 2]; //数组容量  ptr[m]
 @property(nonatomic,assign)int netStatus;
+@property (nonatomic, strong) NSDictionary *triggerOptions;
 
 @end
 

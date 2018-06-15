@@ -116,7 +116,8 @@
     
 //    probDoneVc.nvrCell = self.nvrCell;
 //    probDoneVc.indexPath = self.indexPath;
-    [self.navigationController pushViewController:[ProbeDoneViewController new] animated:YES];
+    [((AMNavigationController *)self.navigationController) pushViewController:[ProbeDoneViewController new] deviceModel:self.operatingDevice camModel:self.operatingCam];
+//    [self.navigationController pushViewController:[ProbeDoneViewController new] animated:YES];
     
 }
 

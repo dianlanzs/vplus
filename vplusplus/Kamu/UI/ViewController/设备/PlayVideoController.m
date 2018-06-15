@@ -16,7 +16,7 @@
 #import "PlayVideoController.h"
 #import "GLDrawController.h"
 #import "Waver.h"
-#import "ZLPlayer.h"
+
 #import "ZLPlayerModel.h"
 
 
@@ -24,7 +24,6 @@
 #import "LivePlayControl.h"
 
 #import "CamSettingsController.h"
-#import "FunctionView.h"
 
 
 #import "DataBuilder.h"
@@ -50,17 +49,12 @@ mydevice_data_callback callBack;
 
 @interface PlayVideoController () <ZLPlayerDelegate>
 //@property (nonatomic, strong) ZLPlayerControlView *controlView;
-@property (strong, nonatomic) ZLPlayerView *vp;
+
 @property (nonatomic, strong) ZLPlayerModel *playerModel;
-@property (nonatomic, strong) FunctionView *funcBar;
 
 //
 //@property (nonatomic,strong)  Cam *cam;
 //@property (nonatomic, strong) Device *device;
-
-
-
-
 @end
 
 
@@ -71,10 +65,8 @@ mydevice_data_callback callBack;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    [self.view setBackgroundColor:[UIColor whiteColor]];//消除Animated的残影
-  
-//    [self setOperatingDevice:self.navigationController.operatingDevice];
     [self setNavgation];
+    [self.view setBackgroundColor:[UIColor whiteColor]];//消除Animated的残影
     [self.view addSubview:self.funcBar];//使用_funcBar，不显示，  cuz 没有走get 方法 self.funcBar!!
 }
 
@@ -86,31 +78,30 @@ mydevice_data_callback callBack;
     [self zl_playerBackAction];
 }
 - (void)zl_playerBackAction {
-    
-//    VideoCell * c = (VideoCell *)[self.nvrCell.QRcv cellForItemAtIndexPath:self.indexpath]; //cam cell
-//    [c.playableView setImage:[UIImage imageWithData:cover]];
     [RLM transactionWithBlock:^{
-        [self.navigationController.operatingCam setCam_cover:[self.vp takeSnapshot]];//database
+        [self.operatingCam setCam_cover:[self.vp takeSnapshot]];//database
     }];
     [self.navigationController popViewControllerAnimated:YES];
 
 }
 - (void)camSetting:(id)sender {
-    QRootElement *camRoot = [[DataBuilder new] createForCamSettings:self.navigationController.operatingCam device:self.navigationController.operatingDevice];
+    QRootElement *camRoot = [[DataBuilder new] createForCamSettings:self.operatingCam device:self.operatingDevice];
     CamSettingsController *camSettingsVc = [[CamSettingsController alloc] initWithRoot:camRoot];
     [self.navigationController pushViewController:camSettingsVc animated:YES];
-//
-//    camSettingsVc.deleteCam = ^{
-//
-//    };
     
+//    [((AMNavigationController *)self.navigationController) pushViewController:camSettingsVc deviceModel:self.operatingDevice camModel:self.operatingCam];
 }
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    [self.funcBar setBatteryProgress:cloud_device_cam_get_battery((void *)self.navigationController.operatingDevice.nvr_h ,[self.navigationController.operatingCam.cam_id UTF8String])];
-    [self.funcBar setWifiProgress:cloud_device_cam_get_signal((void *)self.navigationController.operatingDevice.nvr_h,[self.navigationController.operatingCam.cam_id UTF8String])];
-    [self.vp lv_start];
-    self.navigationItem.title = self.navigationController.operatingCam.cam_name? [self.navigationController.operatingCam.cam_name uppercaseString] : [self.navigationController.operatingCam.cam_id uppercaseString];
+ 
+    
+    [self vp];//config vp
+    
+    if (self.operatingDevice.nvr_status == CLOUD_DEVICE_STATE_CONNECTED) {
+        [self.vp lv_start];
+    }
+
+    self.navigationItem.title = self.operatingCam.cam_name? [self.operatingCam.cam_name uppercaseString] : [self.operatingCam.cam_id uppercaseString];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -118,13 +109,17 @@ mydevice_data_callback callBack;
 }
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
-    [self.navigationController setNavigationBarHidden:NO animated:YES];
+    if (self.operatingDevice.nvr_status == CLOUD_DEVICE_STATE_CONNECTED) {
+        [self.vp lv_stop];
+    }
+//    [self.navigationController setNavigationBarHidden:NO animated:YES];
 
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
     [super viewDidDisappear:YES];
-    [self.vp lv_stop];//maybe NSTimer has 2s dealay
+ 
+
 }
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
@@ -201,11 +196,11 @@ mydevice_data_callback callBack;
     
     if (!_playerModel) {
         _playerModel                  = [[ZLPlayerModel alloc] init];
-        _playerModel.title            = self.navigationController.operatingCam.cam_name? [self.navigationController.operatingCam.cam_name uppercaseString] : [self.navigationController.operatingCam.cam_id uppercaseString];
+        _playerModel.title            = self.operatingCam.cam_name? [self.operatingCam.cam_name uppercaseString] : [self.operatingCam.cam_id uppercaseString];
         _playerModel.placeholderImage = [UIImage imageNamed:@"loading_bgView1"];
         // _playerModel.resolutionDic = @{@"高清" : self.videoURL.absoluteString, @"标清" : self.videoURL.absoluteString};
-        [_playerModel setCam_id:self.navigationController.operatingCam.cam_id];
-        [_playerModel setNvr_h:self.navigationController.operatingDevice.nvr_h];
+//        [_playerModel setCam_id:((AMNavigationController *)self.navigationController).operatingCam.cam_id];
+//        [_playerModel setNvr_h:((AMNavigationController *)self.navigationController).operatingDevice.nvr_h];
     }
     
     return _playerModel;

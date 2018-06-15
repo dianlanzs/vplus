@@ -247,7 +247,6 @@
 		B8825A951FCFB10500531271 /* UIView+Frame.m in Sources */ = {isa = PBXBuildFile; fileRef = B8825A6F1FCFB10400531271 /* UIView+Frame.m */; };
 		B8825ABC1FD15AE500531271 /* NSString+StringFrame.m in Sources */ = {isa = PBXBuildFile; fileRef = B8825ABA1FD15AE500531271 /* NSString+StringFrame.m */; };
 		B88C0AD920CA7ACB00F27C1D /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B88C0AD820CA7ACB00F27C1D /* Images.xcassets */; };
-		B88C0AFE20CF961800F27C1D /* UIViewController+Device.m in Sources */ = {isa = PBXBuildFile; fileRef = B88C0AFD20CF961700F27C1D /* UIViewController+Device.m */; };
 		B88C6B911FF1028200217E94 /* AddCamsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B88C6B8F1FF1028200217E94 /* AddCamsViewController.m */; };
 		B89330C11FD4F05100D1B7E6 /* UIScrollView+EmptyDataSet.m in Sources */ = {isa = PBXBuildFile; fileRef = B89330BD1FD4F05100D1B7E6 /* UIScrollView+EmptyDataSet.m */; };
 		B89330C31FD4F05100D1B7E6 /* UIColor+Hexadecimal.m in Sources */ = {isa = PBXBuildFile; fileRef = B89330BF1FD4F05100D1B7E6 /* UIColor+Hexadecimal.m */; };
@@ -851,8 +850,6 @@
 		B8825ABA1FD15AE500531271 /* NSString+StringFrame.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSString+StringFrame.m"; sourceTree = "<group>"; };
 		B88C0AD620CA7A8300F27C1D /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = SOURCE_ROOT; };
 		B88C0AD820CA7ACB00F27C1D /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
-		B88C0AFC20CF961700F27C1D /* UIViewController+Device.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "UIViewController+Device.h"; sourceTree = "<group>"; };
-		B88C0AFD20CF961700F27C1D /* UIViewController+Device.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "UIViewController+Device.m"; sourceTree = "<group>"; };
 		B88C6B8E1FF1028200217E94 /* AddCamsViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AddCamsViewController.h; sourceTree = "<group>"; };
 		B88C6B8F1FF1028200217E94 /* AddCamsViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AddCamsViewController.m; sourceTree = "<group>"; };
 		B89330BC1FD4F05100D1B7E6 /* UIScrollView+EmptyDataSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIScrollView+EmptyDataSet.h"; sourceTree = "<group>"; };
@@ -1749,8 +1746,8 @@
 			children = (
 				B8825A401FCEED7C00531271 /* DeviceListCell.h */,
 				B8B176631FD8C9D3004C7030 /* QRResultCell.h */,
-				B8825A411FCEED7C00531271 /* DeviceListCell.m */,
 				B8B176641FD8C9D3004C7030 /* QRResultCell.m */,
+				B8825A411FCEED7C00531271 /* DeviceListCell.m */,
 				B8D2A59C1FDE6AFD00BB33F3 /* VideoCell.h */,
 				B8D2A59D1FDE6AFD00BB33F3 /* VideoCell.m */,
 				B8C5D9F320A309C500AAEB67 /* DeviceFooter.h */,
@@ -1900,8 +1897,6 @@
 		B87B39671FBD3D7100290B3F /* AMViewController */ = {
 			isa = PBXGroup;
 			children = (
-				B88C0AFC20CF961700F27C1D /* UIViewController+Device.h */,
-				B88C0AFD20CF961700F27C1D /* UIViewController+Device.m */,
 				B87B396C1FBD3E5900290B3F /* AMTabBarController.h */,
 				B87BEB631FC2712300E7B6D3 /* AMNavigationController.h */,
 				B87BEB641FC2712300E7B6D3 /* AMNavigationController.m */,
@@ -2887,7 +2882,6 @@
 				B81C4FD91FC3C2EA00305CB1 /* bitstream.c in Sources */,
 				B8C85117203270DB0089B76F /* PCMPlayer.m in Sources */,
 				B837C1A9201B33C3003B993D /* QElement.m in Sources */,
-				B88C0AFE20CF961800F27C1D /* UIViewController+Device.m in Sources */,
 				B837C1DB201B33C3003B993D /* QTableViewCell.m in Sources */,
 				B835D68920C0FB6F00B91109 /* UIView+ViewController.m in Sources */,
 				B87CEF44200353B90083ACB6 /* UIWindow+ZLCurrentViewController.m in Sources */,

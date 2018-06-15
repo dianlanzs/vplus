@@ -44,7 +44,7 @@
 - (void)connectDevice {
     
     RLMThreadSafeReference *deviceRef = [RLMThreadSafeReference
-                                         referenceWithThreadConfined:self.navigationController.operatingDevice];
+                                         referenceWithThreadConfined:self.operatingDevice];
     dispatch_async(dispatch_get_global_queue(0, 0), ^{
         
         @autoreleasepool {
@@ -125,7 +125,7 @@ int my_device_action_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, voi
 - (void)toHome:(id)sender {
     
 
-    if ([[self.navigationController.operatingDevice.nvr_cams objectsWhere:[NSString stringWithFormat:@"cam_id = '%@'",self.probedCam.cam_id]] firstObject]) {
+    if ([[self.operatingDevice.nvr_cams objectsWhere:[NSString stringWithFormat:@"cam_id = '%@'",self.probedCam.cam_id]] firstObject]) {
         [MBProgressHUD showPromptWithText:@"该cam已经被添加"];
     }else {
         //局部变量会 出域 就释放了 不需要 ws
@@ -138,7 +138,7 @@ int my_device_action_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, voi
                                         } successBlock:^{
                                             
                                             [RLM transactionWithBlock:^{
-                                                [self.navigationController.operatingDevice.nvr_cams addObject:self.probedCam];
+                                                [self.operatingDevice.nvr_cams addObject:self.probedCam];
                                             }];
 //                                            [self.nvrCell.QRcv reloadItemsAtIndexPaths:@[self.indexPath]];
                                             [self.navigationController popToRootViewControllerAnimated:YES];

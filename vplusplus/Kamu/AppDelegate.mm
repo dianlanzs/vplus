@@ -58,38 +58,26 @@ static BOOL isProduction = NO;
     [[NSNotificationCenter defaultCenter]removeObserver:self name:@"netWorkChangeEventNotification" object:nil];
 }
 
-
-- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
-    
-}
-
 -(void)sendNotation:(NSDictionary *)launchOptions{
     
-    if (launchOptions) {
-        
-        NSDictionary *remoteNotification = [launchOptions objectForKey: UIApplicationLaunchOptionsRemoteNotificationKey];
-        
-        if (remoteNotification) {
-            AMNavigationController *nav = (AMNavigationController *)self.tabBarController.selectedViewController;
-                [nav jumpToViewctroller:remoteNotification];
-            
-        }
-        
-    }
-    
+//    NSDictionary *userInfo = [launchOptions objectForKey: UIApplicationLaunchOptionsRemoteNotificationKey];
+//    if (userInfo) {
+//        [(AMNavigationController *)self.tabBarController.selectedViewController jumpToViewctroller:userInfo];
+//
+//    }
 }
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     
     cloud_init();
-
+    self.triggerOptions = launchOptions;
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    self.window.backgroundColor = [UIColor whiteColor];
+//    self.window.backgroundColor = [UIColor whiteColor];
     [self.window makeKeyAndVisible];
     [self.window setRootViewController:self.tabBarController];
-    [self registerAPNsFor:application]; //more time regisetered ？？
-    [self monitorNetwork];
+    [self observeNetwork];
   
-  
+    [self setMRButtonAppearance];
+    [self configJpushWith:launchOptions];//根据版本第一次加载
     //Steve
 //    self.y_data = new Byte[1920 * 1080 * 1]; //数组容量  ptr[m]
 //    self.u_data = new Byte[1920 * 1080 * 1/4]; //数组容量  ptr[m]
@@ -120,49 +108,27 @@ static BOOL isProduction = NO;
     //        self.token = @"haveToken && valid";
     //    }
     //
-    [self setMRButtonAppearance];
-    [self configJpushWith:launchOptions];
+   
 
-    [self performSelector:@selector(sendNotation:) withObject:launchOptions afterDelay:1.5];
+//    [self performSelector:@selector(sendNotation:) withObject:launchOptions afterDelay:0];
 
-    
-    
     return YES;
 }
 
-#pragma mark - APNs 推送
-- (void)registerAPNsFor:(UIApplication *)app {
-    [app registerUserNotificationSettings:[UIUserNotificationSettings
-                                                   settingsForTypes:(UIUserNotificationTypeSound | UIUserNotificationTypeAlert | UIUserNotificationTypeBadge)
-                                                   categories:nil]];
-    [[UIApplication sharedApplication] registerForRemoteNotifications];
-}
-
 - (void)configJpushWith:(NSDictionary *)launchOptions {
-        [self setup_APNs];
-        [self setup_JpushdidFinishLaunchingWithOptions:launchOptions];
-}
-- (void)setup_APNs{
+    ///初始化APNs
     JPUSHRegisterEntity * entity = [[JPUSHRegisterEntity alloc] init];
     entity.types = JPAuthorizationOptionAlert|JPAuthorizationOptionBadge|JPAuthorizationOptionSound;
-    if ([UIDevice currentDevice].systemVersion.floatValue >= 9.0) {
-        /*可以添加自定义categories
-         NSSet<UNNotificationCategory *> *categories for iOS10 or later
-         NSSet<UIUserNotificationCategory *> *categories for iOS8 and iOS9
-         */
-    }
     [JPUSHService registerForRemoteNotificationConfig:entity delegate:self];
-}
 
-- (void)setup_JpushdidFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    //    NSString *advertisingId = [[[ASIdentifierManager sharedManager] advertisingIdentifier] UUIDString];
+    ///初始化Jpush
     [JPUSHService setupWithOption:launchOptions
                            appKey:appKey
                           channel:nil
                  apsForProduction:isProduction
             advertisingIdentifier:nil];
-    
 }
+
 
 //token 回调
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
@@ -184,55 +150,98 @@ static BOOL isProduction = NO;
 
 
 
-#pragma mark- JPUSHRegisterDelegate
 //#ifdef NSFoundationVersionNumber_iOS_9_x_Max
-#pragma mark- JPUSHRegisterDelegate
+#pragma mark- Jpush Delegate ,  Packaged iOS 10 UN API
+///展示推送
 - (void)jpushNotificationCenter:(UNUserNotificationCenter *)center willPresentNotification:(UNNotification *)notification withCompletionHandler:(void (^)(NSInteger))completionHandler {
-    UNNotificationRequest *request = notification.request; // 收到推送的请求
-    UNNotificationContent *content = request.content; // 收到推送的消息内容
-    NSDictionary * userInfo = notification.request.content.userInfo;
+//    UNNotificationRequest *request = notification.request; // 收到推送的请求
+//    UNNotificationContent *content = request.content; // 收到推送的消息内容
+//    NSDictionary * userInfo = notification.request.content.userInfo;
    
     
-    NSNumber *badge = content.badge;  // 推送消息的角标
-    NSString *body = content.body;    // 推送消息体
-    UNNotificationSound *sound = content.sound;  // 推送消息的声音
-    NSString *subtitle = content.subtitle;  // 推送消息的副标题
-    NSString *title = content.title;  // 推送消息的标题
+//    NSNumber *badge = content.badge;  // 推送消息的角标
+//    NSString *body = content.body;    // 推送消息体
+//    UNNotificationSound *sound = content.sound;  // 推送消息的声音
+//    NSString *subtitle = content.subtitle;  // 推送消息的副标题
+//    NSString *title = content.title;  // 推送消息的标题
     
     if([notification.request.trigger isKindOfClass:[UNPushNotificationTrigger class]]) {
-        [JPUSHService handleRemoteNotification:userInfo];
-        NSLog(@"iOS10 前台收到远程通知:%@", [self logDic:userInfo]);
+//        [JPUSHService handleRemoteNotification:userInfo]; //上报 Jpush 推送信息
+//        NSLog(@"iOS10 前台收到远程通知:%@", [self logDic:userInfo]);
         //        [rootViewController addNotificationCount];
+        
+//        [self sendNotation:notification.request.content.userInfo];
     }
     else {
         // 判断为本地通知
-        NSLog(@"iOS10 前台收到本地通知:{\nbody:%@，\ntitle:%@,\nsubtitle:%@,\nbadge：%@，\nsound：%@，\nuserInfo：%@\n}",body,title,subtitle,badge,sound,userInfo);
+//        NSLog(@"iOS10 前台收到本地通知:{\nbody:%@，\ntitle:%@,\nsubtitle:%@,\nbadge：%@，\nsound：%@，\nuserInfo：%@\n}",body,title,subtitle,badge,sound,userInfo);
     }
     completionHandler(UNNotificationPresentationOptionBadge|UNNotificationPresentationOptionSound|UNNotificationPresentationOptionAlert); // 需要执行这个方法，选择是否提醒用户，有Badge、Sound、Alert三种类型可以设置
 }
 
-//点击
+///点击推送
 - (void)jpushNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(UNNotificationResponse *)response withCompletionHandler:(void (^)())completionHandler {
-    
+
     NSDictionary * userInfo = response.notification.request.content.userInfo;
-    UNNotificationRequest *request = response.notification.request; // 收到推送的请求
-    UNNotificationContent *content = request.content; // 收到推送的消息内容
+//    UNNotificationRequest *request = response.notification.request; // 收到推送的请求
+//    UNNotificationContent *content = request.content; // 收到推送的消息内容
     
-    NSNumber *badge = content.badge;  // 推送消息的角标
-    NSString *body = content.body;    // 推送消息体
-    UNNotificationSound *sound = content.sound;  // 推送消息的声音
-    NSString *subtitle = content.subtitle;  // 推送消息的副标题
-    NSString *title = content.title;  // 推送消息的标题
+//    NSNumber *badge = content.badge;  // 推送消息的角标
+//    NSString *body = content.body;    // 推送消息体
+//    UNNotificationSound *sound = content.sound;  // 推送消息的声音
+//    NSString *subtitle = content.subtitle;  // 推送消息的副标题
+//    NSString *title = content.title;  // 推送消息的标题
     
     if([response.notification.request.trigger isKindOfClass:[UNPushNotificationTrigger class]]) {
-        [JPUSHService handleRemoteNotification:userInfo];
-        NSLog(@"iOS10 收到远程通知:%@", [self logDic:userInfo]);
+//        [JPUSHService handleRemoteNotification:userInfo];
+//        NSLog(@"iOS10 收到远程通知:%@", [self logDic:userInfo]);
         //        [rootViewController addNotificationCount];
+        
+        
+        
+//        if ([UIApplication sharedApplication].applicationState == UIApplicationStateActive || [UIApplication sharedApplication].applicationState == UIApplicationStateBackground) {
+//            NSLog(@"acitve or background");
+//
+//
+//
+//        }else {
+//
+        
+        /*
+        UIAlertController * alertController = [UIAlertController alertControllerWithTitle:@"Alert" message:[self logDic:userInfo] preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"拒绝" style:UIAlertActionStyleCancel handler:nil];
+        UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"接听" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+//            NSString *str = [NSString stringWithFormat:@"https://itunes.apple.com/cn/app/wei-xin/id414478124?mt=8"];
+            
+            [(AMNavigationController *)self.tabBarController.selectedViewController jumpToViewctroller:userInfo];
+
+            //                 [[UIApplication sharedApplication] openURL:[NSURL URLWithString:str]];
+            
+            
+        }];//https在iTunes中找，这里的事件是前往手机端App store下载微信
+        [alertController addAction:cancelAction];
+        [alertController addAction:okAction];
+        [self.tabBarController presentViewController:alertController animated:YES completion:nil];
+       
+//        }
+        */
+        
+        
+        
+        
+        
+        [(AMNavigationController *)self.tabBarController.selectedViewController jumpToViewctroller:userInfo];
+
+     
+        
+        
+             [UIApplication sharedApplication].applicationIconBadgeNumber = 0;
+        [JPUSHService setBadge:0]; //点击 某个 Cell  上报服务器 bageNumber -1
         
     }
     else {
         // 判断为本地通知
-        NSLog(@"iOS10 收到本地通知:{\nbody:%@，\ntitle:%@,\nsubtitle:%@,\nbadge：%@，\nsound：%@，\nuserInfo：%@\n}",body,title,subtitle,badge,sound,userInfo);
+//        NSLog(@"iOS10 收到本地通知:{\nbody:%@，\ntitle:%@,\nsubtitle:%@,\nbadge：%@，\nsound：%@，\nuserInfo：%@\n}",body,title,subtitle,badge,sound,userInfo);
     }
     
     completionHandler();  // 系统要求执行这个方法
@@ -244,19 +253,12 @@ static BOOL isProduction = NO;
     if (![dic count]) {
         return nil;
     }
-    NSString *tempStr1 =
-    [[dic description] stringByReplacingOccurrencesOfString:@"\\u"
+    NSString *tempStr1 = [[dic description] stringByReplacingOccurrencesOfString:@"\\u"
                                                  withString:@"\\U"];
-    NSString *tempStr2 =
-    [tempStr1 stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""];
-    NSString *tempStr3 =
-    [[@"\"" stringByAppendingString:tempStr2] stringByAppendingString:@"\""];
+    NSString *tempStr2 = [tempStr1 stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""];
+    NSString *tempStr3 = [[@"\"" stringByAppendingString:tempStr2] stringByAppendingString:@"\""];
     NSData *tempData = [tempStr3 dataUsingEncoding:NSUTF8StringEncoding];
-    NSString *str =
-    [NSPropertyListSerialization propertyListFromData:tempData
-                                     mutabilityOption:NSPropertyListImmutable
-                                               format:NULL
-                                     errorDescription:NULL];
+    NSString *str = [NSPropertyListSerialization propertyListWithData:tempData options:NSPropertyListImmutable format:NULL error:NULL];
     return str;
 }
 - (void)configTutkPushWith:(NSData *)token{
@@ -534,6 +536,14 @@ static BOOL isProduction = NO;
 
 - (void)applicationWillTerminate:(UIApplication *)application {
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+    
+    AMNavigationController *nav = (AMNavigationController *)self.tabBarController.selectedViewController;
+    for (Device *d in nav.results) {
+        [RLM transactionWithBlock:^{
+            d.nvr_status = CLOUD_DEVICE_STATE_UNKNOWN;
+        }];
+    }
+    
 }
 
 
@@ -642,7 +652,7 @@ static BOOL isProduction = NO;
     
     NSMutableArray *navigationControllers = [NSMutableArray array];
     
-    for (NSInteger index = 0; index < 3; index++ ) {
+    for (NSInteger index = 0; index < 1; index++ ) {
         
         NSString *title = [[self.dict valueForKey:@"navTitles"] objectAtIndex:index];
         UIViewController *vc = [NSClassFromString( [[self.dict valueForKey:@"vcNames"] objectAtIndex:index]) new];
@@ -746,7 +756,7 @@ static BOOL isProduction = NO;
 }
 
 #pragma mark - 检测网络状态变化
-- (void)monitorNetwork {
+- (void)observeNetwork {
     
     
     [[AFNetworkActivityIndicatorManager sharedManager] setEnabled:YES];

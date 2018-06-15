@@ -8,17 +8,15 @@
 
 #import <UIKit/UIKit.h>
 
-
 @interface AMNavigationController : UINavigationController
 
 @property (nonatomic, assign) SEL selector;
 @property (nonatomic, copy) NSString *navTitle;
-@property (nonatomic, strong) Device *pushedDevice;
 
 
 
 
-
+@property (nonatomic, strong) RLMResults<Device *> *results;
 
 
 
@@ -38,6 +36,8 @@
 
 
 
-- (void)pushViewController:(UIViewController *)vc deviceID:(NSString *)deviceID camID:(NSString *)camID;
+//- (void)pushViewController:(UIViewController *)vc deviceID:(NSString *)deviceID camID:(NSString *)camID;
+- (void)pushViewController:(UIViewController *)vc deviceModel:(Device *)deviceModel camModel:(Cam *)camModel;
+
 -(void)jumpToViewctroller:(NSDictionary *)remoteNotification;
 @end
