@@ -21,29 +21,62 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    [self.view setBackgroundColor:[UIColor blackColor]];
+
+     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(stateNotification:) name:@"CLOUD_DEVICE_STATE" object:nil];
 
 }
-
+- (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:@"CLOUD_DEVICE_STATE" object:nil];
+}
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     
-    [self vp];
-
+    [self vp]; //config vp UI
     if (self.operatingDevice.nvr_status == CLOUD_DEVICE_STATE_CONNECTED) {
-          [self.vp pb_start];
+        [MBProgressHUD showStatus:DeviceConnected];
+        [self.vp pb_start];
+    }
+    else if (self.operatingDevice.nvr_status == CLOUD_DEVICE_STATE_UNKNOWN) {
+        [MBProgressHUD showStatus:DeviceConnecting];
+    }else {
+        [MBProgressHUD showStatus:DeviceDisconnected];
     }
  
 }
 
+- (void)stateNotification:(NSNotification *)notification {
+    
+    Device *informedDevice = notification.object;
+    if ([informedDevice.nvr_id isEqualToString:self.operatingDevice.nvr_id]) {
+        if (informedDevice.nvr_status == CLOUD_DEVICE_STATE_CONNECTED) {
+            [MBProgressHUD showStatus:DeviceConnected];
+            self.operatingDevice = informedDevice;
+            [self.vp pb_start ];
+        }else {
+            MBProgressHUD *hud =   [MBProgressHUD showStatus:DeviceDisconnected];
+            [hud.actionBtn setHidden:NO];
+            [hud.actionBtn addTarget:self action:@selector(reconnect:) forControlEvents:UIControlEventTouchUpInside];
+        }
+    }
+    
+}
+
+- (void)reconnect:(id)sender {
+    cloud_connect_device((void *)self.operatingDevice.nvr_h, "admin", "123");
+    [sender setHidden:YES];
+    [MBProgressHUD showStatus:DeviceConnecting];
+}
+
+
+
+
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
-   
-   
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
     [super viewDidDisappear:animated];
-    NSLog(@"%@,%@",self.vp,self.navigationController); //<zlplayerview: 0x1041e3e30>,<AMNavigationController: 0x105033600>
 
     if (self.operatingDevice.nvr_status == CLOUD_DEVICE_STATE_CONNECTED) {
         if (self.navigationController && self.vp.functionControl.state != ZLPlayerStateEnd) {
@@ -71,7 +104,5 @@
     return _playerModel;
 }
 
-- (void)dealloc {
-    ;
-}
+
 @end

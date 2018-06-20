@@ -13,6 +13,26 @@
 
 
 #import "CommonPlayerControl.h"
+
+
+#define ZLPlayerShared                      [ZLBrightnessView sharedBrightnessView]
+
+
+#define AUTOOL [PCMPlayer sharedAudioManager]
+
+
+#define OP_DEVICE self.rootVc.operatingDevice
+
+#define OP_DEVICE_HANDLE self.rootVc.operatingDevice.nvr_h
+#define OP_DEVICE_STATUS self.rootVc.operatingDevice.nvr_status
+
+#define OP_CAM_ID self.rootVc.operatingCam.cam_id
+#define LIVE_PLAY_VC ((PlayVideoController *)self.rootVc)
+
+#define OP_MEDIA_FILE self.rootVc.operatingMedia
+
+
+
 @class ZLPlayerModel;
 
 

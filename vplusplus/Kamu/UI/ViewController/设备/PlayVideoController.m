@@ -48,13 +48,8 @@ mydevice_data_callback callBack;
 
 
 @interface PlayVideoController () <ZLPlayerDelegate>
-//@property (nonatomic, strong) ZLPlayerControlView *controlView;
-
 @property (nonatomic, strong) ZLPlayerModel *playerModel;
 
-//
-//@property (nonatomic,strong)  Cam *cam;
-//@property (nonatomic, strong) Device *device;
 @end
 
 
@@ -68,8 +63,13 @@ mydevice_data_callback callBack;
     [self setNavgation];
     [self.view setBackgroundColor:[UIColor whiteColor]];//消除Animated的残影
     [self.view addSubview:self.funcBar];//使用_funcBar，不显示，  cuz 没有走get 方法 self.funcBar!!
-}
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(stateNotification:) name:@"CLOUD_DEVICE_STATE" object:nil];
 
+}
+- (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:@"CLOUD_DEVICE_STATE" object:nil];
+}
 - (void)setNavgation {
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"nav_back"] style:UIBarButtonItemStylePlain target:self action:@selector(back:)];
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"button_settings"] style:UIBarButtonItemStylePlain target:self action:@selector(camSetting:)];
@@ -88,45 +88,82 @@ mydevice_data_callback callBack;
     QRootElement *camRoot = [[DataBuilder new] createForCamSettings:self.operatingCam device:self.operatingDevice];
     CamSettingsController *camSettingsVc = [[CamSettingsController alloc] initWithRoot:camRoot];
     [self.navigationController pushViewController:camSettingsVc animated:YES];
-    
-//    [((AMNavigationController *)self.navigationController) pushViewController:camSettingsVc deviceModel:self.operatingDevice camModel:self.operatingCam];
 }
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
- 
-    
-    [self vp];//config vp
-    
+    [self vp]; //config vp UI
     if (self.operatingDevice.nvr_status == CLOUD_DEVICE_STATE_CONNECTED) {
+        [MBProgressHUD showStatus:DeviceConnected];
         [self.vp lv_start];
     }
-
+    else if (self.operatingDevice.nvr_status == CLOUD_DEVICE_STATE_UNKNOWN) {
+         [MBProgressHUD showStatus:DeviceConnecting];
+    }else {
+          [MBProgressHUD showStatus:DeviceDisconnected];
+    }
+    
     self.navigationItem.title = self.operatingCam.cam_name? [self.operatingCam.cam_name uppercaseString] : [self.operatingCam.cam_id uppercaseString];
 }
+
+
+
+
+- (void)stateNotification:(NSNotification *)notification {
+    
+    Device *informedDevice = notification.object;
+    if ([informedDevice.nvr_id isEqualToString:self.operatingDevice.nvr_id]) {
+        if (informedDevice.nvr_status == CLOUD_DEVICE_STATE_CONNECTED) {
+            [MBProgressHUD showStatus:DeviceConnected];
+            self.operatingDevice = informedDevice;
+            [self.vp lv_start ];
+        }else {
+         MBProgressHUD *hud =   [MBProgressHUD showStatus:DeviceDisconnected];
+         [hud.actionBtn setHidden:NO];
+         [hud.actionBtn addTarget:self action:@selector(reconnect:) forControlEvents:UIControlEventTouchUpInside];
+        }
+    }
+    
+}
+
+- (void)reconnect:(id)sender {
+    cloud_connect_device((void *)self.operatingDevice.nvr_h, "admin", "123");
+    [sender setHidden:YES];
+    [MBProgressHUD showStatus:DeviceConnecting];
+}
+
+
+
+
+
 
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:YES];
 }
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
-    if (self.operatingDevice.nvr_status == CLOUD_DEVICE_STATE_CONNECTED) {
-        [self.vp lv_stop];
-    }
-//    [self.navigationController setNavigationBarHidden:NO animated:YES];
-
+//    if (self.operatingDevice.nvr_status == CLOUD_DEVICE_STATE_CONNECTED) {
+//        [self.vp lv_stop];
+//    }
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
     [super viewDidDisappear:YES];
- 
+    if (self.operatingDevice.nvr_status == CLOUD_DEVICE_STATE_CONNECTED) {
+        /*
+        if (self.navigationController && self.vp.functionControl.state != ZLPlayerStateEnd) {
+            [self.vp.glvc setPaused:YES];
+        } else if (!self.navigationController) {
+            [self.vp lv_stop];
+        }
+         */
+        [self.vp lv_stop];
+    }
 
 }
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
 }
-- (void)dealloc {
-    NSLog(@"PlayerViewController relese!");
-}
+
 
 
 #pragma mark - 操作方法 //MARK: 注册回调操作,、、形参，Self不提示 没有self变量？？？

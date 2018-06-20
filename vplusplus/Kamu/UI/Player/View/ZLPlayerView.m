@@ -20,21 +20,6 @@
 #import "LivePlayControl.h"
 
 
-#define ZLPlayerShared                      [ZLBrightnessView sharedBrightnessView]
-
-
-#define AUTOOL [PCMPlayer sharedAudioManager]
-
-
-#define OP_DEVICE self.rootVc.operatingDevice
-
-#define OP_DEVICE_HANDLE self.rootVc.operatingDevice.nvr_h
-#define OP_DEVICE_STATUS self.rootVc.operatingDevice.nvr_status
-
-#define OP_CAM_ID self.rootVc.operatingCam.cam_id
-#define LIVE_PLAY_VC ((PlayVideoController *)self.rootVc)
-
-#define OP_MEDIA_FILE self.rootVc.operatingMedia
 
 
 
@@ -78,42 +63,11 @@ typedef NS_ENUM(NSInteger, PanDirection){
 
 
 
-- (void)device:(Device *)nvr sendAvData:(void *)data dataType:(int)type {
-    
-    [self setChekingFlag:1];
-    if (type == CLOUD_CB_VIDEO) {
-        cb_video_info_t *info = (cb_video_info_t *)data;
-        if (info->end_flag) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [self pb_end];
-            });
-        } else {
-            AVFrame *pFrame_ = info->pFrame;
-            int width = pFrame_->width;
-            int height = pFrame_->height;
-            CGFloat timestamp = (info->timestamp) / 1000;
-            [self.glvc writeY:pFrame_->data[0] U:pFrame_->data[1] V:pFrame_->data[2] width:width height:height];
-            
-            
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if (self.functionControl.state != ZLPlayerStatePlaying) {
-                    [self.functionControl setState:ZLPlayerStatePlaying];
-                }
-                if ([self.functionControl isKindOfClass:[PlaybackControl class]]) {
-                    CGFloat valuePercent = timestamp / OP_MEDIA_FILE.timelength;
-                    [self.functionControl zl_playerCurrentTime:timestamp totalTime:OP_MEDIA_FILE.timelength sliderValue:valuePercent];
-                }
-            });
-            
-            
-        }
-        
-    }else if (type == CLOUD_CB_AUDIO) {
-        cb_audio_info_t *info = (cb_audio_info_t *)data;
-        AVFrame *pFrame_ = info->pFrame;
-        [AUTOOL.mIn appendBytes:pFrame_->data[0] length:pFrame_->nb_samples * av_get_bytes_per_sample(AV_SAMPLE_FMT_S16)];
-    }
-}
+//- (void)device:(Device *)nvr sendAvData:(void *)data dataType:(int)type {
+//
+//
+//}
+
 - (void)checking {
     
     [self setChekingFlag:0];
@@ -134,7 +88,10 @@ typedef NS_ENUM(NSInteger, PanDirection){
             }
             else if (self.chekingFlag == 0 && OP_DEVICE_STATUS == CLOUD_DEVICE_STATE_DISCONNECTED) {
                 [self.functionControl setState:ZLPlayerStateFailed];
+                
             }
+            
+         
         });
     }
   
@@ -395,20 +352,22 @@ typedef NS_ENUM(NSInteger, PanDirection){
 
 - (void)lv_start {
     
-    [OP_DEVICE setAvDelegate:self];
+//    [OP_DEVICE setAvDelegate:self];
     cloud_device_play_video((void *)OP_DEVICE_HANDLE,[OP_CAM_ID UTF8String]);
     cloud_device_play_audio((void *)OP_DEVICE_HANDLE,[OP_CAM_ID UTF8String]);
     [AUTOOL startService:OP_DEVICE_HANDLE cam:OP_CAM_ID];
     [LIVE_PLAY_VC.funcBar setBatteryProgress:cloud_device_cam_get_battery((void *)OP_DEVICE_HANDLE ,[OP_CAM_ID UTF8String])];
     [LIVE_PLAY_VC.funcBar setWifiProgress:cloud_device_cam_get_signal((void *)OP_DEVICE_HANDLE,[OP_CAM_ID UTF8String])];
     
-    [self fireTimer];
+//    [self fireTimer];
 }
 - (void)lv_stop {
     cloud_device_stop_video((void *)OP_DEVICE_HANDLE, [OP_CAM_ID UTF8String]);
     cloud_device_stop_audio((void *)OP_DEVICE_HANDLE, [OP_CAM_ID UTF8String]);
     [AUTOOL stopService];
-    [self invalidTimer];
+    if (self.timer.isValid) {
+        [self invalidTimer];
+    }
     [self.functionControl setState:ZLPlayerStateEnd];
 
 }
@@ -420,7 +379,7 @@ typedef NS_ENUM(NSInteger, PanDirection){
     
     NSLog(@"%zd,%s,%s",self.rootVc.operatingDevice.nvr_h, [self.rootVc.operatingCam.cam_id UTF8String], [_rootVc.operatingMedia.fileName UTF8String]);
     [AUTOOL startService:OP_DEVICE_HANDLE cam:OP_CAM_ID];
-    [self fireTimer];
+//    [self fireTimer];
     [self.functionControl setPlayerEnd:NO];
     
   
@@ -432,17 +391,24 @@ typedef NS_ENUM(NSInteger, PanDirection){
     
   
     [AUTOOL stopService];
-    [self invalidTimer];
+    if (self.timer.isValid) {
+        [self invalidTimer];
+    }
     [self.functionControl setState:ZLPlayerStateEnd];
 }
 - (void)pb_pause {
     cloud_device_cam_pb_pause((void *)OP_DEVICE_HANDLE,[OP_CAM_ID UTF8String]);
-    [self invalidTimer];
+    if (self.timer.isValid) {
+        [self invalidTimer];
+    }
     [self.functionControl setState:ZLPlayerStatePause];
 }
 - (void)pb_resume {
     cloud_device_cam_pb_resume((void *)OP_DEVICE_HANDLE,[OP_CAM_ID UTF8String]);
-    [self fireTimer];
+    if (!self.timer.isValid) {
+        [self fireTimer];
+    }
+
     [self.functionControl setState:ZLPlayerStateBuffering];
 
 }
@@ -755,7 +721,11 @@ typedef NS_ENUM(NSInteger, PanDirection){
     
     self = [super init];
     if (self) {
-
+        //register data callback
+        cloud_set_data_callback((void *)vc.operatingDevice.nvr_h, device_data_callback, (__bridge void *)self);
+        
+        
+        
         self.playerModel = vp_model;
         
         [self.functionControl setState:ZLPlayerStateUnknwon];//初始 状态
@@ -778,6 +748,13 @@ typedef NS_ENUM(NSInteger, PanDirection){
         //        [self.glvc setDelegate:self];
         
         [self setFunctionControl:control];
+        
+        [self fireTimer]; //轮询检测设备连接状态
+
+        
+        
+
+
 
     }
     return self;
@@ -794,9 +771,58 @@ typedef NS_ENUM(NSInteger, PanDirection){
 
 
 
+int device_data_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *param,void *context) {
+    
+        ZLPlayerView *context_self = (__bridge ZLPlayerView *)context;
+        [context_self setChekingFlag:1];
+        
+    
+        if (type == CLOUD_CB_VIDEO) {
+            cb_video_info_t *info = (cb_video_info_t *)param;
+            if (info->end_flag) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [context_self pb_end];
+                });
+            } else {
+                AVFrame *pFrame_ = info->pFrame;
+                int width = pFrame_->width;
+                int height = pFrame_->height;
+                CGFloat timestamp = (info->timestamp) / 1000;
+                [context_self.glvc writeY:pFrame_->data[0] U:pFrame_->data[1] V:pFrame_->data[2] width:width height:height];
+                
+                
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    if (context_self.functionControl.state != ZLPlayerStatePlaying) {
+                        [context_self.functionControl setState:ZLPlayerStatePlaying];
+                    }
+                    if ([context_self.functionControl isKindOfClass:[PlaybackControl class]]) {
+                        CGFloat totalTime = context_self.rootVc.operatingMedia.timelength;
+                        CGFloat valuePercent = timestamp / totalTime;
+                        [context_self.functionControl zl_playerCurrentTime:timestamp totalTime:totalTime sliderValue:valuePercent];
+                    }
+                });
+                
+                
+            }
+            
+        }
+    
+    
+    
+        else if (type == CLOUD_CB_AUDIO) {
+            cb_audio_info_t *info = (cb_audio_info_t *)param;
+            AVFrame *pFrame_ = info->pFrame;
+            [AUTOOL.mIn appendBytes:pFrame_->data[0] length:pFrame_->nb_samples * av_get_bytes_per_sample(AV_SAMPLE_FMT_S16)];
+        }
+        
 
+    
+
+    return 0;
+}
 #pragma mark - 观察者、通知
 - (void)addNotifications {
+
     // app退到后台
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(processAppNotification:) name:UIApplicationWillResignActiveNotification object:nil];
     // app进入前台

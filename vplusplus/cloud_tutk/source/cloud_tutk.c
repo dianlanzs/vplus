@@ -1197,7 +1197,7 @@ static void process_recv_cmd(cloud_device_t *device, unsigned int ioType,char *i
 
         if (device->_pblist_callback && gEventListRes->event_start+gEventListRes->event_count >= gEventListRes->event_total) {
 
-            device->_pblist_callback(device,CLOUD_CB_RECORD_LIST,&cam->rec_info,device->_data_context);
+            device->_pblist_callback(device,CLOUD_CB_RECORD_LIST,&cam->rec_info,device->_pblist_context);
         }
     } else if (ioType == IOTYPE_USER_IPCAM_RECORD_PLAYCONTROL_RESP) {
         SMsgAVIoctrlPlayRecordResp *resp = (SMsgAVIoctrlPlayRecordResp *)ioCtrlBuf;

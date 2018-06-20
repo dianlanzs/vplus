@@ -11,9 +11,9 @@
 
 CGFloat padding = 10.f;
 
-CGFloat batteryW = 40.f;
+CGFloat batteryW = 30.f;
 CGFloat lineW = 1.f;
-CGFloat batteryH = 20.f;
+CGFloat batteryH = 15.f;
 @interface FunctionView()
 
 @property (nonatomic, strong) UIButton  *wifiBtn;
@@ -237,7 +237,7 @@ CGFloat batteryH = 20.f;
     UIBezierPath *path1 = [UIBezierPath bezierPathWithRoundedRect:CGRectMake(x, y, w, h) cornerRadius:2];
     CAShapeLayer *batteryLayer = [CAShapeLayer layer];
     batteryLayer.lineWidth = lineW;
-    batteryLayer.strokeColor = [UIColor whiteColor].CGColor; //stroke
+    batteryLayer.strokeColor = [UIColor lightGrayColor].CGColor; //stroke
     batteryLayer.fillColor = [UIColor clearColor].CGColor;
     batteryLayer.path = [path1 CGPath];
     [self.layer addSublayer:batteryLayer];
@@ -249,7 +249,7 @@ CGFloat batteryH = 20.f;
     [path2 addLineToPoint:CGPointMake(x+w+1, y+h*2/3)];//2/3 位置
     CAShapeLayer *layer2 = [CAShapeLayer layer];
     layer2.lineWidth = 2; //lineWidth
-    layer2.strokeColor = [UIColor whiteColor].CGColor;
+    layer2.strokeColor = [UIColor lightGrayColor].CGColor;
     layer2.fillColor = [UIColor clearColor].CGColor;
     layer2.path = [path2 CGPath];
     [self.layer addSublayer:layer2];

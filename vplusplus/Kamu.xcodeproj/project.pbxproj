@@ -318,6 +318,7 @@
 		B8E04EE71FCE75E90086E456 /* button_bell@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = B8E04EE51FCE75E90086E456 /* button_bell@2x.png */; };
 		B8E04EEA1FCEB5670086E456 /* OnlineDeviceCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = B8E04EE81FCEB5670086E456 /* OnlineDeviceCell.xib */; };
 		B8EAEDCE20A466A900D47A56 /* RowCell.m in Sources */ = {isa = PBXBuildFile; fileRef = B8EAEDCD20A466A900D47A56 /* RowCell.m */; };
+		B8F36D1A20D8C9AC0092E168 /* Alert+Status.m in Sources */ = {isa = PBXBuildFile; fileRef = B8F36D1920D8C9AC0092E168 /* Alert+Status.m */; };
 		B8F8FE771FCBE2B100745672 /* BButton.m in Sources */ = {isa = PBXBuildFile; fileRef = B8F8FE6F1FCBE2B100745672 /* BButton.m */; };
 		B8F8FE791FCBE2B100745672 /* NSString+FontAwesome.m in Sources */ = {isa = PBXBuildFile; fileRef = B8F8FE711FCBE2B100745672 /* NSString+FontAwesome.m */; };
 		B8F8FE7D1FCBE2B100745672 /* UIColor+BButton.m in Sources */ = {isa = PBXBuildFile; fileRef = B8F8FE751FCBE2B100745672 /* UIColor+BButton.m */; };
@@ -965,6 +966,8 @@
 		B8E04EE81FCEB5670086E456 /* OnlineDeviceCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = OnlineDeviceCell.xib; sourceTree = "<group>"; };
 		B8EAEDCC20A466A900D47A56 /* RowCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RowCell.h; sourceTree = "<group>"; };
 		B8EAEDCD20A466A900D47A56 /* RowCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RowCell.m; sourceTree = "<group>"; };
+		B8F36D1820D8C9AC0092E168 /* Alert+Status.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Alert+Status.h"; sourceTree = "<group>"; };
+		B8F36D1920D8C9AC0092E168 /* Alert+Status.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "Alert+Status.m"; sourceTree = "<group>"; };
 		B8F8FE6E1FCBE2B100745672 /* BButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BButton.h; sourceTree = "<group>"; };
 		B8F8FE6F1FCBE2B100745672 /* BButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BButton.m; sourceTree = "<group>"; };
 		B8F8FE701FCBE2B100745672 /* NSString+FontAwesome.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+FontAwesome.h"; sourceTree = "<group>"; };
@@ -1773,6 +1776,8 @@
 			children = (
 				B8758C1920CA5F290085E380 /* Alert.h */,
 				B8758C1A20CA5F290085E380 /* Alert.m */,
+				B8F36D1820D8C9AC0092E168 /* Alert+Status.h */,
+				B8F36D1920D8C9AC0092E168 /* Alert+Status.m */,
 			);
 			path = Alert;
 			sourceTree = "<group>";
@@ -2886,6 +2891,7 @@
 				B835D68920C0FB6F00B91109 /* UIView+ViewController.m in Sources */,
 				B87CEF44200353B90083ACB6 /* UIWindow+ZLCurrentViewController.m in Sources */,
 				B837C1B9201B33C3003B993D /* QImageTableViewCell.m in Sources */,
+				B8F36D1A20D8C9AC0092E168 /* Alert+Status.m in Sources */,
 				B837C187201B33C3003B993D /* QAutoEntryTableViewCell.m in Sources */,
 				B837C201201B33C4003B993D /* QPickerTableViewCell.m in Sources */,
 				B8F8FE771FCBE2B100745672 /* BButton.m in Sources */,
@@ -2977,6 +2983,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = NO;
 				CODE_SIGN_ENTITLEMENTS = "测试Demo/测试Demo.entitlements";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Manual;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -3035,6 +3042,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = NO;
 				CODE_SIGN_ENTITLEMENTS = "测试Demo/测试Demo.entitlements";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Manual;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -3070,7 +3078,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = cn.ygtek.kamu;
 				PRODUCT_MODULE_NAME = DateScroll;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "ba41c60c-960c-45f5-9996-23ff8297a71b";
+				PROVISIONING_PROFILE = "7e1934e4-61a2-45d7-800a-1ecbee8811bb";
 				PROVISIONING_PROFILE_SPECIFIER = "pp证书—kamu";
 				SWIFT_OBJC_BRIDGING_HEADER = "测试Demo-Bridging-Header.h";
 				SWIFT_VERSION = 3.0;

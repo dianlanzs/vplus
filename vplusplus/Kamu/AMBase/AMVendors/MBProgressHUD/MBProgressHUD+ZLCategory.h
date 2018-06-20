@@ -9,9 +9,18 @@
 #import <UIKit/UIKit.h>
 #import "RTSpinKitView.h"
 #import "MBProgressHUD.h"
+
+
+typedef NS_ENUM(NSInteger, DeviceConnectStatus) {
+    DeviceConnecting = 0 ,
+    DeviceConnected = 1,
+    DeviceDisconnected = 2,
+};
+
+
 @interface MBProgressHUD (HUD)
-
-
+//@property (nonatomic, strong) void(^callback)(id sender);
+@property (nonatomic, strong) UIButton *actionBtn;
 //纯 文本显示
 + (void)showPromptWithText:(NSString *)text inView:(UIView *)view;
 + (void)showPromptWithText:(NSString *)text;
@@ -40,9 +49,7 @@
 
 
 //======================= SpinKit =====================================
-+ (void)showStatusWithText:(NSString *)text inView:(UIView *)view;
-
-+ (MBProgressHUD *)showIndicator:(RTSpinKitView *)spinner onView:(UIView *)view;
++ (MBProgressHUD *)showStatus:(DeviceConnectStatus)status;
 
 
 

@@ -302,8 +302,9 @@ typedef void (^MBProgressHUDCompletionBlock)(void);
 /**
  * A button that is placed below the labels. Visible only if a target / action is added. 
  */
-@property (strong, nonatomic, readonly) UIButton *button;
+@property (strong, nonatomic,readonly) UIButton *button;// vertial
 
+//@property (nonatomic, strong) UIButton *horizontalBtn;
 @end
 
 
@@ -403,6 +404,8 @@ typedef void (^MBProgressHUDCompletionBlock)(void);
  * @note Due to iOS 7 not supporting UIVisualEffectView, the blur effect differs slightly between iOS 7 and later versions.
  */
 @property (nonatomic, strong) UIColor *color;
+
+
 
 @end
 

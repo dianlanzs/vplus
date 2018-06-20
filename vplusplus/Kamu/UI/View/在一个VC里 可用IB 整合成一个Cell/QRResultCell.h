@@ -38,5 +38,7 @@
 @property (nonatomic, assign) BOOL showedPopup;
 
 @property (nonatomic, strong) NSIndexPath *path;
+
+
 - (void)upadteCams;
 @end

@@ -32,10 +32,55 @@
 @implementation LibraryController
 
 #pragma mark - life circle
+
+int device_list_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *param,void *context) {
+    
+    LibraryController *self_context = (__bridge LibraryController *)context;
+
+
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            record_filelist_t *info = (record_filelist_t *)param;
+            int num = info -> num; //cells
+            rec_file_block *block = info -> blocks;
+            
+            for (int i = 0; i < num; i++) {
+                
+                MediaEntity *media = [MediaEntity new];
+                media.createtime = (block+i) -> createtime;
+                media.fileName = [NSString stringWithUTF8String:(block+i) -> filename];
+                media.filelength = (block+i) -> filelength;
+                media.recordType = (block+i) -> recordtype;
+                media.timelength = (block+i) -> timelength;
+                //        NSLog(@"create time : %@",[NSString stringWithFormat:@"createtime == %d", (block+i) -> createtime]);
+                //        NSLog(@"filename : %@",[NSString stringWithFormat:@"filename == %s", (block+i) -> filename]);
+                Cam *db_cam =  [[self_context.operatingDevice.nvr_cams objectsWhere:[NSString stringWithFormat:@"cam_id = '%@'",[NSString stringWithUTF8String:(block+i) -> camdid]]] firstObject];
+                MediaEntity *db_media = [[db_cam.cam_medias objectsWhere:[NSString stringWithFormat:@"createtime == %d", (block+i) -> createtime]] firstObject];
+                if (db_cam && !db_media) {
+                    [RLM transactionWithBlock:^{
+                        [db_cam.cam_medias addObject:media];
+                    }];
+                }
+            }
+//            self_context.cDevice = selectedNvr;
+
+            PageController *page = self_context.childViewControllers[self_context.segmentedControl.selectedSegmentIndex];
+            [page.tableView reloadData];
+            [MBProgressHUD hideHUDForView:page.view animated:YES];
+            
+        });
+   
+    
+
+    return 0;
+}
 - (void)viewDidLoad {
     [super viewDidLoad];
 
     [self.view setBackgroundColor:[UIColor whiteColor]];
+    cloud_set_pblist_callback((void *)self.operatingDevice.nvr_h,device_list_callback,(__bridge void *)self);
+
+    
+    
     [self.view addSubview:self.segmentedControl];
     [self.view addSubview:self.scrollView];
     
@@ -288,24 +333,15 @@
 
 #pragma mark -  DatePickerDelegate
 - (void)datepicker:(ScrollableDatepicker *)datepicker didSelectDate:(NSDate *)date {
-    int sec = [self showSelectedDate];
     
+    int sec = [self showSelectedDate];
     if (self.segmentedControl.selectedSegmentIndex == 0) {
-//        PageController *page = [[[self.childViewControllers reverseObjectEnumerator] allObjects] objectAtIndex:0];
         PageController *page = [self.childViewControllers  objectAtIndex:0];
-
         [page setStart_daySec:sec];
         if (cloud_get_device_status((void *)self.operatingDevice.nvr_h) == CLOUD_DEVICE_STATE_CONNECTED) { //get status
             self.operatingDevice.listDelegate = page;
-            
-                        [MBProgressHUD showSpinningWithMessage:@"downloding..." toView:page.tableView];
-//            [MBProgressHUD showSpinningWithMessage:@"downloding..." ];
-            
+            [MBProgressHUD showSpinningWithMessage:@"downloding..." toView:page.tableView];
             cloud_device_cam_list_files((void *)self.operatingDevice.nvr_h,NULL,  sec,sec + 24 * 3600,RECORD_TYPE_ALL);
-            
-            
-            
-            
         }else {
             [MBProgressHUD showPromptWithText:@"device offline"];
         }

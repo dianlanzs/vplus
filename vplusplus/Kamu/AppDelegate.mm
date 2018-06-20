@@ -193,49 +193,17 @@ static BOOL isProduction = NO;
 //    NSString *title = content.title;  // 推送消息的标题
     
     if([response.notification.request.trigger isKindOfClass:[UNPushNotificationTrigger class]]) {
-//        [JPUSHService handleRemoteNotification:userInfo];
-//        NSLog(@"iOS10 收到远程通知:%@", [self logDic:userInfo]);
-        //        [rootViewController addNotificationCount];
-        
-        
-        
-//        if ([UIApplication sharedApplication].applicationState == UIApplicationStateActive || [UIApplication sharedApplication].applicationState == UIApplicationStateBackground) {
-//            NSLog(@"acitve or background");
-//
-//
-//
-//        }else {
-//
-        
-        /*
+
         UIAlertController * alertController = [UIAlertController alertControllerWithTitle:@"Alert" message:[self logDic:userInfo] preferredStyle:UIAlertControllerStyleAlert];
         UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"拒绝" style:UIAlertActionStyleCancel handler:nil];
         UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"接听" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-//            NSString *str = [NSString stringWithFormat:@"https://itunes.apple.com/cn/app/wei-xin/id414478124?mt=8"];
-            
             [(AMNavigationController *)self.tabBarController.selectedViewController jumpToViewctroller:userInfo];
-
-            //                 [[UIApplication sharedApplication] openURL:[NSURL URLWithString:str]];
-            
-            
-        }];//https在iTunes中找，这里的事件是前往手机端App store下载微信
+        }];
         [alertController addAction:cancelAction];
         [alertController addAction:okAction];
         [self.tabBarController presentViewController:alertController animated:YES completion:nil];
-       
-//        }
-        */
-        
-        
-        
-        
-        
-        [(AMNavigationController *)self.tabBarController.selectedViewController jumpToViewctroller:userInfo];
-
-     
-        
-        
-             [UIApplication sharedApplication].applicationIconBadgeNumber = 0;
+    
+        [UIApplication sharedApplication].applicationIconBadgeNumber = 0;
         [JPUSHService setBadge:0]; //点击 某个 Cell  上报服务器 bageNumber -1
         
     }
@@ -754,6 +722,7 @@ static BOOL isProduction = NO;
     
     
 }
+//Main Thread Checker: UI API called on a background thread: -[UIApplication currentUserNotificationSettings]
 
 #pragma mark - 检测网络状态变化
 - (void)observeNetwork {
