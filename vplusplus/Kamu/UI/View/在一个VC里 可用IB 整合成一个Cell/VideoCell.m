@@ -42,13 +42,15 @@
 #pragma mark - setter
 - (void)setCam:(Cam *)cam {
     
+    
+    ///check cam pointer is a new cam ?  (maybe cam_id better!)
     if (cam  && cam != _cam ) {
         
         _cam = cam;
         self.cam_token = [cam addNotificationBlock:^(BOOL deleted, NSArray<RLMPropertyChange *> * _Nullable changes, NSError * _Nullable error) {
             if (deleted) {
                 NSLog(@"Cam已经删除!");
-//                self.deleteCam(_cam);
+                [MBProgressHUD showSuccess:@"Cam已经删除!"];
             }else {
                 
                 for (RLMPropertyChange *property in changes) {
@@ -60,25 +62,13 @@
                         [self.playableView setImage:[UIImage imageWithData:property.value]];
                     }
                     
-                    else if ([property.name isEqualToString:@"cam_state"]) {
-                        if ([property.value intValue] == 1) {
-                            [self.playBtn setHidden:NO];
-                        }
-                    }
                     
                 }
   
             }
         }];
         
-        
-        
-        
-        
-        [RLM transactionWithBlock:^{
-            [self.cam setCam_state:0];
-        }];
-        
+
         self.camLabel.text = cam.cam_name ? [cam.cam_name uppercaseString] :[cam.cam_id uppercaseString];
         [self.playableView setImage:[UIImage imageWithData:cam.cam_cover]];
         [self.contentView addSubview:self.playableView];
@@ -100,7 +90,16 @@
         make.top.equalTo(self.contentView);
         make.leading.equalTo(self.contentView);
         make.trailing.equalTo(self.contentView);
-        make.height.equalTo(@100);//80+30
+        if (self.cam.nvrs.count == 1) {
+            
+            Device *d = self.cam.nvrs.firstObject;
+            if (d.nvr_type == CLOUD_DEVICE_TYPE_IPC) {
+                make.height.equalTo(@201);
+            }else if (d.nvr_type == CLOUD_DEVICE_TYPE_GW) {
+                make.height.equalTo(@100);
+            }
+            
+        }
     }];
     
     [self.camLabel mas_makeConstraints:^(MASConstraintMaker *make) {
@@ -112,7 +111,21 @@
     
     [self.playBtn mas_makeConstraints:^(MASConstraintMaker *make) {
         make.center.equalTo(self.playableView);
-        make.size.mas_equalTo(CGSizeMake(40.0f ,40.0f));
+        
+        if (self.cam.nvrs.count == 1) {
+            
+            
+            Device *d = self.cam.nvrs.firstObject;
+            if (d.nvr_type == CLOUD_DEVICE_TYPE_IPC) {
+                make.size.mas_equalTo(CGSizeMake(80.0f ,80.0f));
+            }else if (d.nvr_type == CLOUD_DEVICE_TYPE_GW) {
+                make.size.mas_equalTo(CGSizeMake(40.0f ,40.0f));
+
+            }
+            
+            
+            
+        }
     }];
 }
 

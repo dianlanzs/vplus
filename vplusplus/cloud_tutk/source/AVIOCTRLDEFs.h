@@ -87,10 +87,22 @@ typedef enum
 	IOTYPE_USER_DEVICE_DELCAM 					= 0x0102,
     IOTYPE_USER_DEVICE_GETCAMS                  = 0x0103,
 	IOTYPE_USER_DEVICE_PROBECAM 				= 0x0104,
+
+    IOTYPE_USER_DEVICE_GET_CAMINFO_REQ	        = 0x0105,
+    IOTYPE_USER_DEVICE_GET_CAMINFO_RESP	        = 0x0106,
+    IOTYPE_USER_DEVICE_GET_CAMCFG_REQ	        = 0x0107,
+    IOTYPE_USER_DEVICE_GET_CAMCFG_RESP	        = 0x0108,
+    IOTYPE_USER_DEVICE_SET_CAMCFG_REQ	        = 0x0109,
+    IOTYPE_USER_DEVICE_SET_CAMCFG_RESP	        = 0x010A,
+
 	IOTYPE_USER_IPCAM_SENDUSERDATA 				= 0x0110,
 
 	IOTYPE_USER_IPCAM_LIST_YGEVENT_REQ			= 0x0112,
 	IOTYPE_USER_IPCAM_LIST_YGEVENT_RESP			= 0x0113,
+
+	IOTYPE_USER_ADD_APPID        				= 0x0114,
+	IOTYPE_USER_DEL_APPID        				= 0x0115,
+
 
 	IOTYPE_USER_IPCAM_START 					= 0x01FF,
 	IOTYPE_USER_IPCAM_STOP	 					= 0x02FF,
@@ -1141,6 +1153,30 @@ typedef struct
 } SMsgAVIoctrlUserData;
 
 /*
+	IOTYPE_USER_DEV_CAMINFO
+ */
+typedef struct
+{
+	unsigned int channel; // Camera Index
+	int battery;
+	int wifi;
+	char version[32];
+	unsigned char reserved[4];
+} SMsgAVIoctrlCamInfo;
+
+/*
+	IOTYPE_USER_DEV_CAMCFG
+ */
+typedef struct
+{
+	unsigned int channel; // Camera Index
+	int battery_threshold;
+	int pir_sensitivity;
+	int cam_rotate;
+	unsigned char reserved[4];
+} SMsgAVIoctrlCamCfg;
+
+/*
 IOTYPE_USER_IPCAM_LIST_YGEVENT_REQ
 */
 typedef struct
@@ -1165,6 +1201,15 @@ typedef struct
 	unsigned char *event;		// The first memory address of the events in this package
 }SMsgAVIoctrlListYGEventResp;
 
+/*
+IOTYPE_USER_DEVICE_SET_CAMCFG_RESP
+*/
+typedef struct
+{
+	unsigned int  channel;		// Camera Index
+	int result;
+	unsigned char reserved[4];
+}SMsgAVIoctrlCamResp;
 #if 0
 /*
 IOTYPE_USER_DEVICE_INFO_RESP			= 0x0110,
@@ -1179,4 +1224,7 @@ typedef struct
 
 }SMsgYGIoctrlDeviceInfoResp;
 #endif
+
+#define    APP_ID_LENGTH    128
+
 #endif

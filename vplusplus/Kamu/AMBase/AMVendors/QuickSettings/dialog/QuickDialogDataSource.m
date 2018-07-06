@@ -32,15 +32,21 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     QSection *section = [_tableView.root getVisibleSectionForIndex:indexPath.section];
+    
+    
+    ///zhoulei mark important
     QElement *element = [section getVisibleElementForIndex:indexPath.row];
     element.controller = _tableView.controller;
+    
+     
+    ///API 内部 will " create or get:cell "
     UITableViewCell *cell = [element getCellForTableView:(QuickDialogTableView *) tableView controller:_tableView.controller];
+    
+    
     cell.accessibilityLabel = element.accessibilityLabel;
     cell.accessibilityIdentifier = element.accessibilityIdentifier;
     cell.userInteractionEnabled = element.enabled;
-    
-    ///MARK:修改？
-    
+//    [cell.contentView setTintColor:[UIColor grayColor]];
     return cell;
 }
 

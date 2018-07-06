@@ -67,8 +67,8 @@ typedef NS_ENUM(NSInteger, ZLPlayerState) {
 
 
 
-
-@property (nonatomic, assign) UIInterfaceOrientation  orientation;
+//
+//@property (nonatomic, assign) UIInterfaceOrientation  orientation;
 
 
 
@@ -119,8 +119,8 @@ typedef NS_ENUM(NSInteger, ZLPlayerState) {
 
 //playback
 - (void)zl_playerCurrentTime:(NSInteger)currentTime totalTime:(NSInteger)totalTime sliderValue:(CGFloat)value;
-- (void)zl_playerDraggedTime:(NSInteger)draggedTime totalTime:(NSInteger)totalTime isForward:(BOOL)forawrd hasPreview:(BOOL)preview;
-- (void)zl_playerDraggedTime:(NSInteger)draggedTime sliderImage:(UIImage *)image;
+- (void)zl_changeSilderValueWithDraggedTime:(NSInteger)draggedTime totalTime:(NSInteger)totalTime isForward:(BOOL)forawrd hasPreview:(BOOL)preview;
+- (void)zl_showSilderValueWithDraggedTime:(NSInteger)draggedTime sliderImage:(UIImage *)image;
 - (void)zl_playerDraggedEnd;
 
 @end

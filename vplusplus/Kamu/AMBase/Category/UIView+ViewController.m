@@ -22,8 +22,8 @@
         
         //2.判断响应者是否是控制器类型
         if ([next isKindOfClass:[UIViewController class]]) {
-            UIViewController *root = (UIViewController *)next;
-            return root;
+            UIViewController *vc = (UIViewController *)next;
+            return vc;
         }
         //1.获取下一响应者
         next = next.nextResponder;
@@ -31,9 +31,6 @@
     
     return nil;
 }
-
-
-
 //key  -value
 - (void)setVc:(UIViewController *)vc {
     objc_setAssociatedObject(self, @selector(vc), vc, OBJC_ASSOCIATION_RETAIN);
@@ -41,4 +38,31 @@
 - (UIViewController *)vc {
     return objc_getAssociatedObject(self, _cmd); //_cmd : selector imp
 }
+
+
+
+
+
+- (UINavigationController *)getNavigationController{
+    UIResponder *next = self.nextResponder;
+    
+    while (next != nil) {
+        if ([next isKindOfClass:[UINavigationController class]]) {
+            UINavigationController *nav = (UINavigationController *)next;
+            return nav;
+        }
+        next = next.nextResponder;
+    }
+    return nil;
+}
+- (void)setNavigationController:(UINavigationController *)navigationController {
+    objc_setAssociatedObject(self, @selector(navigationController), navigationController, OBJC_ASSOCIATION_RETAIN);
+}
+- (UINavigationController *)navigationController {
+    return objc_getAssociatedObject(self, _cmd); //_cmd : selector imp
+}
+
+
+
+
 @end

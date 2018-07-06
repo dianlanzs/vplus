@@ -39,6 +39,20 @@
     NSString * _controllerAction;
 }
 
+///zhoulei modify
+@property (nonatomic, strong) QTableViewCell *cell;
+@property(nonatomic, strong) id value;
+@property(nonatomic, copy) void (^onValueChanged)(id);
+
+
+
+
+
+
+
+
+
+
 @property (nonatomic, assign, getter=isEnabled) BOOL enabled;
 
 @property(nonatomic, copy) void (^onSelected)(void);

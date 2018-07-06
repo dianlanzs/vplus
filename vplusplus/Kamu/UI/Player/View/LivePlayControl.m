@@ -69,17 +69,17 @@
         [_speakerBtn_vertical setContentColor:[UIColor whiteColor]];
         [_speakerBtn_vertical setForegroundAnimateToColor:[UIColor blueColor]];
         [_speakerBtn_vertical.imageView setImage:[UIImage imageNamed:@"button_micophone_normal"]];
+        [_speakerBtn_vertical setContentEdgeInsets:UIEdgeInsetsMake(5, 0, 5, 0)];
         [self setActionForSpeaker:(UIButton *)_speakerBtn_vertical];
         
         [_speakerBtn_vertical setRestoreSelectedState:YES];
-        [_speakerBtn_vertical setContentEdgeInsets:UIEdgeInsetsMake(5, 5, 5, 5)];
     }
     return _speakerBtn_vertical;
 }
 - (void)setActionForSpeaker:(UIButton *)sender {
     [sender addTarget:self action:@selector(recordStart:) forControlEvents:UIControlEventTouchDown];
     [sender addTarget:self action:@selector(recordEnd:) forControlEvents:UIControlEventTouchUpInside];
-    [sender addTarget:self action:@selector(recordCancel:) forControlEvents:UIControlEventTouchUpOutside];
+    [sender addTarget:self action:@selector(recordCancel:) forControlEvents:UIControlEventTouchDragOutside];  ///canceled when tochUp outside //UIControlEventTouchUpOutside
 }
 - (void)recordStart:(UIButton *)sender{
     [self.delegate recordStart:sender];
@@ -91,41 +91,53 @@
     [self.delegate recordCancel:sender];
 }
 
-- (void)remakeConstrints {
-    [self.bottomImageView addSubview:self.captureBtn];
+- (instancetype)init {
+    if (self = [super init]) {
+        
+        [self.bottomImageView addSubview:self.captureBtn];
+        [self.bottomImageView addSubview:self.muteBtn];
+        [self.bottomImageView addSubview:self.recordBtn];
+
+    }
+    
+    return self;
+}
+- (void)remakeConstraints {
+
     [self.captureBtn mas_remakeConstraints:^(MASConstraintMaker *make) {
         make.centerY.equalTo(self.bottomImageView);
         make.width.height.mas_equalTo(30);
     }];
     
-    [self.bottomImageView addSubview:self.speakerBtn_vertical];
+  
     
-    
-    [self.bottomImageView addSubview:self.muteBtn];
     [self.muteBtn mas_remakeConstraints:^(MASConstraintMaker *make) {
         make.centerY.equalTo(self.bottomImageView);
         make.width.height.mas_equalTo(30);
     }];
-    [self.bottomImageView addSubview:self.recordBtn];
+  
     [self.recordBtn mas_remakeConstraints:^(MASConstraintMaker *make) {
         make.centerY.equalTo(self.bottomImageView);
         make.width.height.mas_equalTo(30);
     }];
 }
+
+
+
 - (void)setFullScreen:(BOOL)fullScreen {
     
     [super setFullScreen:fullScreen];
+    
     if (fullScreen) {
-        [self remakeConstrints];
+        [self remakeConstraints];
         [self.speakerBtn_vertical mas_remakeConstraints:^(MASConstraintMaker *make) {
-            make.centerY.equalTo(self.bottomImageView).offset(0);
+            make.centerY.equalTo(self.bottomImageView).offset(-5);
             make.height.width.mas_equalTo(60);
         }];
          [self.bottomImageView distributeSpacingHorizontallyWith:@[self.recordBtn,self.captureBtn,self.speakerBtn_vertical,self.muteBtn,self.fullScreenBtn]];
         
-       
     }else {
-        [self remakeConstrints];
+        [self remakeConstraints];
         [self.bottomImageView distributeSpacingHorizontallyWith:@[self.recordBtn,self.captureBtn,self.muteBtn,self.fullScreenBtn]];
         [self.speakerBtn_vertical mas_remakeConstraints:^(MASConstraintMaker *make) {
             make.centerY.equalTo(self.bottomImageView).offset(260);
@@ -133,7 +145,6 @@
             make.height.width.mas_equalTo(60);
         }];
     }
-   
      [self showControl];
 }
 
@@ -145,21 +156,19 @@
 
 - (void)hideControl {
     
-    if (!self.isFullScreen) {
-        [self setOtherButtonsAlpha:0];
-    }else {
-        [super hideControl];
+    if (self.isFullScreen) {
+        [self.speakerBtn_vertical setHidden:YES];
     }
+    [super hideControl];
     [self setShowing:NO];
 }
 
 - (void)showControl {
-    if (!self.isFullScreen) {
-        [self setOtherButtonsAlpha:1];
-    }else {
-         [super showControl];
+    if (self.isFullScreen) {
+        [self.speakerBtn_vertical setHidden:NO];
     }
-     [self setShowing:YES];
+    [super showControl];
+    [self setShowing:YES];
 }
 
 - (void)setState:(ZLPlayerState)state {

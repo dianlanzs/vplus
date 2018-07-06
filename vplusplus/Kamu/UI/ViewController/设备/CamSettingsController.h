@@ -8,6 +8,5 @@
 
 #import <UIKit/UIKit.h>
 #import "QuickDialog.h"
-@interface CamSettingsController : QuickDialogController
-@property (nonatomic, copy) void(^deleteCam)();
+@interface CamSettingsController : QuickDialogController<QuickDialogDelegate>
 @end

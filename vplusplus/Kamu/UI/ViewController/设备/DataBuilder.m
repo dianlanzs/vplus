@@ -20,6 +20,7 @@
 #import "QWebElement.h"
 #import "QMailElement.h"
 #import "QPickerElement.h"
+#import "QFloatElement.h"
 
 
 
@@ -29,39 +30,44 @@ static NSString  *rootControllerName = @"NvrSettingsController";
 
 
 #pragma mark - 创建 CAM settings 界面
-- (QRootElement *)createForCamSettings:(Cam *)cam device:(Device *)device {
-    
+- (QRootElement *)createForCamSettings:(Cam *)cam {
+
+
     QRootElement *camRoot = [[QRootElement alloc] init];
     [camRoot setGrouped:YES];
     camRoot.title =  @"设置CAM";
     
-    [camRoot setObject:[NSDictionary dictionaryWithObjectsAndKeys:cam,@"camModel",device,@"deviceModel" ,nil]];
+    [camRoot setObject:[NSDictionary dictionaryWithObjectsAndKeys:cam,@"camModel",nil]];
     
     QSection *section0 = [[QSection alloc] initWithTitle:@"CAM_Header"];
-    section0.elements = [NSMutableArray arrayWithArray:@[[self changeCamNameElm:cam],[self camSwitchElm],[self remainingBatteryElm],[self videoSettingsElm],[self audioSettingsElm],[self camInfoElm]]];
+    section0.elements = [NSMutableArray arrayWithArray:@[[self changeCamNameElm:cam],[self camSwitchElm],[self batteryWarningElm:cam],[self imageTransformElm:cam],[self motionDetectElm:cam],[self camInfoElm:cam]]];
     
     [camRoot addSection:section0];
-    [self  setAppearance];
+    [self  setAppearance:camRoot];
     return camRoot;
     
 }
 
-- (QRootElement *)camSwitchElm {
-    QBooleanElement *camSwitch = [[QBooleanElement alloc] initWithTitle:@"摄像头打开/关闭" BoolValue:YES];
+- (QBooleanElement *)camSwitchElm {
+    QBooleanElement *camSwitch = [[QBooleanElement alloc] initWithTitle:@"摄像头开关" BoolValue:YES];
     camSwitch.controllerAction = @"camSwitch:";
     return camSwitch;
 }
 
-- (QRootElement *)remainingBatteryElm {
-    QLabelElement *remainingBattery = [[QLabelElement alloc] initWithTitle:@"电池" Value:@""]; //使用iconFont
-    return remainingBattery;
+- (QFloatElement *)batteryWarningElm:(Cam *)cam {
+    QFloatElement *batteryWarningElm = [[QFloatElement alloc] initWithTitle:@"电量剩余报警" value:0.f];
+    [batteryWarningElm setEnabled:NO];
+    [batteryWarningElm setKey:@"cam_battery_threshold"];
+//    batteryAlert.onValueChanged = ^(NSNumber *value) {
+//        batteryAlert set
+//    };
+    [batteryWarningElm setHeight:80];
+    return batteryWarningElm;
 }
 
 - (QElement *)changeCamNameElm:(Cam *)cam {
     
-    //prepare data
     NSString *s = cam.cam_name ? cam.cam_name :cam.cam_id;
-//    NSIndexPath *path = [nvrCell.QRcv indexPathForCell:videoCell];
     
     
     
@@ -72,22 +78,18 @@ static NSString  *rootControllerName = @"NvrSettingsController";
     camNameElm.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     
 
-    QSection *section0 = [[QSection alloc] initWithTitle:@"Modify_CamName"];
+    QSection *section0 = [[QSection alloc] initWithTitle:@"CHANGE_CAM_NAME"];
   
-    QEntryElement *entryElm = [[QEntryElement alloc] initWithTitle:@"修改" Value:s Placeholder:@"this is holder"];
-    [entryElm setKey:@"rename"];
-    [entryElm setTf_endEditing:^(UITextField *tf) {
-        if (tf.text == s ) {
-            return ;
-        }
-        
-//        [cam.cam_name setText:tf.text];
-//        cam.cam_name = tf.text;
-        [RLM transactionWithBlock:^{
-            [cam setCam_name:tf.text];
-//            [cam setCam_name:tf.text];  // Cam* Unmanaged!
-        }];
-    }];
+    QEntryElement *entryElm = [[QEntryElement alloc] initWithTitle:@"别名" Value:s Placeholder:@"this is holder"];
+    [entryElm setKey:@"cam_rename"];
+//    [entryElm setTf_endEditing:^(UITextField *tf) {
+//        if (tf.text != s ) {
+//            [RLM transactionWithBlock:^{
+//                [cam setCam_name:tf.text];
+//            }];
+//        }
+//
+//    }];
     
     [section0 addElement:entryElm];
     [camNameElm addSection:section0];
@@ -95,56 +97,40 @@ static NSString  *rootControllerName = @"NvrSettingsController";
 }
 
 
-- (QElement *)videoSettingsElm {
-    
-    QRootElement *videoRoot = [[QRootElement alloc] init];
-    videoRoot.grouped = YES;
-    videoRoot.title = @"视频设置";
-    videoRoot.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
-    
-    QSection *section1 = [[QSection alloc] initWithTitle:@"VideoSet"];
-    QLabelElement *versionInfo = [[QLabelElement alloc] initWithTitle:@"序列号" Value:@"0302040204"];
-    QLabelElement *deviceNum = [[QLabelElement alloc] initWithTitle:@"设备标识" Value:@"attached"];
-    
-    [section1 addElement:versionInfo];
-    [section1 addElement:deviceNum];
-    
-    [videoRoot addSection:section1];
-    
-    return videoRoot;
+- (QBooleanElement *)imageTransformElm:(Cam *)cam {
+    QBooleanElement *imageTransformElm = [[QBooleanElement alloc] initWithTitle:@"图像旋转" BoolValue:YES];
+    [imageTransformElm setEnabled:NO];
+
+    [imageTransformElm setKey:@"cam_rotate"];
+
+    return imageTransformElm;
 }
-- (QElement *)audioSettingsElm {
+
+- (QFloatElement *)motionDetectElm:(Cam *)cam {
+    QFloatElement *motionDetectElm = [[QFloatElement alloc] initWithTitle:@"移动侦测灵敏度" value:0.f];
+    [motionDetectElm setEnabled:NO];
     
-    QRootElement *audioRoot = [[QRootElement alloc] init];
-    audioRoot.grouped = YES;
-    audioRoot.title = @"音频设置";
-    audioRoot.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
-    
-    QSection *section1 = [[QSection alloc] initWithTitle:@"VideoSet"];
-    QLabelElement *versionInfo = [[QLabelElement alloc] initWithTitle:@"序列号" Value:@"0302040204"];
-    QLabelElement *deviceNum = [[QLabelElement alloc] initWithTitle:@"设备标识" Value:@"attached"];
-    
-    [section1 addElement:versionInfo];
-    [section1 addElement:deviceNum];
-    
-    [audioRoot addSection:section1];
-    return audioRoot;
+    [motionDetectElm setKey:@"cam_pir_sensitivity"];//NSStringFromClass([QFloatElement class])
+    [motionDetectElm setHeight:80];
+    return motionDetectElm;
 }
-- (QElement *)camInfoElm {
-    QRootElement *deviceInfoRoot = [[QRootElement alloc] init];
-    deviceInfoRoot.grouped = YES;
-    deviceInfoRoot.title = @"音频设置";
-    deviceInfoRoot.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+
+
+- (QElement *)camInfoElm:(Cam *)cam {
+    QRootElement *camInfoRoot = [[QRootElement alloc] init];
+    camInfoRoot.grouped = YES;
+    camInfoRoot.title = @"摄像头信息";
+    camInfoRoot.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     
-    QSection *section1 = [[QSection alloc] initWithTitle:@"VideoSet"];
-    QLabelElement *versionInfo = [[QLabelElement alloc] initWithTitle:@"序列号" Value:@"0302040204"];
-    QLabelElement *deviceNum = [[QLabelElement alloc] initWithTitle:@"设备标识" Value:@"attached"];
-    
-    [section1 addElement:versionInfo];
-    [section1 addElement:deviceNum];
-    
-    [deviceInfoRoot addSection:section1];
-    return deviceInfoRoot;
+    QSection *infoSection = [[QSection alloc] initWithTitle:@"CAM_INFO"];
+    QLabelElement *cid = [[QLabelElement alloc] initWithTitle:@"ID" Value:[cam.cam_id uppercaseString]];
+    QLabelElement *version = [[QLabelElement alloc] initWithTitle:@"version" Value:[cam.cam_version uppercaseString]];
+
+    [infoSection addElement:cid];
+    [infoSection addElement:version];
+
+    [camInfoRoot addSection:infoSection];
+    return camInfoRoot;
 }
 
 
@@ -170,7 +156,8 @@ static NSString  *rootControllerName = @"NvrSettingsController";
 //    [nvrRoot setAppearance:[self customAppearance]];
 //    [[self new] setAppearance];//设置外观，add
     [nvrRoot addSection:section0];
-    [self setAppearance];
+//    [self setAppearance];
+    [self setAppearance:nvrRoot];
 
     return nvrRoot;
 }
@@ -255,8 +242,11 @@ static NSString  *rootControllerName = @"NvrSettingsController";
     
     
     QSection *section_0 = [[QSection alloc] initWithTitle:@"Device"];
-    QLabelElement *versionInfo = [[QLabelElement alloc] initWithTitle:@"序列号" Value:@"0.12"];
-    QLabelElement *deviceNum = [[QLabelElement alloc] initWithTitle:@"设备标识" Value:device.nvr_id];
+    
+    char version[64];
+    cloud_device_get_version((void *)device.nvr_h, version);
+    QLabelElement *versionInfo = [[QLabelElement alloc] initWithTitle:@"device_version" Value:[NSString stringWithUTF8String:version]];
+    QLabelElement *deviceNum = [[QLabelElement alloc] initWithTitle:@"ID" Value:device.nvr_id];
     section_0.elements = [NSMutableArray arrayWithArray:@[versionInfo,deviceNum]];
     
     
@@ -281,14 +271,16 @@ static NSString  *rootControllerName = @"NvrSettingsController";
     return appearance;
     
 }
+
+
 //instance method
-- (void)setAppearance {
+- (void)setAppearance:(QRootElement *)rootElement {
     
-    QAppearance *appearance = [QElement appearance];//QFlatAppearance ,get  default appearece!
+    QAppearance *appearance = [rootElement appearance];//QFlatAppearance ,get  default appearece!
     appearance.labelFont = [UIFont boldSystemFontOfSize:17.f];
     appearance.valueFont = [UIFont systemFontOfSize:17.f];
     appearance.valueColorEnabled = [UIColor lightGrayColor];
-    appearance.labelColorEnabled = [UIColor redColor];
+    appearance.labelColorEnabled = [UIColor blackColor];
     
     appearance.sectionTitleFont = [UIFont systemFontOfSize:17.f];
     appearance.entryFont = [UIFont systemFontOfSize:17.f];

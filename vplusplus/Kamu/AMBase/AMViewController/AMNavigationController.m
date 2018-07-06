@@ -9,20 +9,21 @@
 #import "AMNavigationController.h"
 #import "UIBarButtonItem+Item.h"
 
-#import "MainViewController.h"
-#import "PlayVideoController.h"
-#import "PlaybackControl.h"
+
+
 
 #import "AppDelegate.h"
 
 
+
+
+#import "PlayVideoController.h"
 #import "PlaybackViewController.h"
 @interface AMNavigationController () <UINavigationControllerDelegate ,UIGestureRecognizerDelegate >
 
 @property (strong, nonatomic) AppDelegate *appDelegate;
 
 
-@property (nonatomic, strong) Device *informedDevice;
 
 @property (nonatomic, strong)NSMutableArray *connectedDevicesList;
 
@@ -93,20 +94,12 @@
 //    }
 //}
 
-
-
 #pragma mark - 视图生命周期
 
 - (void)viewDidLoad {
-    
     [super viewDidLoad];
-    Device *find_db_device =  [[self.results objectsWhere:[NSString stringWithFormat:@"nvr_id = '%@'",@"EHPU8T5WPL7C3G6GY16J"]] firstObject];
-
-    //View Frame  navBar 底部
     [self.navigationBar setTranslucent:NO];
     [self.appDelegate.tabBarController setTabBarHidden:YES];
-    
-
     
     if ([self respondsToSelector:@selector(interactivePopGestureRecognizer)]) {
         //重新签代理
@@ -141,12 +134,9 @@
 }
 
 - (UIStatusBarStyle)preferredStatusBarStyle {
-    
     if ([self.topViewController isKindOfClass:NSClassFromString(@"PlayVideoController")] ) {
         return self.topViewController.preferredStatusBarStyle;
-        
     }
-    
     return UIStatusBarStyleLightContent;
     
 }
@@ -158,46 +148,67 @@
 - (BOOL)shouldAutorotate {
     
     return NO;
+//    return [self.topViewController shouldAutorotate];
 }
 
 // 支持哪些屏幕方向
-- (UIInterfaceOrientationMask)supportedInterfaceOrientations {
-    return [self.topViewController supportedInterfaceOrientations];;
-}
-#pragma mark - 拦截‘push'操作 统一设置 返回按钮
-- (void)pushViewController:(AMViewController *)vc deviceModel:(Device *)deviceModel camModel:(Cam *)camModel {
-    [self pushViewController:vc animated:YES];
-    if (camModel) {
-        vc.operatingCam = camModel;
-    }
-    if (deviceModel ) {////?? count == 1 推送打开 ? 2:正常打开
-        
-        //for can't recive device state
-        vc.operatingDevice = deviceModel;
-//        if (vc.operatingDevice.nvr_status != CLOUD_DEVICE_STATE_CONNECTED) {
-//            [self UI_device_connecting];
-//        }
-      
-    
+//- (UIInterfaceOrientationMask)supportedInterfaceOrientations {
+//    return [self.topViewController supportedInterfaceOrientations];;
+//}
 
-        
-    }
-   
+///优先展示方向 iOS 10 不调用
+//- (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation {
+//    return [self.topViewController preferredInterfaceOrientationForPresentation];
+//
+//}
+
+#pragma mark - 拦截‘push'操作 统一设置 返回按钮
+- (void)reconnect:(id)sender {
+    cloud_connect_device((void *)self.operatingDevice.nvr_h, "admin", "123");
+    [sender setHidden:YES];
+    [MBProgressHUD showStatus:CLOUD_DEVICE_STATE_UNKNOWN];
 }
+- (void)pushViewController:(UIViewController *)vc deviceModel:(Device *)deviceModel camModel:(Cam *)camModel {
+    [self pushViewController:vc animated:YES];
+    
+    self.operatingCam = camModel;
+    self.operatingDevice = deviceModel;
+    
+    
+    if (deviceModel.nvr_status != CLOUD_DEVICE_STATE_CONNECTED) {
+        [MBProgressHUD showStatus:self.operatingDevice.nvr_status];
+    }
+    
+#warning 在push 完成之后设置 view !, 之前， view == nil  crash!!
+    [vc.view setBackgroundColor:[UIColor whiteColor]];    //消除Animated的残影
+
+}
+
 
 #pragma mark - 推送跳转方法
 -(void)jumpToViewctroller:(NSDictionary *)remoteNotification {
-    
+//    NSDictionary *extras = [remoteNotification valueForKey:@"extras"];
     NSString *jumpIdx =    remoteNotification[@"jump"];
     NSString *did =  remoteNotification[@"did"];
     NSString *cid =  remoteNotification[@"cid"];
-    NSString *file =  remoteNotification[@"file"];
+    NSString *fileName =  remoteNotification[@"fileName"];
+//    NSNumber *fileLength =  remoteNotification[@"fileLength"];
+
+
+  
+    ///Message : 服务端传递的Extras附加字段，key是自己定义的
+/*
+        NSString *jumpIdx =    [extras valueForKey:@"jump"];
+        NSString *did =  [extras valueForKey:@"did"];
+        NSString *cid =  [extras valueForKey:@"cid"];
+        NSString *file =  [extras valueForKey:@"file"];
+*/
     Device *find_db_device =  [[self.results objectsWhere:[NSString stringWithFormat:@"nvr_id = '%@'",did]] firstObject];
     Cam  *find_db_cam =  [[find_db_device.nvr_cams objectsWhere:[NSString stringWithFormat:@"cam_id = '%@'",cid]] firstObject];
     
     if ([jumpIdx isEqualToString:@"1"]) {
         
-        if (find_db_cam && find_db_device && !file) {
+        if (find_db_cam && find_db_device && !fileName) { /// TODO : if  db has no find device ,alert add device first!!
             PlayVideoController *pv_viewcontroller =  [PlayVideoController new];
             [self pushViewController:pv_viewcontroller deviceModel:find_db_device camModel:find_db_cam];
         }else {
@@ -205,9 +216,11 @@
         }
     }else if ([jumpIdx isEqualToString:@"2"]) {
         
-        if (find_db_cam && find_db_device && file ) {
+        if (find_db_cam && find_db_device && fileName ) {
             PlaybackViewController *pb_viewController = [PlaybackViewController new];
-            pb_viewController.operatingMedia.fileName = file;
+            self.operatingMedia = [MediaEntity new];
+            self.operatingMedia.fileName = fileName;
+//            self.operatingMedia.filelength = 60.9f;
             [self pushViewController:pb_viewController deviceModel:find_db_device camModel:find_db_cam];
         }else {
             [MBProgressHUD showError:@"回放设备参数错误"];
@@ -216,6 +229,7 @@
 }
 - (void)pushViewController:(UIViewController *)viewController animated:(BOOL)animated {
 
+   
 
 
     //拦截 push 之后 count > 1 ,push  之前 count > 0
@@ -242,7 +256,6 @@
         //隐藏
         [self.appDelegate.tabBarController setTabBarHidden:YES animated:YES];
 
-
     }
 
 
@@ -261,6 +274,7 @@
 #pragma mark - pop 操作
 // 自定义返回操作 ,,判断是否 ‘根控制器’
 - (void)backPrevious:(id)sender {
+    [MBProgressHUD hideHUD];
     [self popViewControllerAnimated:YES];
 }
 
@@ -271,22 +285,15 @@
 
 
 
-///MARK:根控制器 ，tabBar 和 navBar 设置不隐藏
+///MARK:根控制器，tabBar 和 navBar 设置不隐藏
 - (nullable UIViewController *)popViewControllerAnimated:(BOOL)animated {
-    
-    if (self.viewControllers.count == 2) {
-//        [self.appDelegate.tabBarController setTabBarHidden:NO animated:YES];
+    if (self.viewControllers.count == 2) { /// homePage
         [self setNavigationBarHidden:NO];
     }
-    
     return [super popViewControllerAnimated:YES];
 }
 
 - (nullable NSArray<__kindof UIViewController *> *)popToRootViewControllerAnimated:(BOOL)animated {
-    
-//    [self.appDelegate.tabBarController setTabBarHidden:NO animated:YES];
-    
-
     [self setNavigationBarHidden:NO];
     return [super popToRootViewControllerAnimated:YES];
     

@@ -13,7 +13,10 @@
 //
 
 #import "QuickDialogTableView.h"
+#import "QFloatTableViewCell.h"
+
 #import "QLabelElement.h"
+
 
 /**
   QFloatElement: shows an slider control.
@@ -21,7 +24,7 @@
 
 @interface QFloatElement : QLabelElement {
     
-    float _floatValue;
+//    float _floatValue;
     float _minimumValue;
     float _maximumValue;
 }

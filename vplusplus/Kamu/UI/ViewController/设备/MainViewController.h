@@ -7,7 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
-
+#include <signal.h>
 
 
 @interface MainViewController : AMViewController

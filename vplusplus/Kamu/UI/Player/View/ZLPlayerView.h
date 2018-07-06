@@ -13,23 +13,19 @@
 
 
 #import "CommonPlayerControl.h"
-
+#import "PlaybackControl.h"
+#import "LivePlayControl.h"
+#import "FunctionView.h"
 
 #define ZLPlayerShared                      [ZLBrightnessView sharedBrightnessView]
 
 
 #define AUTOOL [PCMPlayer sharedAudioManager]
 
-
-#define OP_DEVICE self.rootVc.operatingDevice
-
-#define OP_DEVICE_HANDLE self.rootVc.operatingDevice.nvr_h
-#define OP_DEVICE_STATUS self.rootVc.operatingDevice.nvr_status
-
-#define OP_CAM_ID self.rootVc.operatingCam.cam_id
-#define LIVE_PLAY_VC ((PlayVideoController *)self.rootVc)
-
-#define OP_MEDIA_FILE self.rootVc.operatingMedia
+typedef NS_ENUM(NSInteger, ControlType) {
+   CONTROL_PB = 0,
+   CONTROL_LP = 1,
+};
 
 
 
@@ -74,21 +70,27 @@
 
 
 @interface ZLPlayerView : UIView <ZLPlayerDelegate>
+@property (nonatomic, strong) FunctionView *funcBar;
 
-@property (nonatomic, strong) NSTimer *timer;
+
 @property (nonatomic, assign) NSInteger chekingFlag;
 @property (nonatomic, assign) BOOL  hasDownload;
 @property (nonatomic, assign) BOOL hasPreviewView;
 @property (nonatomic, weak) id<ZLPlayerDelegate> delegate;
 
 @property (strong, nonatomic) GLDrawController *glvc;
-@property (nonatomic, strong) void (^snapshot)();
-@property (nonatomic, strong) void (^recordVideo)(BOOL isRecord);
+//@property (nonatomic, strong) void (^snapshot)();
+//@property (nonatomic, strong) void (^recordVideo)(BOOL isRecord);
 @property (nonatomic, strong) ZLPlayerModel *playerModel;
+
+//@property (nonatomic, strong) Class controlClass;
 
 
 @property (nonatomic, strong) CommonPlayerControl *functionControl;  //父类指针指向子类对象
 
+
+
+int device_data_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *param,void *context);
 - (NSData *)takeSnapshot;
 - (instancetype)initWithModel: (ZLPlayerModel *)vp_model control:(CommonPlayerControl *)control controller:(UIViewController *)vc;
 - (void)reconnect;

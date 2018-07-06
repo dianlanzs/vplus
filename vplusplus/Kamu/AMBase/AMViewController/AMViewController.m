@@ -41,24 +41,5 @@
 //}
 
 
-- (MediaEntity *)operatingMedia {
-    if (!_operatingMedia) {
-        _operatingMedia = [MediaEntity new];
-    }
-    return _operatingMedia;
-}
 
-- (Device *)operatingDevice {
-    if (!_operatingDevice) {
-        _operatingDevice = [Device new];
-    }
-    return _operatingDevice;
-}
-
-- (Cam *)operatingCam {
-    if (!_operatingCam) {
-        _operatingCam = [Cam new];
-    }
-    return _operatingCam;
-}
 @end

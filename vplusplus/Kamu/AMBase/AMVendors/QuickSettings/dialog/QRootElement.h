@@ -66,11 +66,10 @@ typedef enum  {
 @property(nonatomic) QPresentationMode presentationMode;
 @property(nonatomic, strong) NSIndexPath *preselectedElementIndex;
 
-
+//zhoulei
 //@property(nonatomic, copy) void (^onValueChanged)(QRootElement *);
 
-//zhoulei
-@property(nonatomic, copy) void (^onValueChanged)(id);
+
 
 
 + (instancetype)rootForJSON:(NSString *)jsonFileName withObject:(id)object;

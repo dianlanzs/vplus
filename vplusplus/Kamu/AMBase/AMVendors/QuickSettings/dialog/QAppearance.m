@@ -55,6 +55,7 @@
         copy.sectionTitleFont = _sectionTitleFont;
         copy.sectionFooterColor = _sectionFooterColor;
         copy.sectionFooterFont = _sectionFooterFont;
+        
     }
     return copy;
 }

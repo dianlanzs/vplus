@@ -13,7 +13,8 @@ CGFloat padding = 10.f;
 
 CGFloat batteryW = 30.f;
 CGFloat lineW = 1.f;
-CGFloat batteryH = 15.f;
+CGFloat batteryH = 12.f;
+CGFloat cornerRadius = 2.f;
 @interface FunctionView()
 
 @property (nonatomic, strong) UIButton  *wifiBtn;
@@ -58,7 +59,7 @@ CGFloat batteryH = 15.f;
         
         [self.wifi mas_makeConstraints:^(MASConstraintMaker *make) {
             make.leading.mas_equalTo(self.batteryLabel.mas_trailing).offset(padding);
-            make.centerY.equalTo(self).offset(0.f);//fine tuning
+            make.centerY.equalTo(self).offset(-2.f);//fine tuning
             make.size.mas_equalTo(CGSizeMake(CGRectGetHeight(self.bounds) * 0.5, CGRectGetHeight(self.bounds) * 0.5));
         }];
         
@@ -123,6 +124,7 @@ CGFloat batteryH = 15.f;
         for (NSInteger i = 0; i < images.count; i++) {
             UIImage *signalPercent =  [[UIImage imageNamed:reverseImages[i]] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
             UIImageView *imv = [[UIImageView alloc] initWithImage:signalPercent];
+            [imv setTintColor:[UIColor lightGrayColor]];
             [imv setTag:1000 + i];
             [_wifi addSubview:imv];
         }
@@ -131,6 +133,9 @@ CGFloat batteryH = 15.f;
     
     return _wifi;
 }
+
+
+
 - (void)setWifiProgress:(NSInteger)progressValue {
     
     if (progressValue >= 70 && progressValue <= 100) {
@@ -149,7 +154,7 @@ CGFloat batteryH = 15.f;
         for (UIImageView *imv in self.wifi.subviews) {
             if ([imv isKindOfClass:[UIImageView class]]) {
                 
-                if (idx == 0) { //subview[0]    on the bottom  max / signal:70-100
+                if (idx == 0) { ///  index = 0   = 70_100 image ,reverse!!!
                         [imv setTintColor:[UIColor lightGrayColor]];
                 } else {
                     [imv setTintColor:[UIColor greenColor]];
@@ -179,7 +184,7 @@ CGFloat batteryH = 15.f;
         }
     }
     
-   else {
+     else if (progressValue >= 3 && progressValue <= 10)  {
        NSInteger idx = 0;
        for (UIImageView *imv in self.wifi.subviews) {
            if ([imv isKindOfClass:[UIImageView class]]) {
@@ -196,6 +201,17 @@ CGFloat batteryH = 15.f;
             idx++;
        }
    }
+    
+     else  {
+         NSInteger idx = 0;
+         for (UIImageView *imv in self.wifi.subviews) {
+             if ([imv isKindOfClass:[UIImageView class]]) {
+
+                     [imv setTintColor:[UIColor lightGrayColor]];
+             }
+             idx++;
+         }
+     }
     self.signalLb.text = [[NSString stringWithFormat:@"%lu",(long)progressValue] stringByAppendingString:@"%"];
 //    [self setNeedsDisplay];
 }
@@ -234,7 +250,7 @@ CGFloat batteryH = 15.f;
     
     
     //电池logo
-    UIBezierPath *path1 = [UIBezierPath bezierPathWithRoundedRect:CGRectMake(x, y, w, h) cornerRadius:2];
+    UIBezierPath *path1 = [UIBezierPath bezierPathWithRoundedRect:CGRectMake(x, y, w, h) cornerRadius:cornerRadius];
     CAShapeLayer *batteryLayer = [CAShapeLayer layer];
     batteryLayer.lineWidth = lineW;
     batteryLayer.strokeColor = [UIColor lightGrayColor].CGColor; //stroke
@@ -245,8 +261,8 @@ CGFloat batteryH = 15.f;
     
     //正极logo
     UIBezierPath *path2 = [UIBezierPath bezierPath];
-    [path2 moveToPoint:CGPointMake(x+w+1, y+h/3)];//正极1/3位置
-    [path2 addLineToPoint:CGPointMake(x+w+1, y+h*2/3)];//2/3 位置
+    [path2 moveToPoint:CGPointMake(x + w + 1, y + h / 3)];//正极1/3位置
+    [path2 addLineToPoint:CGPointMake(x + w + 1, y + h * 2 / 3)];//2/3 位置
     CAShapeLayer *layer2 = [CAShapeLayer layer];
     layer2.lineWidth = 2; //lineWidth
     layer2.strokeColor = [UIColor lightGrayColor].CGColor;
@@ -255,8 +271,8 @@ CGFloat batteryH = 15.f;
     [self.layer addSublayer:layer2];
     
     //绘制进度 嵌套 solid view
-    self.batteryView = [[UIView alloc]initWithFrame:CGRectMake(x,y+lineW, 0, h-lineW*2)];
-    self.batteryView.layer.cornerRadius = 0;
+    self.batteryView = [[UIView alloc]initWithFrame:CGRectMake(x + 2 * lineW ,y + 2 * lineW, 0, h - 2 * (lineW * 2) )];
+    self.batteryView.layer.cornerRadius = 1;
     self.batteryView.backgroundColor = [UIColor colorWithRed:0.324 green:0.941 blue:0.413 alpha:1.000];
     [self addSubview:self.batteryView];
     
@@ -274,11 +290,11 @@ CGFloat batteryH = 15.f;
  
     [UIView animateWithDuration:1 animations:^{
         CGRect frame = self.batteryView.frame;
-        frame.size.width = (progressValue * (batteryW - lineW * 2))/100; //battery include width of stroke line
+        frame.size.width = (progressValue * (batteryW - lineW * 2)) / 100; //battery include width of stroke line
         self.batteryView.frame  = frame;
         self.batteryLabel.text = [[NSString stringWithFormat:@"%lu",(long)progressValue] stringByAppendingString:@"%"];
 
-        if (progressValue < 10) {
+        if (progressValue < 20) {
             self.batteryView.backgroundColor = [UIColor redColor];
         }else{
             self.batteryView.backgroundColor = [UIColor greenColor];

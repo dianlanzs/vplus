@@ -32,7 +32,6 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
- 
     [self addSubviews];
  
 }
@@ -106,19 +105,12 @@
         }];
     }
     
-    
     return _specView;
 }
+
+
 - (void)add:(id)sender {
-    
-    
-//    ProbeDoneViewController *probDoneVc = [[ProbeDoneViewController alloc] init];
-    
-//    probDoneVc.nvrCell = self.nvrCell;
-//    probDoneVc.indexPath = self.indexPath;
-    [((AMNavigationController *)self.navigationController) pushViewController:[ProbeDoneViewController new] deviceModel:self.operatingDevice camModel:self.operatingCam];
-//    [self.navigationController pushViewController:[ProbeDoneViewController new] animated:YES];
-    
+    [self.navigationController pushViewController:[ProbeDoneViewController new] deviceModel:self.navigationController.operatingDevice camModel:self.navigationController.operatingCam];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -127,7 +119,6 @@
 }
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
 }
 
 

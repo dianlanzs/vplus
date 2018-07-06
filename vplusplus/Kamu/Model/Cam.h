@@ -20,17 +20,27 @@
 @property  NSString * _Nullable cam_name;
 @property  NSData * _Nullable cam_cover;
 @property  NSString * _Nullable cam_tag;
+@property  NSString * _Nullable cam_version;
 
+
+@property  int cam_pir_sensitivity;
+@property  int cam_battery_threshold;
+@property  int cam_rotate;
+
+
+
+@property (readonly) RLMLinkingObjects * _Nullable nvrs;
 
 @property  int cam_index;
-@property  int cam_state;
+
 
 
 
 
 //@property (nonatomic, strong) NSDate * _Nullable date;
 
-@property RLMArray <MediaEntity>  * _Nullable cam_medias;
+//@property RLMArray <MediaEntity>  * _Nullable cam_medias;
+@property (nonatomic, strong) NSMutableArray * _Nullable cam_cloudMedias;
 
 @end
 

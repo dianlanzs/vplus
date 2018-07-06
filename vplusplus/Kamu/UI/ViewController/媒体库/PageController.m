@@ -19,11 +19,10 @@
 #define SEC_24 SEC_00 + 24 * 3600
 #define CAMS       [Cam allObjects]
 
-@interface PageController ()<ZLNvrDelegate >
+@interface PageController ()
 
-//@property (nonatomic, strong) Device *cDevice;
 @property (nonatomic, strong) ZLPlayerView *vpTool;
-
+@property (nonatomic, strong) NSPredicate *predicate_selectedDate;
 @end
 
 @implementation PageController
@@ -46,33 +45,41 @@
     [super didReceiveMemoryWarning];
 }
 
+- (NSMutableArray *)tempCams {
+    
+    if (!_tempCams) {
+        _tempCams = [@[] mutableCopy];
+        for (Cam *tempCam in self.parentViewController.navigationController.operatingDevice.nvr_cams) {
+            [_tempCams addObject:tempCam];
+        }
+    }
+    return _tempCams;
+}
 
-//- (NSMutableDictionary *)mDict {
-//    if (_mDict) {
-//        _mDict = [@{} mutableCopy]; //分配内存 ,且 return mutable 对象
-//    }
-//    
-//    return _mDict;
-//}
 
 #pragma mark - Table view data source
 
+
+- (NSMutableArray *)cloudMediasWithIndex:(NSInteger)index {
+    return [self.parentViewController.navigationController.operatingDevice.nvr_cams[index] cam_cloudMedias];
+}
+
+- (NSPredicate *)predicate_selectedDate {
+
+    return [NSPredicate predicateWithFormat:@"%d > createtime AND createtime > %d",self.zero_seconds + 24 * 3600 , self.zero_seconds];
+}
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    return ((LibraryController *)self.parentViewController).operatingDevice.nvr_cams.count;
+    return self.tempCams.count;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    
-    
-    RLMArray *medias = [((LibraryController *)self.parentViewController).operatingDevice.nvr_cams[section] cam_medias];
-    NSPredicate *pred = [NSPredicate predicateWithFormat:@"%d > createtime AND createtime > %d",
-                       self.start_daySec + 24 * 3600 , self.start_daySec];
-    RLMResults *res = [medias objectsWithPredicate:pred];
-    return res.count;
+    NSMutableArray *cloudMedias =  [self.tempCams[section] cam_cloudMedias];
+    NSArray *res = [cloudMedias filteredArrayUsingPredicate:self.predicate_selectedDate];
+    return  res.count;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-   
+    
     // 1.  RegisterCell  must use forIndexpath ,   2.if u no register no use indexpath ,   3.stroyBoard use if(!cell)
     MediaLibCell *mediaCell = [tableView dequeueReusableCellWithIdentifier:@"1"];
     mediaCell.selectionStyle = UITableViewCellSelectionStyleNone;
@@ -80,19 +87,20 @@
         // owner can  = nil and = self  ,// If the owner parameter is nil, connections to File's Owner are not permitted.
         mediaCell = [[[UINib nibWithNibName:NIB(MediaLibCell) bundle:nil] instantiateWithOwner:self options:nil] firstObject];
     }
-    RLMArray *medias = [((LibraryController *)self.parentViewController).operatingDevice.nvr_cams[indexPath.section] cam_medias];
-    RLMResults *res = [medias objectsWhere:[NSString stringWithFormat:@"%d < createtime AND createtime < %d",self.start_daySec,self.start_daySec + 24 *3600]];
-    [mediaCell setEntity:res[indexPath.row]];
-    
-    mediaCell.playcallback = ^(MediaLibCell *cell) {
-        
-        PlaybackViewController *playbackVc = [[PlaybackViewController alloc] init];
-        LibraryController *libVc = (LibraryController *)self.parentViewController;
-        [(AMNavigationController *)self.navigationController pushViewController:playbackVc deviceModel:libVc.operatingDevice camModel:libVc.operatingCam];
-  
-        [playbackVc.operatingCam setCam_id:[libVc.operatingDevice.nvr_cams[indexPath.section] cam_id]];
-        [playbackVc setOperatingMedia:cell.entity];
-    };
+    NSMutableArray *cloudMedias =  [self.tempCams[indexPath.section] cam_cloudMedias];
+    NSArray *res = [cloudMedias filteredArrayUsingPredicate:self.predicate_selectedDate];
+    if (res.count) {
+        [mediaCell setEntity:res[indexPath.row]];
+        mediaCell.playcallback = ^(MediaLibCell *cell) {
+            
+            PlaybackViewController *playbackVc = [[PlaybackViewController alloc] init];
+            [self.navigationController pushViewController:playbackVc deviceModel:self.parentViewController.navigationController.operatingDevice camModel:self.parentViewController.navigationController.operatingCam];
+            
+            [self.navigationController.operatingCam setCam_id:[self.navigationController.operatingDevice.nvr_cams[indexPath.section] cam_id]];
+            [self.navigationController setOperatingMedia:cell.entity];
+        };
+    }
+
     return  mediaCell;
     
 }
@@ -102,13 +110,6 @@
 //    size_t ,zd
     NSLog(@"didSelectRowAtIndexPath---%zd",indexPath.row);
 }
-//- (void)device:(Device *)selectedNvr sendListData:(void *)data dataType:(int)type {
-//    ;
-//}
-
-
-
-
 
 
 #pragma mark - getter
@@ -120,8 +121,27 @@
     [self.tableView setRowHeight:100];
     [self.tableView setDelegate:self];
     [self.tableView setDataSource:self];
+    
+//    self.tableView.mj_footer = [MJRefreshFooter footerWithRefreshingBlock:^{
+//        NSInteger remainCount = self.totalMedias.count - self.shortMedias.count;
+//       self.shortMedias =  [self.totalMedias subarrayWithRange:NSMakeRange(self.shortMedias.count, remainCount > 20 ? 20 : remainCount)];
+//    }];
 }
 
-
+/*
+- (NSArray *)shortMedias {
+    if (!_shortMedias) {
+        _shortMedias = [NSArray array];
+    }
+    
+}
+- (NSMutableArray *)totalMedias {
+    if (!_totalMedias) {
+        _totalMedias = [NSMutableArray array];
+    }
+    [_totalMedias filteredArrayUsingPredicate:self.predicate_selectedDate];
+    return _totalMedias;
+}
+*/
 
 @end

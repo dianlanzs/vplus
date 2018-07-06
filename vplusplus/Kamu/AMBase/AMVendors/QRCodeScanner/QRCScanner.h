@@ -51,7 +51,8 @@
  *
  *  @return QRCScanner实例
  */
-- (instancetype)initQRCScannerWithView:(UIView *)view;
+//- (instancetype)initQRCScannerWithView:(UIView *)view;
+- (instancetype)initQRCScannerWithView:(UIView *)view lightButton:(UIButton *)button;
 /**
  *  根据给定的字符串生成一个给定尺寸的二维码image
  *
@@ -90,4 +91,7 @@
  *  @return 二维码信息
  */
 + (NSString *)scQRReaderForImage:(UIImage *)qrimage NS_AVAILABLE_IOS(8_0);
+
+///照明按钮
+- (void)torchSwitch:(UIButton *)sender;
 @end

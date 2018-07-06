@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 #import "QRResultCell.h"
 
-@interface ProbeDoneViewController : AMViewController
+@interface ProbeDoneViewController : UIViewController
 
 @property (nonatomic,strong) Cam *probedCam;
 

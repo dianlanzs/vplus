@@ -11,36 +11,33 @@
 
 @implementation UIView (EqualMargin)
 
-- (void) distributeSpacingHorizontallyWith:(NSArray*)views {
+
+
+
+- (void)distributeSpacingHorizontallyWith:(NSArray*)views {
     
-//    NSInteger a_spaces = views.count +1;
-//    for (UIView *count_v in views) {
-//        if (count_v.isHidden == YES) {
-//            a_spaces--;
-//        }
-//    }
     
     NSMutableArray *spaces = [NSMutableArray arrayWithCapacity:views.count + 1];
 
     
     
     
+    ///delete previous v_btns
+    [self.subviews enumerateObjectsUsingBlock:^(__kindof UIButton * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        if (obj.tag == 1000) {
+            [obj removeFromSuperview];
+        }
+    }];
     
-    
-    
-    
-    
-    //views.count + 1
-    for ( int i = 0 ; i < views.count + 1; ++i )
-    {
-        UIView *v_btn = [UIButton new];
+   
+    ///add new  v_btns
+    for ( int i = 0 ; i < views.count + 1; ++i ){
+        UIButton *v_btn = [UIButton new];
+        [v_btn setTag:1000];
         [spaces addObject:v_btn];
         [self addSubview:v_btn];
-        
         [v_btn mas_makeConstraints:^(MASConstraintMaker *make) {
-            
-            //宽高相同
-            make.width.equalTo(v_btn.mas_height);
+            make.width.equalTo(v_btn.mas_height);   //宽高相同
         }];
     }
     

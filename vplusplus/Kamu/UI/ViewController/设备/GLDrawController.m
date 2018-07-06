@@ -317,9 +317,9 @@ enum
         
         
         
-        //Steve dbg
-        //usleep(10000);
-        return false;   
+  
+        usleep(10000);// 10 ms
+        return NO;
 //    } else {
 //        last_time = time();
 //        stop_buffering();

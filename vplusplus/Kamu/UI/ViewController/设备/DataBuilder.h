@@ -16,11 +16,10 @@
 #import <Foundation/Foundation.h>
 #import "QuickDialogEntryElementDelegate.h"
 
-#import "QRResultCell.h"
 @class QRootElement;
 
 
-@interface DataBuilder : NSObject<QuickDialogEntryElementDelegate> {
+@interface DataBuilder : NSObject<QuickDialogEntryElementDelegate > {
 
 }
 
@@ -30,6 +29,6 @@
 @property (nonatomic, copy) NSString *camName;
 @property (nonatomic, strong) Device *nvrModel;
 
-- (QRootElement *)createForCamSettings:(Cam *)cam device:(Device *)device;
+- (QRootElement *)createForCamSettings:(Cam *)cam;
 - (QRootElement *)createForNvrSettings:(Device *)device;
 @end

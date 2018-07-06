@@ -23,19 +23,16 @@ typedef enum {
     
 }mdeiaType;
 
-@interface MediaEntity : RLMObject
+//RLMObject
+@interface MediaEntity : NSObject
 
-/*给 Cam.medias 正向添加一个 media 对象 ---- 就反向将该对象的 media.owner 属性设置为对应的 Person。
+/*给 cam.medias 正向添加一个 media 对象 ---- 就反向将该对象的 media.cams 属性设置为对应的 cam。
  为了解决这个问题，Realm 提供了连接对象属性，从而表示这种双向关系。*/
+//@property (readonly) RLMLinkingObjects * _Nullable cams;
+/*Media 对象可以拥有一个名为 cams 属性，它包含所有 medias ----> cams 属性有该 Media 对象的 Cam 对象*/
 
 
-//@property (readonly) RLMLinkingObjects * _Nullable owners;
-
-
-/*Media 对象可以拥有一个名为 owners 属性，它包含所有 medias 属性有该 Media 对象的 Cam 对象*/
-
-
-@property (nonatomic, copy) NSString * _Nonnull fileName;
+@property (nonatomic, copy)   NSString * _Nonnull fileName;
 @property (nonatomic, assign) int  timelength;
 @property (nonatomic, assign) int  recordType;
 @property (nonatomic, assign) int  createtime;

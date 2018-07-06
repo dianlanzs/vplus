@@ -177,8 +177,6 @@
 		B85C215F204811430065D557 /* MediaLibCell.m in Sources */ = {isa = PBXBuildFile; fileRef = B85C215E204811430065D557 /* MediaLibCell.m */; };
 		B85C216120491B1A0065D557 /* more@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = B85C216020491B1A0065D557 /* more@2x.png */; };
 		B85C2168204925AB0065D557 /* PageController.m in Sources */ = {isa = PBXBuildFile; fileRef = B85C2167204925AB0065D557 /* PageController.m */; };
-		B86524AE20BE943F006247A3 /* ASValuePopUpView.m in Sources */ = {isa = PBXBuildFile; fileRef = B86524AB20BE943F006247A3 /* ASValuePopUpView.m */; };
-		B86524AF20BE943F006247A3 /* ASValueTrackingSlider.m in Sources */ = {isa = PBXBuildFile; fileRef = B86524AD20BE943F006247A3 /* ASValueTrackingSlider.m */; };
 		B86BA55820B53E9600E3E8D4 /* PlaybackViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B86BA55720B53E9600E3E8D4 /* PlaybackViewController.m */; };
 		B8758C1B20CA5F2A0085E380 /* Alert.m in Sources */ = {isa = PBXBuildFile; fileRef = B8758C1A20CA5F290085E380 /* Alert.m */; };
 		B876A986206B6E03004427EF /* nav_add@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = B876A985206B6E03004427EF /* nav_add@2x.png */; };
@@ -268,6 +266,9 @@
 		B897FC0220906EC400F88F79 /* MediaEntity.m in Sources */ = {isa = PBXBuildFile; fileRef = B897FBF820906EC300F88F79 /* MediaEntity.m */; };
 		B897FC0420906EC400F88F79 /* VPPRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = B897FBFC20906EC300F88F79 /* VPPRequest.m */; };
 		B89FC8841FC412CB00862AD1 /* AddDevice.xib in Resources */ = {isa = PBXBuildFile; fileRef = B89FC8821FC412CB00862AD1 /* AddDevice.xib */; };
+		B8A3335220E0C57600427E0E /* ASValuePopUpView.m in Sources */ = {isa = PBXBuildFile; fileRef = B8A3334F20E0C57500427E0E /* ASValuePopUpView.m */; };
+		B8A3335320E0C57600427E0E /* ASValueTrackingSlider.m in Sources */ = {isa = PBXBuildFile; fileRef = B8A3335120E0C57500427E0E /* ASValueTrackingSlider.m */; };
+		B8A3335620E219F600427E0E /* UINavigationController+operating.m in Sources */ = {isa = PBXBuildFile; fileRef = B8A3335520E219F600427E0E /* UINavigationController+operating.m */; };
 		B8A64B5B2028690A00D9C621 /* authority@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = B8A64B592028690A00D9C621 /* authority@2x.png */; };
 		B8A64B5F202A9DAB00D9C621 /* nav_close@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = B8A64B5D202A9DA800D9C621 /* nav_close@2x.png */; };
 		B8A83AC62061398E00234BEF /* AMRequestManager.m in Sources */ = {isa = PBXBuildFile; fileRef = B8A83AC52061398E00234BEF /* AMRequestManager.m */; };
@@ -747,10 +748,6 @@
 		B85C216020491B1A0065D557 /* more@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "more@2x.png"; sourceTree = "<group>"; };
 		B85C2166204925AB0065D557 /* PageController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PageController.h; sourceTree = "<group>"; };
 		B85C2167204925AB0065D557 /* PageController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PageController.m; sourceTree = "<group>"; };
-		B86524AA20BE943F006247A3 /* ASValuePopUpView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ASValuePopUpView.h; sourceTree = "<group>"; };
-		B86524AB20BE943F006247A3 /* ASValuePopUpView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ASValuePopUpView.m; sourceTree = "<group>"; };
-		B86524AC20BE943F006247A3 /* ASValueTrackingSlider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ASValueTrackingSlider.h; sourceTree = "<group>"; };
-		B86524AD20BE943F006247A3 /* ASValueTrackingSlider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ASValueTrackingSlider.m; sourceTree = "<group>"; };
 		B86BA55620B53E9600E3E8D4 /* PlaybackViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PlaybackViewController.h; sourceTree = "<group>"; };
 		B86BA55720B53E9600E3E8D4 /* PlaybackViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PlaybackViewController.m; sourceTree = "<group>"; };
 		B8758C1920CA5F290085E380 /* Alert.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Alert.h; sourceTree = "<group>"; };
@@ -894,6 +891,12 @@
 		B897FBFC20906EC300F88F79 /* VPPRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VPPRequest.m; sourceTree = "<group>"; };
 		B89FC8821FC412CB00862AD1 /* AddDevice.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = AddDevice.xib; sourceTree = "<group>"; };
 		B89FC8891FC4268A00862AD1 /* AMCommonDef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AMCommonDef.h; sourceTree = "<group>"; };
+		B8A3334E20E0C57500427E0E /* ASValuePopUpView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ASValuePopUpView.h; sourceTree = "<group>"; };
+		B8A3334F20E0C57500427E0E /* ASValuePopUpView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ASValuePopUpView.m; sourceTree = "<group>"; };
+		B8A3335020E0C57500427E0E /* ASValueTrackingSlider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ASValueTrackingSlider.h; sourceTree = "<group>"; };
+		B8A3335120E0C57500427E0E /* ASValueTrackingSlider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ASValueTrackingSlider.m; sourceTree = "<group>"; };
+		B8A3335420E219F600427E0E /* UINavigationController+operating.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "UINavigationController+operating.h"; sourceTree = "<group>"; };
+		B8A3335520E219F600427E0E /* UINavigationController+operating.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "UINavigationController+operating.m"; sourceTree = "<group>"; };
 		B8A64B592028690A00D9C621 /* authority@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "authority@2x.png"; sourceTree = "<group>"; };
 		B8A64B5C20294F6F00D9C621 /* 测试Demo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = "测试Demo.entitlements"; path = "测试Demo/测试Demo.entitlements"; sourceTree = "<group>"; };
 		B8A64B5D202A9DA800D9C621 /* nav_close@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "nav_close@2x.png"; sourceTree = "<group>"; };
@@ -1443,11 +1446,11 @@
 		B8409FC11FFE5F120069C776 /* View */ = {
 			isa = PBXGroup;
 			children = (
+				B8A3334D20E0C57500427E0E /* AS */,
 				B8409FBD1FFE5F040069C776 /* ZLPlayerView.h */,
 				B8409FBE1FFE5F040069C776 /* ZLPlayerView.m */,
 				B835D68A20C118B600B91109 /* PlayerControl.h */,
 				B835D68B20C118B600B91109 /* PlayerControl.m */,
-				B86524A920BE943F006247A3 /* Asist */,
 				B81ABB6E20109C290023BCD2 /* ZLPlayer.h */,
 				B8409FC21FFE6B8D0069C776 /* PlaybackControl.h */,
 				B8409FC31FFE6B8D0069C776 /* PlaybackControl.m */,
@@ -1748,9 +1751,9 @@
 			isa = PBXGroup;
 			children = (
 				B8825A401FCEED7C00531271 /* DeviceListCell.h */,
+				B8825A411FCEED7C00531271 /* DeviceListCell.m */,
 				B8B176631FD8C9D3004C7030 /* QRResultCell.h */,
 				B8B176641FD8C9D3004C7030 /* QRResultCell.m */,
-				B8825A411FCEED7C00531271 /* DeviceListCell.m */,
 				B8D2A59C1FDE6AFD00BB33F3 /* VideoCell.h */,
 				B8D2A59D1FDE6AFD00BB33F3 /* VideoCell.m */,
 				B8C5D9F320A309C500AAEB67 /* DeviceFooter.h */,
@@ -1758,18 +1761,6 @@
 			);
 			path = "在一个VC里 可用IB 整合成一个Cell";
 			sourceTree = "<group>";
-		};
-		B86524A920BE943F006247A3 /* Asist */ = {
-			isa = PBXGroup;
-			children = (
-				B86524AA20BE943F006247A3 /* ASValuePopUpView.h */,
-				B86524AB20BE943F006247A3 /* ASValuePopUpView.m */,
-				B86524AC20BE943F006247A3 /* ASValueTrackingSlider.h */,
-				B86524AD20BE943F006247A3 /* ASValueTrackingSlider.m */,
-			);
-			name = Asist;
-			path = Kamu/UI/Player/Asist;
-			sourceTree = SOURCE_ROOT;
 		};
 		B8758C1820CA5F290085E380 /* Alert */ = {
 			isa = PBXGroup;
@@ -1832,6 +1823,7 @@
 				B8CD9F972056D01F00A67715 /* MediaMuxer.m */,
 				B8A83ACA20637A1400234BEF /* UITextField+deleteEvent.h */,
 				B8A83ACB20637A1400234BEF /* UITextField+deleteEvent.m */,
+				B891BCA620DB2AE300016EB2 /* Kamu_category */,
 			);
 			path = Category;
 			sourceTree = "<group>";
@@ -2101,6 +2093,15 @@
 			path = AMCategory;
 			sourceTree = "<group>";
 		};
+		B891BCA620DB2AE300016EB2 /* Kamu_category */ = {
+			isa = PBXGroup;
+			children = (
+				B8A3335420E219F600427E0E /* UINavigationController+operating.h */,
+				B8A3335520E219F600427E0E /* UINavigationController+operating.m */,
+			);
+			path = Kamu_category;
+			sourceTree = "<group>";
+		};
 		B89330BA1FD4F05100D1B7E6 /* DZNEmptyDataSet */ = {
 			isa = PBXGroup;
 			children = (
@@ -2203,6 +2204,18 @@
 			name = Model;
 			path = /Users/ygtech/Desktop/KAMU/ios/vplusplus/Kamu/Model;
 			sourceTree = "<absolute>";
+		};
+		B8A3334D20E0C57500427E0E /* AS */ = {
+			isa = PBXGroup;
+			children = (
+				B8A3334E20E0C57500427E0E /* ASValuePopUpView.h */,
+				B8A3334F20E0C57500427E0E /* ASValuePopUpView.m */,
+				B8A3335020E0C57500427E0E /* ASValueTrackingSlider.h */,
+				B8A3335120E0C57500427E0E /* ASValueTrackingSlider.m */,
+			);
+			name = AS;
+			path = Kamu/UI/Player/AS;
+			sourceTree = SOURCE_ROOT;
 		};
 		B8B26C0A1FC467BD006D4061 /* Button */ = {
 			isa = PBXGroup;
@@ -2699,6 +2712,7 @@
 				"${SRCROOT}/Pods/Target Support Files/Pods-Kamu/Pods-Kamu-frameworks.sh",
 				"${BUILT_PRODUCTS_DIR}/AFNetworking/AFNetworking.framework",
 				"${BUILT_PRODUCTS_DIR}/MGSwipeTableCell/MGSwipeTableCell.framework",
+				"${BUILT_PRODUCTS_DIR}/MJRefresh/MJRefresh.framework",
 				"${BUILT_PRODUCTS_DIR}/Masonry/Masonry.framework",
 				"${BUILT_PRODUCTS_DIR}/RDVTabBarController/RDVTabBarController.framework",
 				"${BUILT_PRODUCTS_DIR}/ReactiveObjC/ReactiveObjC.framework",
@@ -2710,6 +2724,7 @@
 			outputPaths = (
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/AFNetworking.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MGSwipeTableCell.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MJRefresh.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Masonry.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RDVTabBarController.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactiveObjC.framework",
@@ -2813,6 +2828,7 @@
 				B897FC0420906EC400F88F79 /* VPPRequest.m in Sources */,
 				B8825A811FCFB10500531271 /* NSString+Encode.m in Sources */,
 				B837C1A7201B33C3003B993D /* QElement+Appearance.m in Sources */,
+				B8A3335320E0C57600427E0E /* ASValueTrackingSlider.m in Sources */,
 				B837C1F9201B33C3003B993D /* QMapElement.m in Sources */,
 				B87B39371FBD391D00290B3F /* main.m in Sources */,
 				B8825A8D1FCFB10500531271 /* UINavigationBar+Awesome.m in Sources */,
@@ -2824,7 +2840,7 @@
 				B837C183201B33C3003B993D /* QAppearance.m in Sources */,
 				B8825A8F1FCFB10500531271 /* UINavigationBar+Custom.m in Sources */,
 				B837C1ED201B33C3003B993D /* QuickDialogTableDelegate.m in Sources */,
-				B86524AE20BE943F006247A3 /* ASValuePopUpView.m in Sources */,
+				B8A3335220E0C57600427E0E /* ASValuePopUpView.m in Sources */,
 				B8D2A59F1FDE6AFD00BB33F3 /* VideoCell.m in Sources */,
 				B8C85113203019300089B76F /* CamNameController.m in Sources */,
 				B837C1C1201B33C3003B993D /* QMultilineTextViewController.m in Sources */,
@@ -2874,7 +2890,6 @@
 				B85C215F204811430065D557 /* MediaLibCell.m in Sources */,
 				B837C1C7201B33C3003B993D /* QRadioItemElement.m in Sources */,
 				B89331381FD6C75A00D1B7E6 /* YoshikoTextField.m in Sources */,
-				B86524AF20BE943F006247A3 /* ASValueTrackingSlider.m in Sources */,
 				B8C3B713207F2A63007A1589 /* LCVoiceHud.m in Sources */,
 				B837C1BB201B33C3003B993D /* QLabelElement.m in Sources */,
 				B8825A7D1FCFB10400531271 /* NSObject+Notification.m in Sources */,
@@ -2900,6 +2915,7 @@
 				B837C1E3201B33C3003B993D /* QuickDialogController+Helpers.m in Sources */,
 				B87B39771FBD6F0C00290B3F /* AMViewController.m in Sources */,
 				B8758C1B20CA5F2A0085E380 /* Alert.m in Sources */,
+				B8A3335620E219F600427E0E /* UINavigationController+operating.m in Sources */,
 				B837C1F7201B33C3003B993D /* QMapAnnotation.m in Sources */,
 				B8825A851FCFB10500531271 /* UIDevice+Identifier.m in Sources */,
 				B881A77A20AE72F4009B56CB /* FilterController.m in Sources */,

@@ -17,6 +17,7 @@
 #import "QElement.h"
 #import "QuickDialog.h"
 
+#import "QFloatTableViewCell.h"
 @implementation QElement {
 @private
     id _object;
@@ -56,11 +57,14 @@
     }
     return self;
 }
-///MARK: 修改
+
+
 - (UITableViewCell *)getCellForTableView:(QuickDialogTableView *)tableView controller:(QuickDialogController *)controller {
     _controller = controller;
     
-    QTableViewCell *cell= [self getOrCreateEmptyCell:tableView];
+   
+    QTableViewCell *cell= [self getOrCreateEmptyCell:tableView];///MARK: zhoulei mark
+
 
     [cell applyAppearanceForElement:self];
 
@@ -79,6 +83,8 @@
     QTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:[NSString stringWithFormat:@"QuickformElementCell%@%@", self.key, self.class]];
     if (cell == nil){
         cell = [[QTableViewCell alloc] initWithReuseIdentifier:[NSString stringWithFormat:@"QuickformElementCell%@%@", self.key, NSStringFromClass(self.class)]];
+        
+       
     }
     return cell;
 }

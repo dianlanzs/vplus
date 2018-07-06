@@ -46,7 +46,7 @@
 @dynamic visibleIndex;
 @synthesize object = _object;
 
-
+///zhoulei mark
 - (QElement *)getVisibleElementForIndex:(NSInteger)index
 {
     for (QElement * q in self.elements)

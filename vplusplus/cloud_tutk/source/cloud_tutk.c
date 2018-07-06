@@ -64,6 +64,11 @@ typedef enum {
     DEVICE_PROBECAM = (1<<10),
     DEVICE_ADDCAM  = (1<<11),
     DEVICE_DELCAM  = (1<<12),
+    DEVICE_CAM_SETCFG  = (1<<13),
+    DEVICE_CAM_GETCFG  = (1<<14),
+    DEVICE_CAM_GETINFO  = (1<<15),
+    DEVICE_FORGET = (1<<16),
+
 } CLOUD_DEVICE_CMD;
 
 
@@ -94,12 +99,19 @@ typedef struct cam_info_s {
 
 	device_cam_info_t cam_info;
 
+	char version[32];
+	int rotate;
+	int battery_threshold;
+	int pir_sensitivity;
+
+
 } cam_info_t;
 
 typedef struct {
     char UID[64];
     char username[32];
     char password[32];
+    char version[32];
     int exit;
 
 
@@ -171,6 +183,7 @@ typedef struct {
     unsigned int play_timestamp_base;
 } cloud_device_t;
 
+static char g_appinfo[APP_ID_LENGTH];
 static int g_video_bsout = 0;
 static int g_audio_bsout = 0;
 
@@ -217,9 +230,69 @@ static AVCodec *audioCodec;
     pthread_mutex_unlock(&device->lock); \
 }while(0)
 
+#define DEVICE_NUM_MAX  64
+static cloud_device_t *g_device_list[DEVICE_NUM_MAX];
+static cloud_device_t *alloc_device(const char *did)
+{
+    int free_id = -1;
+    int i;
+    for (i=0;i<DEVICE_NUM_MAX;i++) {
+        if (g_device_list[i] == NULL) {
+            if (free_id < 0) {
+                free_id = i;
+            }
+        } else {
+            if (strcmp(g_device_list[i]->UID,did) == 0) {
+                CLOUD_PRINTF("device is already allocated !\n");
+                return g_device_list[i];
+            }
+        }
+    }
+    if (free_id == -1) {
+        CLOUD_PRINTF("device num up to DEVICE_NUM_MAX\n");
+        return NULL;
+    }
+    cloud_device_t *device = (cloud_device_t *)malloc(sizeof(cloud_device_t));
+    if (device == NULL) {
+        return NULL;
+    }
+    memset(device,0,sizeof(cloud_device_t));
+    g_device_list[free_id] = device;
+    printf("alloc_device %d = %p\n",i,g_device_list[i]);
+    return device;
+}
+static void free_device(cloud_device_t *device)
+{
+    int i;
+    for (i=0;i<DEVICE_NUM_MAX;i++) {
+        if (g_device_list[i] == device) {
+            free(device);
+            g_device_list[i] = NULL;
+            printf("free_device %d = %p\n",i,g_device_list[i]);
 
+            return ;
+        }
+    }
+    if (i == DEVICE_NUM_MAX) {
+        CLOUD_PRINTF("device %p is not found in DEVICE_NUM_MAX\n",device);
+        return;
+    }
+}
+static cloud_device_t *find_device(const char *did)
+{
+    int i;
+    for (i=0;i<DEVICE_NUM_MAX;i++) {
+        if (g_device_list[i]) {
+            if (strcmp(g_device_list[i]->UID,did) == 0) {
+                return g_device_list[i];
+            }
+        }
+    }
+    CLOUD_PRINTF("device %s is not found in DEVICE_NUM_MAX\n",did);
+    return NULL;
+}
 
-int cloud_init(void)
+int cloud_init()
 {
 	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
 	int ret = IOTC_Initialize2(0);
@@ -260,6 +333,10 @@ int cloud_init(void)
         IOTC_DeInitialize();
 		return -1;
 	}
+    int i;
+    for (i=0;i<DEVICE_NUM_MAX;i++) {
+        g_device_list[i] = NULL;
+    }
     return 0;
 }
 
@@ -273,15 +350,41 @@ int cloud_exit(void)
     CLOUD_PRINTF("cloud_exited!\n");
     return 0;
 }
-cloud_device_type_t cloud_get_device_type_from_did(char *did)
+int cloud_set_appinfo(const char *appinfo)
 {
-    return CLOUD_DEVICE_TYPE_IPC;
+	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
+	strcpy(g_appinfo,appinfo);
+	CLOUD_PRINTF("appinfo:[%s]\n",appinfo);
+	return 0;
 }
+int cloud_notify_network_changed(void)
+{
+    printf("cloud_notify_network_changed\n");
+    cloud_device_t *device;
+    int i;
+    for (i=0;i<DEVICE_NUM_MAX;i++) {
 
+        if (g_device_list[i] == NULL) {
+            continue;
+        }
+        printf("g_device_list[%d] = %p\n ",i,g_device_list[i]);
+        device = g_device_list[i];
+        pthread_mutex_lock(&device->lock);
+        cloud_cmd_t *cmd = new_cmd(DEVICE_DISCONNECT,0);
+        if (cmd == NULL) {
+            CLOUD_PRINTF("err:new cmd fail!\n");
+            pthread_mutex_unlock(&device->lock);
+            continue;
+        }
+        cloud_cmd_put(device->msgq,cmd);
+        pthread_mutex_unlock(&device->lock);
+    }
+    return 0;
+}
 cloud_device_handle cloud_open_device(const char *did)
 {
 	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
-    cloud_device_t *device = (cloud_device_t *)malloc(sizeof(cloud_device_t));
+    cloud_device_t *device = alloc_device(did);//(cloud_device_t *)malloc(sizeof(cloud_device_t));
     if (device == NULL) {
         return (cloud_device_handle)NULL;
     }
@@ -363,7 +466,7 @@ int cloud_close_device(cloud_device_handle handle)
     pthread_cond_destroy(&device->cond);
     ut_msgq_destroy(device->msgq);
 
-    free(device);
+    free_device(device);//free(device);
 	return 0;
 }
 
@@ -371,12 +474,12 @@ cloud_device_type_t cloud_get_device_type(cloud_device_handle handle)
 {
     return CLOUD_DEVICE_TYPE_GW;
 }
+
 cloud_device_state_t cloud_get_device_status(cloud_device_handle handle)
 {
     cloud_device_t *device = (cloud_device_t *)handle;
     return device->state;
 }
-
 
 cloud_device_state_t cloud_connect_device(cloud_device_handle handle, const char* username,const char *password)
 {
@@ -396,18 +499,18 @@ cloud_device_state_t cloud_connect_device(cloud_device_handle handle, const char
     }
     cloud_cmd_put(device->msgq,cmd);
 
-    //device->cmd |= DEVICE_CONNECT;
-    //device->cmd &= ~DEVICE_DISCONNECT;
 
     pthread_mutex_unlock(&device->lock);
 
     return device->state;
 }
+
 cloud_device_state_t cloud_reconnect_device(cloud_device_handle handle)
 {
     cloud_device_t *device = (cloud_device_t *)handle;
     return cloud_connect_device(handle,device->username,device->password);
 }
+
 int cloud_disconnect_device(cloud_device_handle handle)
 {
 	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
@@ -415,7 +518,7 @@ int cloud_disconnect_device(cloud_device_handle handle)
 
     pthread_mutex_lock(&device->lock);
 
-    cloud_cmd_t *cmd = new_cmd(DEVICE_DISCONNECT,0);
+    cloud_cmd_t *cmd = new_cmd(DEVICE_FORGET,0);
     if (cmd == NULL) {
         CLOUD_PRINTF("err:new cmd fail!\n");
         pthread_mutex_unlock(&device->lock);
@@ -423,12 +526,34 @@ int cloud_disconnect_device(cloud_device_handle handle)
     }
     cloud_cmd_put(device->msgq,cmd);
 
-    //device->cmd |= DEVICE_DISCONNECT;
-    //device->cmd &= ~DEVICE_CONNECT;
+    cmd = new_cmd(DEVICE_DISCONNECT,0);
+    if (cmd == NULL) {
+        CLOUD_PRINTF("err:new cmd fail!\n");
+        pthread_mutex_unlock(&device->lock);
+		return -1;
+    }
+    cloud_cmd_put(device->msgq,cmd);
 
     pthread_mutex_unlock(&device->lock);
 
 	return 0;
+}
+
+int cloud_device_get_version(cloud_device_handle handle, const char *version)
+{
+	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
+
+    cloud_device_t *device = (cloud_device_t *)handle;
+
+    pthread_mutex_lock(&device->lock);
+    if (device->state != CLOUD_DEVICE_STATE_CONNECTED) {
+        pthread_mutex_unlock(&device->lock);
+        CLOUD_PRINTF("device->state != CLOUD_DEVICE_STATE_CONNECTED\n");
+        return -1;
+    }
+    strcpy(version,device->version);
+    pthread_mutex_unlock(&device->lock);
+    return 0;
 }
 
 int cloud_device_probe_cam(cloud_device_handle handle, CLOUD_DEVICE_CALLBACK fn_callback, void* fn_context)
@@ -460,6 +585,7 @@ int cloud_device_probe_cam(cloud_device_handle handle, CLOUD_DEVICE_CALLBACK fn_
     pthread_mutex_unlock(&device->lock);
     return 0;
 }
+
 
 int cloud_device_add_cam(cloud_device_handle handle, const char* cam_did)
 {
@@ -528,6 +654,11 @@ int cloud_device_del_cam(cloud_device_handle handle, const char* cam_did)
         CLOUD_PRINTF("device cam not valid!\n");
         return -1;
     }
+    if (cam_handle == 0) {
+        pthread_mutex_unlock(&device->lock);
+        CLOUD_PRINTF("master cam cannot be deleted!\n");
+        return -1;
+    }
 
     device_cam_deinit(device,cam_handle);
     device->cam_num --;
@@ -552,6 +683,7 @@ int cloud_device_del_cam(cloud_device_handle handle, const char* cam_did)
 
 	return 0;
 }
+
 
 int cloud_device_get_cams(cloud_device_handle handle, int max_num, device_cam_info_t* info)
 {
@@ -578,7 +710,6 @@ int cloud_device_get_cams(cloud_device_handle handle, int max_num, device_cam_in
 
 	return num;
 }
-
 
 int cloud_device_play_video(cloud_device_handle handle,const char* cam_did)
 {
@@ -613,6 +744,7 @@ int cloud_device_play_video(cloud_device_handle handle,const char* cam_did)
     pthread_mutex_unlock(&device->lock);
     return 0;
 }
+
 int cloud_device_stop_video(cloud_device_handle handle,const char* cam_did)
 {
 	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
@@ -643,6 +775,7 @@ int cloud_device_stop_video(cloud_device_handle handle,const char* cam_did)
     pthread_mutex_unlock(&device->lock);
     return 0;
 }
+
 int cloud_device_play_audio(cloud_device_handle handle,const char* cam_did)
 {
 	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
@@ -674,6 +807,7 @@ int cloud_device_play_audio(cloud_device_handle handle,const char* cam_did)
     pthread_mutex_unlock(&device->lock);
     return 0;
 }
+
 int cloud_device_stop_audio(cloud_device_handle handle,const char* cam_did)
 {
 	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
@@ -704,6 +838,7 @@ int cloud_device_stop_audio(cloud_device_handle handle,const char* cam_did)
     pthread_mutex_unlock(&device->lock);
     return 0;
 }
+
 int cloud_device_speaker_enable(cloud_device_handle handle,const char* cam_did)
 {
 	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
@@ -733,6 +868,7 @@ int cloud_device_speaker_enable(cloud_device_handle handle,const char* cam_did)
     pthread_mutex_unlock(&device->lock);
     return 0;
 }
+
 int cloud_device_speaker_disable(cloud_device_handle handle,const char* cam_did)
 {
 	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
@@ -777,14 +913,109 @@ int cloud_device_speaker_data(cloud_device_handle handle,const char* cam_did,uns
 int cloud_device_cam_get_battery(cloud_device_handle handle,const char* cam_did)
 {
 	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
-
     return 50;
-
 }
+
 int cloud_device_cam_get_signal(cloud_device_handle handle,const char* cam_did)
 {
 	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
     return 50;
+}
+
+
+int cloud_device_cam_get_info(cloud_device_handle handle,const char* cam_did)
+{
+	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
+    cloud_device_t *device = (cloud_device_t *)handle;
+
+    pthread_mutex_lock(&device->lock);
+    if (device->state != CLOUD_DEVICE_STATE_CONNECTED) {
+        pthread_mutex_unlock(&device->lock);
+        CLOUD_PRINTF("device->state != CLOUD_DEVICE_STATE_CONNECTED\n");
+        return -1;
+    }
+    int cam_handle = find_cam(device,cam_did);
+    if (cam_handle < 0) {
+        pthread_mutex_unlock(&device->lock);
+        CLOUD_PRINTF("device cam not valid!\n");
+        return -1;
+    }
+    cloud_cmd_t *cmd = new_cmd(DEVICE_CAM_GETINFO,sizeof(SMsgAVIoctrlCamera));
+    if (cmd == NULL) {
+        CLOUD_PRINTF("err:new cmd fail!\n");
+        pthread_mutex_unlock(&device->lock);
+		return -1;
+    }
+    SMsgAVIoctrlCamera *cfg = (SMsgAVIoctrlCamera *)cmd->m_msg.ext;
+    cfg->channel = cam_handle;
+
+    cloud_cmd_put(device->msgq,cmd);
+    pthread_mutex_unlock(&device->lock);
+    return 0;
+}
+
+int cloud_device_cam_set_cfg(cloud_device_handle handle,const char* cam_did, device_cam_cfg_t *val)
+{
+	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
+    cloud_device_t *device = (cloud_device_t *)handle;
+
+    pthread_mutex_lock(&device->lock);
+    if (device->state != CLOUD_DEVICE_STATE_CONNECTED) {
+        pthread_mutex_unlock(&device->lock);
+        CLOUD_PRINTF("device->state != CLOUD_DEVICE_STATE_CONNECTED\n");
+        return -1;
+    }
+    int cam_handle = find_cam(device,cam_did);
+    if (cam_handle < 0) {
+        pthread_mutex_unlock(&device->lock);
+        CLOUD_PRINTF("device cam not valid!\n");
+        return -1;
+    }
+    cloud_cmd_t *cmd = new_cmd(DEVICE_CAM_SETCFG,sizeof(SMsgAVIoctrlCamCfg));
+    if (cmd == NULL) {
+        CLOUD_PRINTF("err:new cmd fail!\n");
+        pthread_mutex_unlock(&device->lock);
+		return -1;
+    }
+    SMsgAVIoctrlCamCfg *cfg = (SMsgAVIoctrlCamCfg *)cmd->m_msg.ext;
+    cfg->battery_threshold = val->battery_threshold;
+    cfg->cam_rotate = val->rotate;
+    cfg->pir_sensitivity = val->pir_sensitivity;
+    cfg->channel = cam_handle;
+    cloud_cmd_put(device->msgq,cmd);
+    pthread_mutex_unlock(&device->lock);
+    return 0;
+}
+
+int cloud_device_cam_get_cfg(cloud_device_handle handle,const char* cam_did)
+{
+	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
+    cloud_device_t *device = (cloud_device_t *)handle;
+
+    pthread_mutex_lock(&device->lock);
+    if (device->state != CLOUD_DEVICE_STATE_CONNECTED) {
+        pthread_mutex_unlock(&device->lock);
+        CLOUD_PRINTF("device->state != CLOUD_DEVICE_STATE_CONNECTED\n");
+        return -1;
+    }
+    int cam_handle = find_cam(device,cam_did);
+    if (cam_handle < 0) {
+        pthread_mutex_unlock(&device->lock);
+        CLOUD_PRINTF("device cam not valid!\n");
+        return -1;
+    }
+    cloud_cmd_t *cmd = new_cmd(DEVICE_CAM_GETCFG,sizeof(SMsgAVIoctrlCamera));
+    if (cmd == NULL) {
+        CLOUD_PRINTF("err:new cmd fail!\n");
+        pthread_mutex_unlock(&device->lock);
+		return -1;
+    }
+    SMsgAVIoctrlCamera *cfg = (SMsgAVIoctrlCamera *)cmd->m_msg.ext;
+    cfg->channel = cam_handle;
+
+    cloud_cmd_put(device->msgq,cmd);
+    pthread_mutex_unlock(&device->lock);
+    return 0;
 }
 
 int cloud_device_cam_list_files(cloud_device_handle handle,const char* cam_did, int start_time,int end_time,RECORD_TYPE recordtype)
@@ -827,6 +1058,7 @@ int cloud_device_cam_list_files(cloud_device_handle handle,const char* cam_did, 
     return 0;
 
 }
+
 int cloud_device_cam_pb_play_file(cloud_device_handle handle,const char* cam_did, const char *filename)
 {
 	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
@@ -873,12 +1105,14 @@ int cloud_device_cam_pb_play_file(cloud_device_handle handle,const char* cam_did
     return 0;
 
 }
+
 int cloud_device_cam_pb_play_time(cloud_device_handle handle,const char* cam_did, int time)
 {
 	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
     return 0;
 
 }
+
 int cloud_device_cam_pb_stop(cloud_device_handle handle,const char* cam_did)
 {
 	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
@@ -967,6 +1201,7 @@ int cloud_device_cam_pb_pause(cloud_device_handle handle,const char* cam_did)
     return 0;
 
 }
+
 int cloud_device_cam_pb_resume(cloud_device_handle handle,const char* cam_did)
 {
 	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
@@ -1013,6 +1248,7 @@ int cloud_device_cam_pb_resume(cloud_device_handle handle,const char* cam_did)
     return 0;
 
 }
+
 int cloud_device_cam_pb_seek_file(cloud_device_handle handle,const char* cam_did, int offset)
 {
 	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
@@ -1105,7 +1341,6 @@ int cloud_set_pblist_callback(cloud_device_handle handle, CLOUD_DEVICE_CALLBACK 
     pthread_mutex_unlock(&device->lock);
     return 0;
 }
-
 /**************************************************************************************************************************************************************/
 /**************************************************************************************************************************************************************/
 /**************************************************************************************************************************************************************/
@@ -1222,8 +1457,67 @@ static void process_recv_cmd(cloud_device_t *device, unsigned int ioType,char *i
                 (device->_data_callback)(device,CLOUD_CB_VIDEO,&info,device->_data_context);
             }
         }
+    } else if (ioType == IOTYPE_USER_IPCAM_DEVINFO_RESP) {
+        SMsgAVIoctrlDeviceInfoResp *resp = (SMsgAVIoctrlDeviceInfoResp *)ioCtrlBuf;
+        sprintf(device->version,"%s-%d",resp->model,resp->version);
 
+    } else if (ioType == IOTYPE_USER_DEVICE_GET_CAMCFG_RESP) {
+        SMsgAVIoctrlCamCfg *resp = (SMsgAVIoctrlCamCfg *)ioCtrlBuf;
+
+        int cam_handle = resp->channel;
+        cam_info_t *cam;
+        if (device->cam[cam_handle].valid == 0) {
+            printf("IOTYPE_USER_DEVICE_GET_CAMCFG_RESP: channel not exist!\n");
+            return;
+        }
+        cam = &device->cam[cam_handle];
+        device_cam_cfg_t cfg;
+        cfg.battery_threshold = resp->battery_threshold;
+        cfg.rotate = resp->cam_rotate;
+        cfg.pir_sensitivity = resp->pir_sensitivity;
+        strcpy(cfg.camdid , cam->cam_info.camdid);
+
+        if (device->_event_callback) {
+            device->_event_callback(device,CLOUD_CB_CAM_CFG,&cfg,device->_event_context);
+        }
+    } else if (ioType == IOTYPE_USER_DEVICE_GET_CAMINFO_RESP) {
+        SMsgAVIoctrlCamInfo *resp = (SMsgAVIoctrlCamInfo *)ioCtrlBuf;
+
+        int cam_handle = resp->channel;
+        cam_info_t *cam;
+        if (device->cam[cam_handle].valid == 0) {
+            printf("IOTYPE_USER_DEVICE_GET_CAMCFG_RESP: channel not exist!\n");
+            return;
+        }
+        cam = &device->cam[cam_handle];
+        device_camera_info_t info;
+        strncpy(info.verison, resp->version,sizeof(info.verison)-1);
+        info.batttery = resp->battery;
+        info.wifi = resp->wifi;
+        strcpy(info.camdid , cam->cam_info.camdid);
+        if (device->_event_callback) {
+            device->_event_callback(device,CLOUD_CB_CAM_INFO,&info,device->_event_context);
+        }
+    } else if (ioType == IOTYPE_USER_DEVICE_SET_CAMCFG_RESP) {
+        SMsgAVIoctrlCamResp *resp = (SMsgAVIoctrlCamResp *)ioCtrlBuf;
+
+        int cam_handle = resp->channel;
+        cam_info_t *cam;
+        if (device->cam[cam_handle].valid == 0) {
+            printf("IOTYPE_USER_DEVICE_SET_CAMCFG_RESP: channel not exist!\n");
+            return;
+        }
+        cam = &device->cam[cam_handle];
+        device_cam_result_t ret;
+        ret.ret_val = resp->result;
+        strcpy(ret.camdid , cam->cam_info.camdid);
+
+        if (device->_event_callback) {
+            device->_event_callback(device,CLOUD_CB_CAM_SET_CFG,&ret,device->_event_context);
+        }
     }
+
+
 }
 static int send_heartbeat_cmd(cloud_device_t *device)
 {
@@ -1261,6 +1555,9 @@ static int _cloud_connect_device(cloud_device_t *device)
 	int tmpSID = IOTC_Get_SessionID();
 	if(tmpSID < 0) {
 		CLOUD_PRINTF("IOTC_Get_SessionID error code [%d]\n", tmpSID);
+        if(IOTC_ER_NOT_INITIALIZED == tmpSID) {
+            goto noinit_err;
+        }
 		goto conn_err;
 	}
 	CLOUD_PRINTF("  [] thread_ConnectCCR::IOTC_Get_SessionID, ret=[%d]\n", tmpSID);
@@ -1301,6 +1598,12 @@ static int _cloud_connect_device(cloud_device_t *device)
 	}
 	CLOUD_PRINTF("avClientStart2 OK[%d], Resend[%d]\n", device->avIndex, nResend);
 
+	if((ret = avSendIOCtrl(avIndex, IOTYPE_USER_ADD_APPID, g_appinfo, APP_ID_LENGTH) < 0))
+	{
+		CLOUD_PRINTF("IOTYPE_USER_ADD_APPID failed[%d]\n", ret);
+        goto conn_err;
+	}
+	CLOUD_PRINTF("send Cmd: IOTYPE_USER_ADD_APPID, OK\n");
 
 	if((ret = avSendIOCtrl(avIndex, IOTYPE_USER_DEVICE_GETCAMS, NULL, 0) < 0))
 	{
@@ -1332,6 +1635,11 @@ static int _cloud_connect_device(cloud_device_t *device)
         cam_handle = cams.channel[i];
         CLOUD_PRINTF("cam channel %d\n",cam_handle);
         CLOUD_PRINTF("cam szCameraID %s\n",cams.szCameraID[i]);
+        if (cam_handle > DEVICE_CAM_NUM_MAX) {
+            CLOUD_PRINTF("invalid cam!!!!\n");
+            device->cam_num = i;
+            break;
+        }
         device_cam_init(device,cam_handle,cams.szCameraID[i]);
         device->cam_sta[cam_handle] = 0;
     }
@@ -1354,6 +1662,23 @@ conn_err:
     }
 
     return -1;
+noinit_err:
+    return -2;
+}
+int _cloud_forget_device(cloud_device_t *device)
+{
+    int ret;
+
+    if(device->avIndex >= 0) {
+
+        if((ret = avSendIOCtrl(device->avIndex, IOTYPE_USER_DEL_APPID, g_appinfo, APP_ID_LENGTH) < 0))
+        {
+            CLOUD_PRINTF("IOTYPE_USER_DEL_APPID failed[%d]\n", ret);
+        }
+        CLOUD_PRINTF("send Cmd: IOTYPE_USER_DEL_APPID, OK\n");
+    }
+
+	return 0;
 }
 int _cloud_disconnect_device(cloud_device_t *device)
 {
@@ -1361,6 +1686,7 @@ int _cloud_disconnect_device(cloud_device_t *device)
     pthread_join(device->ThreadSpeaker_ID,NULL);
 
     if(device->avIndex >= 0) {
+
         avClientStop(device->avIndex);
         CLOUD_PRINTF("avClientStop avIndex %d OK\n",device->avIndex);
         device->avIndex = -1;
@@ -1452,8 +1778,8 @@ int _cloud_device_play_audio(cloud_device_t *device,int cam_handle)
     CLOUD_PRINTF("send Cmd: IOTYPE_USER_IPCAM_AUDIOSTART cam[%d], OK\n",ioMsg.channel);
 
 
-    device->audio_cam_id = (int)cam_handle;
     device_audio_init(device);
+    device->audio_cam_id = (int)cam_handle;
 
     return 0;
 }
@@ -1661,7 +1987,51 @@ int _cloud_device_cam_pb_ctrl(cloud_device_t *device,SMsgAVIoctrlPlayRecord *pbc
 
     return 0;
 }
+int _cloud_device_cam_set_cfg(cloud_device_t *device, SMsgAVIoctrlCamCfg *val)
+{
+	int avIndex = device->avIndex;
+    int send_size = sizeof(SMsgAVIoctrlCamCfg);
+	int ret;
+    if((ret = avSendIOCtrl(avIndex, IOTYPE_USER_DEVICE_SET_CAMCFG_REQ, (char *)val, send_size)) < 0)
+    {
+        CLOUD_PRINTF("IOTYPE_USER_DEVICE_SET_CAMCFG_REQ failed[%d]\n", ret);
+        return -1;
+    }
+    CLOUD_PRINTF("send Cmd: IOTYPE_USER_DEVICE_SET_CAMCFG_REQ cam[%d], OK\n",val->channel);
 
+
+    return 0;
+}
+int _cloud_device_cam_get_cfg(cloud_device_t *device,SMsgAVIoctrlCamera *val)
+{
+	int avIndex = device->avIndex;
+    int send_size = sizeof(SMsgAVIoctrlCamera);
+	int ret;
+    if((ret = avSendIOCtrl(avIndex, IOTYPE_USER_DEVICE_GET_CAMCFG_REQ, (char *)val, send_size)) < 0)
+    {
+        CLOUD_PRINTF("IOTYPE_USER_DEVICE_GET_CAMCFG_REQ failed[%d]\n", ret);
+        return -1;
+    }
+    CLOUD_PRINTF("send Cmd: IOTYPE_USER_DEVICE_GET_CAMCFG_REQ cam[%d], OK\n",val->channel);
+
+
+    return 0;
+}
+int _cloud_device_cam_get_info(cloud_device_t *device,SMsgAVIoctrlCamera *val)
+{
+	int avIndex = device->avIndex;
+    int send_size = sizeof(SMsgAVIoctrlCamera);
+	int ret;
+    if((ret = avSendIOCtrl(avIndex, IOTYPE_USER_DEVICE_GET_CAMINFO_REQ, (char *)val, send_size)) < 0)
+    {
+        CLOUD_PRINTF("IOTYPE_USER_DEVICE_GET_CAMINFO_REQ failed[%d]\n", ret);
+        return -1;
+    }
+    CLOUD_PRINTF("send Cmd: IOTYPE_USER_DEVICE_GET_CAMINFO_REQ cam[%d], OK\n",val->channel);
+
+
+    return 0;
+}
 static void *thread_device(void *arg)
 {
 	CLOUD_PRINTF("[thread_device] Starting....\n");
@@ -1681,8 +2051,13 @@ static void *thread_device(void *arg)
             if (cmd->m_msg.data[0] == DEVICE_CONNECT) {
                 printf("device->cmd & DEVICE_CONNECT, state = %d\n",device->state);
                 if (device->state == CLOUD_DEVICE_STATE_DISCONNECTED) {
-                    if (_cloud_connect_device(device)  < 0 ) {
-                        DEVICE_STATE_SET(device,CLOUD_DEVICE_STATE_DISCONNECTED);
+                    ret = _cloud_connect_device(device);
+                    if (ret  < 0 ) {
+                        if (ret == -2) {
+                            DEVICE_STATE_SET(device,CLOUD_DEVICE_STATE_UNINITILIZED);
+                        } else {
+                            DEVICE_STATE_SET(device,CLOUD_DEVICE_STATE_DISCONNECTED);
+                        }
                     } else {
                         DEVICE_STATE_SET(device,CLOUD_DEVICE_STATE_CONNECTED);
                         send_heartbeat_cmd(device);
@@ -1790,6 +2165,32 @@ static void *thread_device(void *arg)
                     free_cmd(cmd);
 
                     continue;
+                } else if (cmd->m_msg.data[0] == DEVICE_CAM_SETCFG) {
+                    SMsgAVIoctrlCamCfg *cfg = (SMsgAVIoctrlCamCfg *)cmd->m_msg.ext;
+
+                    _cloud_device_cam_set_cfg(device,cfg);
+                    free_cmd(cmd);
+
+                    continue;
+                } else if (cmd->m_msg.data[0] == DEVICE_CAM_GETCFG) {
+                    SMsgAVIoctrlCamera *camctrl = (SMsgAVIoctrlCamera *)cmd->m_msg.ext;
+
+                    _cloud_device_cam_get_cfg(device,camctrl);
+                    free_cmd(cmd);
+
+                    continue;
+                } else if (cmd->m_msg.data[0] == DEVICE_CAM_GETINFO) {
+                    SMsgAVIoctrlCamera *camctrl = (SMsgAVIoctrlCamera *)cmd->m_msg.ext;
+
+                    _cloud_device_cam_get_info(device,camctrl);
+                    free_cmd(cmd);
+
+                    continue;
+                } else if (cmd->m_msg.data[0] == DEVICE_FORGET) {
+                    _cloud_forget_device(device);
+                    free_cmd(cmd);
+
+                    continue;
                 }
             }
         }
@@ -1816,9 +2217,12 @@ static void *thread_device(void *arg)
 
         } else if (timout_cnt == 15) {
             //CLOUD_PRINTF("avIndex[%d], avRecvIOCtrl war, code[%d]\n",avIndex, ret);
-            send_heartbeat_cmd(device);
-            timout_cnt = 0;
-        } else if (timout_cnt > 20) {
+            if (send_heartbeat_cmd(device) == 0) {
+                timout_cnt = 0;
+            } else {
+                timout_cnt ++;
+            }
+        } else if (timout_cnt > 15) {
             CLOUD_PRINTF("avIndex[%d], avRecvIOCtrl heartbeat timout, code[%d]\n",avIndex, ret);
             tmp_state = CLOUD_DEVICE_STATE_DISCONNECTED;
         } else {
@@ -1922,7 +2326,7 @@ static void *thread_ReceiveVideo(void *arg)
 		//ret = avRecvFrameData(avIndex, buf, VIDEO_BUF_SIZE, (char *)&frameInfo, sizeof(FRAMEINFO_t), &frmNo);
 		ret = avRecvFrameData2(avIndex, buf, VIDEO_BUF_SIZE, &outBufSize, &outFrmSize, (char *)&frameInfo, sizeof(FRAMEINFO_t), &outFrmInfoSize, &frmNo);
 		// show Frame Info at 1st frame
-		//CLOUD_PRINTF("frmNo = %d\n",frmNo);
+		//CLOUD_PRINTF("frmNo = %d,outBufSize = %d\n",frmNo,outBufSize);
 		if(frmNo == 0)
 		{
 			char *format[] = {"MPEG4","H263","H264","MJPEG","UNKNOWN"};
@@ -1939,7 +2343,7 @@ static void *thread_ReceiveVideo(void *arg)
 				idx = 4;
 			CLOUD_PRINTF("--- Video Formate: %s ---\n", format[idx]);
 		}
-
+        //CLOUD_PRINTF("ret = %d,format %d, ts = %d\n",ret,frameInfo.codec_id,frameInfo.timestamp);
 		if(ret == AV_ER_DATA_NOREADY) {
 			//CLOUD_PRINTF("AV_ER_DATA_NOREADY[%d]\n", avIndex);
 			usleep(10 * 1000);
@@ -2133,6 +2537,8 @@ static void device_video_dec(cloud_device_t *device,cam_info_t *cam ,char* buf, 
     int decodeLen = avcodec_decode_video2(device->video_codec_ctx, pFrame_, &frameFinished, &device->video_packet);
     if(decodeLen < 0) {
         CLOUD_PRINTF("decode fail!\n");
+        device->video_packet.size = 0;
+        device->video_packet.data = NULL;
         return;
     }
     //CLOUD_PRINTF("decodeLen = %d\n",decodeLen);
@@ -2168,6 +2574,7 @@ static void device_video_dec(cloud_device_t *device,cam_info_t *cam ,char* buf, 
             (device->_data_callback)(device,CLOUD_CB_VIDEO,&info,device->_data_context);
         }
         //CLOUD_PRINTF("777\n");
+
     }
 }
 #if 0

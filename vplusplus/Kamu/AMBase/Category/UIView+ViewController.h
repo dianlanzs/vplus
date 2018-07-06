@@ -11,6 +11,9 @@
 
 @interface UIView (ViewController)
 @property (strong, nonatomic) UIViewController *vc;
+@property (strong, nonatomic) UINavigationController *navigationController;
 
+#warning 分类中 覆盖了navigationController ，属性了 ! 导致 navigationController 属性 == nil!!  ????????
 - (UIViewController *)getViewController;
+- (UINavigationController *)getNavigationController;
 @end

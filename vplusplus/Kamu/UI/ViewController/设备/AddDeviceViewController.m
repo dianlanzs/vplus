@@ -30,16 +30,10 @@
 @implementation AddDeviceViewController
 
 
-
-
-
-
 #pragma mark - 生命周期
 //先调用这个方法----> 再调用init方法
 - (instancetype)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
-    
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
-    
     if (self) {
         self.navigationItem.title = @"扫设备二维码";
     }
@@ -67,39 +61,41 @@
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
+
+    ///set nav clear
     [self.navigationController.navigationBar setBackgroundImage:[UIImage new] forBarMetrics:UIBarMetricsDefault];
     [self.navigationController.navigationBar setShadowImage:[UIImage new]];
+    self.navigationController.navigationBar.translucent = YES;
 
 }
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
 }
 
-- (void)viewDidDisappear:(BOOL)animated {
-    [super viewDidDisappear:animated];
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    ///deset nav clear
     [self.navigationController.navigationBar setBackgroundImage:nil forBarMetrics:UIBarMetricsDefault];
     [self.navigationController.navigationBar setShadowImage:nil];
+    self.navigationController.navigationBar.translucent = NO;
+}
+- (void)viewDidDisappear:(BOOL)animated {
+    [super viewDidDisappear:animated];
+    
+
 
 }
 #pragma mark -QRCodeScanne Delegate
 - (void)didScannedQRCode:(NSString *)result {
     
-    //合法性验证 ，必须是deviceID
-//    RLMResults<Device *> *rets = [Device objectsWhere:[NSString stringWithFormat:@"did = '%@'",result]];
-    
-
-        
-        if (result) {
+        if (result && result.length >= 20) {
             QRDoneViewController *QRdoneVc = [QRDoneViewController new];
             QRdoneVc.qr_String = result;
             [self.navigationController pushViewController:QRdoneVc animated:YES];
             
         }else{
-            [MBProgressHUD showPromptWithText:@"未扫描到结果请退App出重新扫描!"];
+            [MBProgressHUD showPromptWithText:@"设备号不正确"];
         }
-
-    
 }
 
 
@@ -109,7 +105,23 @@
 - (QRCScanner *)scanner {
     
     if (!_scanner) {
-        _scanner = [[QRCScanner alloc] initQRCScannerWithView:self.view];
+        
+        UIButton *lightButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 100, 40)];
+        [lightButton setImage:[UIImage imageNamed:@"button_torch_normal"] forState:UIControlStateNormal];
+        [lightButton setImage:[UIImage imageNamed:@"button_torch_selected"] forState:UIControlStateSelected];
+
+        [lightButton setTitle:@"OFF" forState:UIControlStateNormal];
+        [lightButton setTitle:@"ON" forState:UIControlStateSelected];
+
+        [lightButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+        [lightButton.titleLabel setFont:[UIFont systemFontOfSize:14.f]];
+        lightButton.titleEdgeInsets = UIEdgeInsetsMake(0, 2, 0, 0);
+        [lightButton.titleLabel sizeToFit];
+        [self.navigationItem setRightBarButtonItem:[[UIBarButtonItem alloc] initWithCustomView:lightButton]];
+        
+        _scanner = [[QRCScanner alloc] initQRCScannerWithView:self.view lightButton:lightButton];
+        [lightButton addTarget:_scanner action:@selector(torchSwitch:) forControlEvents:UIControlEventTouchUpInside];
+
         _scanner.delegate = self;
     }
     
@@ -120,28 +132,15 @@
 - (void)addSubviews {
     
     [self.view addSubview:self.scanner];
-    
-    //说明View
     [self.view addSubview:self.specView];
     [self.view addSubview:self.descLb];
     
-    
-    
-    //其他方式添加视图
-//    [self.view addSubview:self.addDeviceView];
-    
-    
-    
-    
-    //约束：
     [self.specView mas_makeConstraints:^(MASConstraintMaker *make) {
         make.leading.equalTo(self.view).offset(20.f);
         make.trailing.equalTo(self.view).offset(- 20.f);
-        make.bottom.equalTo(self.view).offset(- 50.f);
-//        make.size.mas_equalTo(CGSizeMake(AM_SCREEN_WIDTH - 20.f, 120.f));
+        make.centerY.equalTo(self.view).offset( (AM_SCREEN_HEIGHT + self.scanner.transparentAreaSize.height) * 0.25  - 10);
         make.height.mas_equalTo(120);
     }];
-    
     [self.descLb mas_makeConstraints:^(MASConstraintMaker *make) {
         make.leading.trailing.equalTo(self.view);
         make.top.equalTo(self.specView.mas_bottom).offset(5.f);
@@ -150,23 +149,10 @@
     
 }
 
-
-
-
-
-
-
-
-
-
-#pragma mark - data required
-
-
 - (UIImageView *)specView {
     
     if (!_specView) {
         _specView = [[UIImageView alloc] init];
-        
         _specView.contentMode = UIViewContentModeScaleAspectFit;
         _specView.image = [UIImage imageNamed:@"imv_qrExample"];
      

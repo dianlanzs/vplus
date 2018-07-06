@@ -8,7 +8,11 @@
 
 #import "MBProgressHUD+ZLCategory.h"
 #import "UIWindow+LastWindow.h"
+
 #import <objc/runtime.h>
+
+
+#import "ZLBrightnessView.h"
 @implementation MBProgressHUD (HUD)
 //+ (void)showStatusWithText:(NSString *)text inView:(UIView *)view {
 //    [MBProgressHUD hideHUD];
@@ -93,28 +97,38 @@
 
 //======================= SpinKit =====================================
 //+ (MBProgressHUD *)device:(Device *)device showStatus:(DeviceConnectStatus)status onView:(UIView *)view {
-+ (MBProgressHUD *)showStatus:(DeviceConnectStatus)status onView:(UIView *)view {
-
-
++ (MBProgressHUD *)showStatus:(cloud_device_state_t)status onView:(UIView *)view {
+    
+    ///prepare:
+    
+    
+    
     [MBProgressHUD hideHUD];
-    if (view == nil) view = [[UIApplication sharedApplication] keyWindow];
-    UILabel *stateLb = [UILabel labelWithText:nil withFont:[UIFont systemFontOfSize:17.f] color:[UIColor whiteColor] aligment:NSTextAlignmentCenter];
+    UIWindow *keyWindow = [[UIApplication sharedApplication] keyWindow];
+    if (view == nil)  view = keyWindow;
+    UIViewController *root_vc = [(UIWindow *) view  rootViewController];
+    
+    
+    
+    
+    
+    
+    
+    
+    UILabel *stateLb = [UILabel labelWithText:nil withFont:[UIFont systemFontOfSize:15.f] color:[UIColor whiteColor] aligment:NSTextAlignmentCenter];
     UIView *stateView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, AM_SCREEN_WIDTH, 64)];
-//    UIView *stateView = [[UIView alloc] initWithFrame:CGRectZero];
-
-   
     [stateView addSubview:stateLb];
     [stateLb mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.center.equalTo(stateView);
+        make.centerY.equalTo(stateView).offset(10); //offset 10
+        make.leading.equalTo(stateView).offset(10 + 20 + 10);
         make.height.mas_equalTo(20.f);
     }];
     
-
+    
     MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:view animated:YES];
-//    [hud.bezelView setUserInteractionEnabled:YES];
     [hud setSquare:NO];
-//    [hud setMinSize:CGSizeMake(AM_SCREEN_WIDTH, 64)];
-//    [hud setMargin:0];
+    //    [hud setMinSize:CGSizeMake(AM_SCREEN_WIDTH, 64)];
+    //    [hud setMargin:0];
     hud.mode = MBProgressHUDModeCustomView;
     hud.backgroundView.style = MBProgressHUDBackgroundStyleSolidColor;
     hud.frame = CGRectMake(0, 0, AM_SCREEN_WIDTH, 64);
@@ -122,40 +136,55 @@
     
     
     /// check state
-    if (status == DeviceConnecting) {
+    if (status == CLOUD_DEVICE_STATE_UNKNOWN) {
         RTSpinKitView *spinner = [[RTSpinKitView alloc] initWithStyle:RTSpinKitViewStyleArc color:[UIColor whiteColor] spinnerSize:25.f];
         spinner.contentMode = UIViewContentModeCenter;
         [spinner setHidesWhenStopped:YES];
-        [stateLb setText:@"Connecting...."];
-//        hud.bezelView.color = [UIColor cyanColor];
+        [stateLb setText:@"CLOUD_DEVICE_CONNECTING...."];
         [stateView setBackgroundColor:[UIColor cyanColor]];
-
+        
         [stateView addSubview:spinner];
         [spinner mas_makeConstraints:^(MASConstraintMaker *make) {
             make.trailing.equalTo(stateLb.mas_leading).offset(-10.f);
             make.centerY.equalTo(stateLb);
         }];
+        
+//        [keyWindow setWindowLevel:UIWindowLevelAlert];
+//        ZLPlayerShared.isStatusBarHidden = YES;
     }
     
     else {
         UIImageView *imv = [[UIImageView alloc] init];
         [imv setTintColor:[UIColor whiteColor]];
-        if (status == DeviceDisconnected) {
+        if (status == CLOUD_DEVICE_STATE_DISCONNECTED) {
             
+            
+///            UIInterfaceOrientation statusBarOrientation = [UIApplication sharedApplication].statusBarOrientation;
+
             hud.actionBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-            [hud.actionBtn setTitle:@"重连设备" forState:UIControlStateNormal];
-            [hud.actionBtn.titleLabel setFont:[UIFont systemFontOfSize:14.f]];
-            hud.actionBtn.contentEdgeInsets = UIEdgeInsetsMake(5, 10, 5, 10);
-            [hud.actionBtn sizeToFit]; //update actionBtn size
-            [hud.actionBtn.layer setCornerRadius:hud.actionBtn.bounds.size.height / 2];
-            [hud.actionBtn.layer setMasksToBounds:YES];
-            hud.actionBtn.layer.borderColor = [UIColor blackColor].CGColor;
-            hud.actionBtn.layer.borderWidth = 1.f;
-            hud.actionBtn.layer.borderColor = [UIColor whiteColor].CGColor;
+            [self setButton:hud.actionBtn  title:@"重连"];
+            [hud.actionBtn addTarget:[(RDVTabBarController *)root_vc selectedViewController] action:@selector(reconnect:) forControlEvents:UIControlEventTouchUpInside];
             [stateView addSubview:hud.actionBtn];
+            
+            
+            
+            hud.backBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+            [self setButton:hud.backBtn title:@"取消"];
+            [hud.backBtn addTarget:self action:@selector(cancel:) forControlEvents:UIControlEventTouchUpInside];
+            [stateView addSubview:hud.backBtn];
+            
+
+          
             [hud.actionBtn  mas_remakeConstraints:^(MASConstraintMaker *make) {
                 make.leading.mas_equalTo(stateLb.mas_trailing).offset(10.f);
                 make.centerY.equalTo(stateLb);
+            }];
+            
+        
+            [hud.backBtn  mas_remakeConstraints:^(MASConstraintMaker *make) {
+                make.leading.mas_equalTo(hud.actionBtn.mas_trailing).offset(10.f);
+                make.centerY.equalTo(stateLb);
+                make.width.height.equalTo(hud.actionBtn);
             }];
             
             
@@ -163,39 +192,51 @@
             
             UIImage *errorImg = [[UIImage imageNamed:@"Error"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
             [imv setImage:errorImg];
-            [stateLb setText:@"连接失败"];
-           [stateView setBackgroundColor:[UIColor redColor]];
-                //        hud.bezelView.color = [UIColor redColor];
+            [stateLb setText:@"DISCONNECTED"];
+            [stateView setBackgroundColor:[UIColor redColor]];
+            //        hud.bezelView.color = [UIColor redColor];
+            
+//            ZLPlayerShared.isStatusBarHidden = YES;
+//            [keyWindow setWindowLevel:UIWindowLevelAlert];
 
-        }else if (status == DeviceConnected) {
+            
+        }
+        
+  
+        
+        else if (status == CLOUD_DEVICE_STATE_CONNECTED) {
+            
+            
             UIImage *checkImg = [[UIImage imageNamed:@"Checkmark"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
             [imv setImage:checkImg];
-            [stateLb setText:@"连接成功"];
+            [stateLb setText:@"CONNECTED"];
             [stateView setBackgroundColor:[UIColor greenColor]];
             //        hud.bezelView.color = [UIColor greenColor];
+            
+            [hud hideAnimated:YES afterDelay:.0f];
+//            ZLPlayerShared.isStatusBarHidden = NO;
+//            [keyWindow setWindowLevel:UIWindowLevelNormal];
 
-             [hud hideAnimated:YES afterDelay:2.f];
         }
+         
+    
+        
         
         [stateView addSubview:imv];
         [imv mas_makeConstraints:^(MASConstraintMaker *make) {
             make.trailing.equalTo(stateLb.mas_leading).offset(-10.f);
             make.centerY.equalTo(stateLb);
-            make.size.mas_equalTo(CGSizeMake(30, 30));
+            make.size.mas_equalTo(CGSizeMake(20, 20));
         }];
-       
+        
     }
     
-     hud.customView = nil;
+    hud.customView = nil;
     [hud addSubview:stateView];
     return hud;
 }
 
-//+ (MBProgressHUD *)device:(Device *)device showStatus:(DeviceConnectStatus)status  {
-//    return [MBProgressHUD device:device showStatus:status];
-//}
-
-+ (MBProgressHUD *)showStatus:(DeviceConnectStatus)status  {
++ (MBProgressHUD *)showStatus:(cloud_device_state_t)status  {
     return [MBProgressHUD showStatus:status onView:nil];
 }
 
@@ -206,5 +247,32 @@
 }
 - (UIButton *)actionBtn {
     return objc_getAssociatedObject(self, _cmd); //_cmd : selector imp
+}
+
+- (void)setBackBtn:(UIButton *)backBtn {
+    objc_setAssociatedObject(self, @selector(backBtn), backBtn, OBJC_ASSOCIATION_RETAIN);
+}
+- (UIButton *)backBtn {
+    return objc_getAssociatedObject(self, _cmd); //_cmd : selector imp
+}
++(void)cancel:(UIButton *)sender {
+    [MBProgressHUD hideHUD];
+}
++ (void)setButton:(UIButton *)btn title:(NSString *)title {
+    
+  
+    [btn setTitle:title forState:UIControlStateNormal];
+    [btn.titleLabel setFont:[UIFont systemFontOfSize:15.f]];
+    btn.contentEdgeInsets = UIEdgeInsetsMake(2, 10, 2, 10);
+    [btn sizeToFit]; ///update actionBtn size
+    [btn.layer setCornerRadius:btn.bounds.size.height / 2];
+    [btn.layer setMasksToBounds:YES];
+    btn.layer.borderColor = [UIColor blackColor].CGColor;
+    btn.layer.borderWidth = 1.f;
+    btn.layer.borderColor = [UIColor whiteColor].CGColor;
+    [btn setHidden:NO];
+    
+    
+
 }
 @end

@@ -10,9 +10,7 @@
 #import "AMViewControllerProtocol.h"
 
 @interface AMViewController : UIViewController <AMViewControllerProtocol>
-@property (nonatomic, strong) Device *operatingDevice;
-@property (nonatomic, strong) Cam *operatingCam;
-@property (nonatomic, strong) MediaEntity *operatingMedia;
+
 
 
 @end

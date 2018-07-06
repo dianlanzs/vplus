@@ -27,7 +27,8 @@
 #import "ZLPlayer.h"
 
 
-
+// player的单例
+#define ZLPlayerShared                      [ZLBrightnessView sharedBrightnessView]
 
 @interface ZLBrightnessView : UIView
 

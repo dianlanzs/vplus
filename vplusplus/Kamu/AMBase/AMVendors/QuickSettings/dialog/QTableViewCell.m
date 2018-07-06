@@ -97,7 +97,7 @@ static const int kCellMinimumLabelWidth = 80;
     }
 }
 
-
+///zhoulei mark important   alreday  modifyed the color in dataBuilder!!!!!!
 - (void)applyAppearanceForElement:(QElement *)element {
     QAppearance *appearance = element.appearance;//default appearance
     self.textLabel.textColor = element.enabled  ? appearance.labelColorEnabled : appearance.labelColorDisabled;

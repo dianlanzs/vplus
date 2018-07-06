@@ -69,8 +69,8 @@
     _textField.autoresizingMask = ( UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
     [_textField addTarget:self action:@selector(textFieldEditingChanged:) forControlEvents:UIControlEventEditingChanged];
     
-    //zhoulei_add
-    [_textField addTarget:self action:@selector(tf_didEndEditing:) forControlEvents:UIControlEventEditingDidEnd];
+    ///zhoulei add
+//    [_textField addTarget:self action:@selector(tf_didEndEditing:) forControlEvents:UIControlEventEditingDidEnd];
     [self.contentView addSubview:_textField];
 }
 
@@ -191,10 +191,11 @@
 }
 
 
-//zhoulei _ mark
-- (void)tf_didEndEditing:(UITextField *)tf {
-    _entryElement.tf_endEditing(tf);
-}
+///zhoulei  modify
+//- (void)tf_didEndEditing:(UITextField *)tf {
+//    _entryElement.tf_endEditing(tf);
+//}
+
 - (void)textFieldEditingChanged:(UITextField *)textFieldEditingChanged {
    _entryElement.textValue = _textField.text;
     [_entryElement handleEditingChanged:self];

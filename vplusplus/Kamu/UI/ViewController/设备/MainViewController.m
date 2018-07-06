@@ -133,9 +133,17 @@
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
+/*
 - (BOOL)shouldAutorotate {
-    return NO;
+    return YES;  ///只是不支持 再次 旋转 ，如果是横屏 出现不会旋转成竖屏 .
 }
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations {
+    return UIInterfaceOrientationMaskPortrait; ///只有 shouldAutorotate YES ,才会有作用 ，否则 跟随设备方向 设置初始界面方向
+}
+- (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation {
+    return UIInterfaceOrientationPortrait;
+}
+*/
 
 
 #pragma mark - Table view 数据源回调方法
@@ -149,19 +157,44 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    
     Device *nonCams_device = ((AMNavigationController *)self.navigationController).results[indexPath.section];
+//    [RLM transactionWithBlock:^{
+//        nonCams_device.nvr_type = CLOUD_DEVICE_TYPE_IPC;
+//    }];
+    
+    
+    
     if (nonCams_device.nvr_type == CLOUD_DEVICE_TYPE_GW) {
         QRResultCell *nvrCell = [[QRResultCell alloc] init];
         [nvrCell setNvrModel:nonCams_device];
         [nvrCell setPath:indexPath];
         return nvrCell;
-    } else if (nonCams_device.nvr_type == CLOUD_DEVICE_TYPE_IPC) {
+    }
+    
+//    if (nonCams_device.nvr_type == CLOUD_DEVICE_TYPE_IPC) {
+//        QRResultCell *nvrCell = [[QRResultCell alloc] init];
+//        [nvrCell setNvrModel:nonCams_device];
+//        [nvrCell setPath:indexPath];
+//        return nvrCell;
+//    }
+    /*
+    else if (nonCams_device.nvr_type == CLOUD_DEVICE_TYPE_IPC) {
+    
+        
+        
         tableView.rowHeight = 200;
         DeviceListCell *ipcCell = [self.tableView dequeueReusableCellWithIdentifier:NSStringFromClass([DeviceListCell class]) forIndexPath:indexPath];
         ipcCell.ipcModel = nonCams_device;
         ipcCell.delegate = self;
         return ipcCell;
+        
+        
+        
+        
     }
+     
+     */
     
     return nil;
 }

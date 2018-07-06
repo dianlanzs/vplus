@@ -6,9 +6,11 @@
 //  Copyright © 2017年 com.Kamu.cme. All rights reserved.
 //
 
+#include <signal.h>
 
 // 引入JPush功能所需头文件
 #import "JPUSHService.h"
+
 // iOS10注册APNs所需头文件
 #ifdef NSFoundationVersionNumber_iOS_9_x_Max
 #import <UserNotifications/UserNotifications.h>
@@ -22,7 +24,7 @@
 #import "RDVTabBarItem.h"
 
 
-#import "NetWorkTools.h"
+
 #import "ReactiveObjC.h"
 
 #import "VPPRequest.h"
@@ -52,8 +54,25 @@ static BOOL isProduction = NO;
 @implementation AppDelegate
 
 
+void sigpipe_handler(int unused){
+    printf("Caught signal SIGPIPE %d\n",unused);
+    
+}
 
+///锁屏触发事件
+- (void)applicationProtectedDataWillBecomeUnavailable:(UIApplication *)application{
+    
+    NSLog(@"Lock screen.");
+    cloud_notify_network_changed();
 
+}
+///解锁事件
+- (void) applicationProtectedDataDidBecomeAvailable:(UIApplication *)application
+{
+//    [[NSNotificationCenter defaultCenter] postNotificationName:UN_LOCK_SCREEN_NOTIFY
+//                                                        object:nil];
+    NSLog(@"UnLock screen.");
+}
 -(void)dealloc{
     [[NSNotificationCenter defaultCenter]removeObserver:self name:@"netWorkChangeEventNotification" object:nil];
 }
@@ -69,15 +88,25 @@ static BOOL isProduction = NO;
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     
     cloud_init();
+   
+    
+   
+//signal(SIGPIPE, SIG_IGN);
+//    sigaction(SIGPIPE, &(struct sigaction){sigpipe_handler}, NULL);
+
+    ///Jpush Message Notification
+//    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(networkDidReceiveMessage:) name:kJPFNetworkDidReceiveMessageNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(networkDidLogin:) name:kJPFNetworkDidLoginNotification object:nil];
+
     self.triggerOptions = launchOptions;
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-//    self.window.backgroundColor = [UIColor whiteColor];
     [self.window makeKeyAndVisible];
     [self.window setRootViewController:self.tabBarController];
-    [self observeNetwork];
+
   
     [self setMRButtonAppearance];
     [self configJpushWith:launchOptions];//根据版本第一次加载
+    [self.manager.reachabilityManager startMonitoring];
     //Steve
 //    self.y_data = new Byte[1920 * 1080 * 1]; //数组容量  ptr[m]
 //    self.u_data = new Byte[1920 * 1080 * 1/4]; //数组容量  ptr[m]
@@ -127,6 +156,8 @@ static BOOL isProduction = NO;
                           channel:nil
                  apsForProduction:isProduction
             advertisingIdentifier:nil];
+
+
 }
 
 
@@ -134,8 +165,18 @@ static BOOL isProduction = NO;
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
 //    [self configTutkPushWith:deviceToken];
     [JPUSHService registerDeviceToken:deviceToken];// Required - 上报DeviceToken给极光服务器
+  
 
 }
+- (void)networkDidLogin:(NSNotification *)notification {
+  const  char * rid =  [[JPUSHService registrationID] UTF8String];
+    if (rid) {
+        cloud_set_appinfo(rid);
+    }
+    
+}
+
+
 - (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
     //Optional
     NSLog(@"did Fail To Register For Remote Notifications With Error: %@", error);
@@ -152,71 +193,53 @@ static BOOL isProduction = NO;
 
 //#ifdef NSFoundationVersionNumber_iOS_9_x_Max
 #pragma mark- Jpush Delegate ,  Packaged iOS 10 UN API
-///展示推送
+- (void)networkDidReceiveMessage:(NSNotification *)notification {
+    
+    ;
+}
+///后台，前台 （后台有横幅，前台没有）--- 推送消息：（Required:content-avalible:1）
+/*
+- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler {
+    UIApplicationState state = [application applicationState];
+    if (state == UIApplicationStateActive) {
+        ;
+        //应用在前台，接收远程推送，会进入这个状态
+    }
+    else if (state == UIApplicationStateInactive) {
+        ;
+        //应用在后台，通过点击远程推送通知，进入这个状态
+    }
+    else if (state == UIApplicationStateBackground) {
+        ;
+        //应用在后台，收到静默推送，进入这个状态
+    }
+    //记得加上这句话，要不然应用在后台时不触发方法3。
+//    completionHandler(UIBackgroundFetchResultNewData);
+}
+*/
+
+///前台 --- 展示推送 （可以自定义 有无 横幅，声音等）
 - (void)jpushNotificationCenter:(UNUserNotificationCenter *)center willPresentNotification:(UNNotification *)notification withCompletionHandler:(void (^)(NSInteger))completionHandler {
-//    UNNotificationRequest *request = notification.request; // 收到推送的请求
-//    UNNotificationContent *content = request.content; // 收到推送的消息内容
-//    NSDictionary * userInfo = notification.request.content.userInfo;
-   
+    /*
+     NSNumber *badge = content.badge;
+     NSString *body = content.body;
+     UNNotificationSound *sound = content.sound;
+     NSString *subtitle = content.subtitle;
+     NSString *title = content.title;
+     */
     
-//    NSNumber *badge = content.badge;  // 推送消息的角标
-//    NSString *body = content.body;    // 推送消息体
-//    UNNotificationSound *sound = content.sound;  // 推送消息的声音
-//    NSString *subtitle = content.subtitle;  // 推送消息的副标题
-//    NSString *title = content.title;  // 推送消息的标题
-    
-    if([notification.request.trigger isKindOfClass:[UNPushNotificationTrigger class]]) {
-//        [JPUSHService handleRemoteNotification:userInfo]; //上报 Jpush 推送信息
-//        NSLog(@"iOS10 前台收到远程通知:%@", [self logDic:userInfo]);
-        //        [rootViewController addNotificationCount];
-        
-//        [self sendNotation:notification.request.content.userInfo];
-    }
-    else {
-        // 判断为本地通知
-//        NSLog(@"iOS10 前台收到本地通知:{\nbody:%@，\ntitle:%@,\nsubtitle:%@,\nbadge：%@，\nsound：%@，\nuserInfo：%@\n}",body,title,subtitle,badge,sound,userInfo);
-    }
-    completionHandler(UNNotificationPresentationOptionBadge|UNNotificationPresentationOptionSound|UNNotificationPresentationOptionAlert); // 需要执行这个方法，选择是否提醒用户，有Badge、Sound、Alert三种类型可以设置
+    [self handleRemoteNotification:notification];
+//    if ([UIApplication sharedApplication].applicationState != UIApplicationStateActive) {
+//        completionHandler(UNNotificationPresentationOptionBadge|UNNotificationPresentationOptionSound|UNNotificationPresentationOptionAlert);
+//    }
 }
 
-///点击推送
+///前台、后台，杀死 -- 点击推送
 - (void)jpushNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(UNNotificationResponse *)response withCompletionHandler:(void (^)())completionHandler {
-
-    NSDictionary * userInfo = response.notification.request.content.userInfo;
-//    UNNotificationRequest *request = response.notification.request; // 收到推送的请求
-//    UNNotificationContent *content = request.content; // 收到推送的消息内容
-    
-//    NSNumber *badge = content.badge;  // 推送消息的角标
-//    NSString *body = content.body;    // 推送消息体
-//    UNNotificationSound *sound = content.sound;  // 推送消息的声音
-//    NSString *subtitle = content.subtitle;  // 推送消息的副标题
-//    NSString *title = content.title;  // 推送消息的标题
-    
-    if([response.notification.request.trigger isKindOfClass:[UNPushNotificationTrigger class]]) {
-
-        UIAlertController * alertController = [UIAlertController alertControllerWithTitle:@"Alert" message:[self logDic:userInfo] preferredStyle:UIAlertControllerStyleAlert];
-        UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"拒绝" style:UIAlertActionStyleCancel handler:nil];
-        UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"接听" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-            [(AMNavigationController *)self.tabBarController.selectedViewController jumpToViewctroller:userInfo];
-        }];
-        [alertController addAction:cancelAction];
-        [alertController addAction:okAction];
-        [self.tabBarController presentViewController:alertController animated:YES completion:nil];
-    
-        [UIApplication sharedApplication].applicationIconBadgeNumber = 0;
-        [JPUSHService setBadge:0]; //点击 某个 Cell  上报服务器 bageNumber -1
-        
-    }
-    else {
-        // 判断为本地通知
-//        NSLog(@"iOS10 收到本地通知:{\nbody:%@，\ntitle:%@,\nsubtitle:%@,\nbadge：%@，\nsound：%@，\nuserInfo：%@\n}",body,title,subtitle,badge,sound,userInfo);
-    }
-    
-    completionHandler();  // 系统要求执行这个方法
+    [self handleRemoteNotification:response.notification];
+    completionHandler();  
 }
-//#endif
-// log NSSet with UTF8
-// if not ,log will be \Uxxx
+// log NSSet with UTF8  if not ,log will be  Uxxx
 - (NSString *)logDic:(NSDictionary *)dic {
     if (![dic count]) {
         return nil;
@@ -228,6 +251,32 @@ static BOOL isProduction = NO;
     NSData *tempData = [tempStr3 dataUsingEncoding:NSUTF8StringEncoding];
     NSString *str = [NSPropertyListSerialization propertyListWithData:tempData options:NSPropertyListImmutable format:NULL error:NULL];
     return str;
+}
+
+
+- (void)handleRemoteNotification:(UNNotification *)notification {
+    
+    
+    UNNotificationRequest *request = notification.request;
+    UNNotificationContent *content = request.content;
+    NSDictionary * userInfo = content.userInfo;
+    NSLog(@"APP_STATUS:%zd",[UIApplication sharedApplication].applicationState);
+    if([notification.request.trigger isKindOfClass:[UNPushNotificationTrigger class]]) {
+        [JPUSHService handleRemoteNotification:userInfo]; //上报 Jpush 推送信息
+        
+        UIAlertController * alertController = [UIAlertController alertControllerWithTitle:@"Alert" message:[self logDic:userInfo] preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"拒绝" style:UIAlertActionStyleCancel handler:nil];
+        UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"接听" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+            [(AMNavigationController *)self.tabBarController.selectedViewController jumpToViewctroller:userInfo];
+        }];
+        [alertController addAction:cancelAction];
+        [alertController addAction:okAction];
+        [self.tabBarController presentViewController:alertController animated:YES completion:nil];
+        
+        
+        [UIApplication sharedApplication].applicationIconBadgeNumber = 0;
+        [JPUSHService setBadge:0]; //点击 某个 Cell  上报服务器 bageNumber -1
+    }
 }
 - (void)configTutkPushWith:(NSData *)token{
     NSMutableArray *tempArray = [NSMutableArray array];
@@ -725,40 +774,46 @@ static BOOL isProduction = NO;
 //Main Thread Checker: UI API called on a background thread: -[UIApplication currentUserNotificationSettings]
 
 #pragma mark - 检测网络状态变化
-- (void)observeNetwork {
+- (AFHTTPSessionManager *)manager {
     
     
-    [[AFNetworkActivityIndicatorManager sharedManager] setEnabled:YES];
-    NSURL *url = [NSURL URLWithString:@"https://www.baidu.com"];
-    AFHTTPSessionManager *manager = [[AFHTTPSessionManager alloc] initWithBaseURL:url];
-    
-    
-    [manager.reachabilityManager setReachabilityStatusChangeBlock:^(AFNetworkReachabilityStatus status) {
+    if (!_manager) {
         
-        self.netStatus = status;
-        switch (status) {
-            case AFNetworkReachabilityStatusReachableViaWWAN:
-                [MBProgressHUD showPromptWithText:@"当前使用的是流量模式"];
-                
-                break;
-            case AFNetworkReachabilityStatusReachableViaWiFi:
-                [MBProgressHUD showPromptWithText:@"当前使用的是wifi模式"];
-                break;
-            case AFNetworkReachabilityStatusNotReachable:
-                [MBProgressHUD showError:@"断网了"];
-                break;
-            case AFNetworkReachabilityStatusUnknown:
-                [MBProgressHUD showPromptWithText:@"变成了未知网络状态"];
-                
-                break; default: break;
-                
-        }
+        [[AFNetworkActivityIndicatorManager sharedManager] setEnabled:YES];
+        NSURL *url = [NSURL URLWithString:@"https://www.baidu.com"];
+       _manager = [[AFHTTPSessionManager alloc] initWithBaseURL:url];
+      __block   BOOL firstObserved = YES;
+      
+        [_manager.reachabilityManager setReachabilityStatusChangeBlock:^(AFNetworkReachabilityStatus status) {
+           
+            switch (status) {
+                case AFNetworkReachabilityStatusReachableViaWWAN:
+                    [MBProgressHUD showPromptWithText:@"当前使用的是流量模式"];
+                    
+                    break;
+                case AFNetworkReachabilityStatusReachableViaWiFi:
+                    [MBProgressHUD showPromptWithText:@"当前使用的是wifi模式"];
+                    break;
+                case AFNetworkReachabilityStatusNotReachable:
+                    [MBProgressHUD showError:@"断网了"];
+                    break;
+                case AFNetworkReachabilityStatusUnknown:
+                    [MBProgressHUD showPromptWithText:@"变成了未知网络状态"];
+                    break;
+            }
+            
+            if (firstObserved == NO) {
+                cloud_notify_network_changed();
+            }else {
+                firstObserved = NO;
+            }
+            
+        }];
         
         
-    }];
+    }
     
-    [manager.reachabilityManager startMonitoring];
-    
-    
+    return _manager;
 }
+
 @end

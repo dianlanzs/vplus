@@ -13,7 +13,7 @@
 #import "ZLBrightnessView.h"
 #import "PlayerControl.h"
 #import "CommonPlayerControl.h"
-@interface PlaybackControl () <UIGestureRecognizerDelegate>
+@interface PlaybackControl () <UIGestureRecognizerDelegate, ASValueTrackingSliderDataSource>
 //@property (nonatomic, strong) CommonPlayerControl *commonControl;
 
 @end
@@ -104,6 +104,9 @@
             make.center.equalTo(self);
         }];
         
+        
+        [self resetControl];
+        
               
     }
     return self;
@@ -115,38 +118,17 @@
 }
 
 #pragma mark - public method
-- (void)zl_playerDraggedTime:(NSInteger)draggedTime sliderImage:(UIImage *)image; {
-    NSInteger proMin = draggedTime / 60;//当前秒
-    NSInteger proSec = draggedTime % 60;//当前分钟
-    NSString *currentTimeStr = [NSString stringWithFormat:@"%02lu:%02zd", (long)proMin, proSec];
-    [self.videoSlider setImage:image];
-    [self.videoSlider setText:currentTimeStr];
-    self.fastView.hidden = YES;
-}
-- (void)zl_playerDraggedTime:(NSInteger)draggedTime totalTime:(NSInteger)totalTime isForward:(BOOL)forawrd hasPreview:(BOOL)preview {
-    //    [self.activity stopAnimating];
-    NSInteger proMin = draggedTime / 60;
-    NSInteger proSec = draggedTime % 60;
-    NSInteger durMin = totalTime / 60;
-    NSInteger durSec = totalTime % 60;
-    NSString *currentTimeStr = [NSString stringWithFormat:@"%02zd:%02zd", proMin, proSec];
-    NSString *totalTimeStr   = [NSString stringWithFormat:@"%02zd:%02zd", durMin, durSec];
-    CGFloat  draggedValue    = (CGFloat)draggedTime/(CGFloat)totalTime;
-    NSString *timeStr        = [NSString stringWithFormat:@"%@ / %@", currentTimeStr, totalTimeStr];
-    self.videoSlider.popUpView.hidden = !preview;
-    self.videoSlider.value            = draggedValue;
-    self.bottomProgressView.progress  = draggedValue;
-    self.currentTimeLabel.text        = currentTimeStr;
-    self.dragged = YES;  //Middle UI
-    if (forawrd) {
-          self.fastImageView.image = ZLPlayerImage(@"ZLPlayer_fast_forward");
-    } else {
-         self.fastImageView.image = ZLPlayerImage(@"ZLPlayer_fast_backward");
-    }
-    self.fastView.hidden           = preview;
-    self.fastTimeLabel.text        = timeStr;
-    self.fastProgressView.progress = draggedValue;
-}
+
+
+     
+//
+//- (void)zl_changeSilderValueWithDraggedTime:(NSInteger)draggedTime totalTime:(NSInteger)totalTime isForward:(BOOL)forawrd hasPreview:(BOOL)preview {
+//
+//    
+//
+//
+//
+//}
 
 
 #pragma mark - Gesture Delegate
@@ -167,14 +149,18 @@
 
 #pragma mark - Public Method
 - (void)zl_playerDraggedEnd {
+    
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
           self.fastView.hidden = YES;
     });
+    
+    
     [self setDragged:NO];
 
 }
 
 - (void)zl_playerCurrentTime:(NSInteger)currentTime totalTime:(NSInteger)totalTime sliderValue:(CGFloat)value {
+    
     NSInteger proMin = currentTime / 60;
     NSInteger proSec = currentTime % 60;
     NSInteger durMin = totalTime / 60;
@@ -268,14 +254,33 @@
         _videoSlider.popUpViewCornerRadius = 0.0;
         _videoSlider.popUpViewColor = RGBA(19, 19, 9, 1);
         _videoSlider.popUpViewArrowLength = 8;
+        
+        
+        
+         _videoSlider.dataSource = self;
+
+        
+        
+        
         [_videoSlider setThumbImage:ZLPlayerImage(@"滑动") forState:UIControlStateNormal];
         _videoSlider.maximumValue          = 1;
         _videoSlider.minimumTrackTintColor = [UIColor redColor];
         _videoSlider.maximumTrackTintColor = [UIColor colorWithRed:0.5 green:0.5 blue:0.5 alpha:0.5];
+        
+        
+        
+        
+        
         [_videoSlider addTarget:self action:@selector(progressSliderTouchBegan:) forControlEvents:UIControlEventTouchDown];
         [_videoSlider addTarget:self action:@selector(progressSliderValueChanged:) forControlEvents:UIControlEventValueChanged];
         [_videoSlider addTarget:self action:@selector(progressSliderTouchEnded:) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchCancel | UIControlEventTouchUpOutside];
-        //tap  & pan gesture for slider
+        
+        
+        
+        
+        
+        
+        ///tap  & pan gesture for slider
         UITapGestureRecognizer *sliderTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapSliderAction:)];
         [_videoSlider addGestureRecognizer:sliderTap];
         UIPanGestureRecognizer *panRecognizer = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(panRecognizer:)];
@@ -288,26 +293,39 @@
     }
     return _videoSlider;
 }
+
+
+
+
 - (void)progressSliderTouchBegan:(ASValueTrackingSlider *)sender {
 //    [(PlayerControl *)self.superview zl_playerCancelAutoFadeOutControlView];
 //    self.videoSlider.popUpView.hidden = YES;
 //    [self.delegate zl_controlView:self progressSliderTouchBegan:sender]; // not implemt
 }
 
-- (void)progressSliderValueChanged:(ASValueTrackingSlider *)sender {
-    [self.delegate zl_controlView:self progressSliderValueChanged:sender];
+
+
+- (void)progressSliderValueChanged:(ASValueTrackingSlider *)slider {
+//    [self.delegate zl_controlView:self progressSliderValueChanged:sender];
+    
+  
+    
+    
 }
 - (void)progressSliderTouchEnded:(ASValueTrackingSlider *)sender {
     [self.delegate zl_controlView:self progressSliderTouchEnded:sender];
     
+   
+    
 }
+
+
 - (void)tapSliderAction:(UITapGestureRecognizer *)tap {
     if ([tap.view isKindOfClass:[UISlider class]]) {
         UISlider *slider = (UISlider *)tap.view;
         CGPoint point = [tap locationInView:slider];
-        CGFloat length = slider.frame.size.width;
         // 视频跳转的value
-        CGFloat tapValue = point.x / length;
+        CGFloat tapValue = point.x / slider.frame.size.width;
         if ([self.delegate respondsToSelector:@selector(zl_controlView:progressSliderTap:)]) {
             [self.delegate zl_controlView:self progressSliderTap:tapValue]; //跳转
         }
@@ -316,6 +334,22 @@
 
 // 不做处理，只是为了滑动slider其他地方不响应其他手势
 - (void)panRecognizer:(UIPanGestureRecognizer *)sender {}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #pragma mark - fast & progress view

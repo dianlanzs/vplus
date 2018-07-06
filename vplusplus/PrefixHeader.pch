@@ -33,8 +33,6 @@
 #import "Masonry.h" //设置约束
 #import "MBProgressHUD+ZLCategory.h" //HUD
 
-//视频P2P
-
 
 //Cell
 //#import "MGSwipeButton.h"
@@ -70,6 +68,6 @@
 #import "Alert.h"
 #import "UIView+ViewController.h"
 #import "AMViewController.h"
-
+#import "UINavigationController+operating.h"
 #endif
 #endif

@@ -31,54 +31,66 @@
 
 @implementation LibraryController
 
-#pragma mark - life circle
+
 
 int device_list_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *param,void *context) {
     
     LibraryController *self_context = (__bridge LibraryController *)context;
-
-
-        dispatch_sync(dispatch_get_main_queue(), ^{
-            record_filelist_t *info = (record_filelist_t *)param;
-            int num = info -> num; //cells
-            rec_file_block *block = info -> blocks;
+    PageController *page = self_context.childViewControllers[0]; /// 0 is cloudDevice
+    
+    
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        record_filelist_t *info = (record_filelist_t *)param;
+        int num = info -> num;
+ 
+        rec_file_block *block = info -> blocks;
+        
+        for (int i = 0; i < num; i++) {
             
-            for (int i = 0; i < num; i++) {
-                
-                MediaEntity *media = [MediaEntity new];
-                media.createtime = (block+i) -> createtime;
-                media.fileName = [NSString stringWithUTF8String:(block+i) -> filename];
-                media.filelength = (block+i) -> filelength;
-                media.recordType = (block+i) -> recordtype;
-                media.timelength = (block+i) -> timelength;
-                //        NSLog(@"create time : %@",[NSString stringWithFormat:@"createtime == %d", (block+i) -> createtime]);
-                //        NSLog(@"filename : %@",[NSString stringWithFormat:@"filename == %s", (block+i) -> filename]);
-                Cam *db_cam =  [[self_context.operatingDevice.nvr_cams objectsWhere:[NSString stringWithFormat:@"cam_id = '%@'",[NSString stringWithUTF8String:(block+i) -> camdid]]] firstObject];
-                MediaEntity *db_media = [[db_cam.cam_medias objectsWhere:[NSString stringWithFormat:@"createtime == %d", (block+i) -> createtime]] firstObject];
-                if (db_cam && !db_media) {
-                    [RLM transactionWithBlock:^{
-                        [db_cam.cam_medias addObject:media];
-                    }];
+            MediaEntity *media = [MediaEntity new];
+            media.createtime = (block+i) -> createtime;
+            media.fileName = [NSString stringWithUTF8String:(block+i) -> filename];
+            media.filelength = (block+i) -> filelength;
+            media.recordType = (block+i) -> recordtype;
+            media.timelength = (block+i) -> timelength;
+            //        NSLog(@"filename : %@",[NSString stringWithFormat:@"filename == %s", (block+i) -> filename]);
+            
+    
+            for (Cam *tempCam in page.tempCams) {
+                NSPredicate *predicate = [NSPredicate predicateWithFormat:[NSString stringWithFormat:@"createtime == %d", (block+i) -> createtime]];
+                if ([tempCam.cam_id isEqualToString:[NSString stringWithUTF8String:(block+i) -> camdid]] && ![tempCam.cam_cloudMedias filteredArrayUsingPredicate:predicate].firstObject) {
+                    NSLog(@"create time : %@",[NSString stringWithFormat:@"createtime == %d", (block+i) -> createtime]);
+                    [tempCam.cam_cloudMedias addObject:media];
                 }
             }
-//            self_context.cDevice = selectedNvr;
 
-            PageController *page = self_context.childViewControllers[self_context.segmentedControl.selectedSegmentIndex];
-            [page.tableView reloadData];
-            [MBProgressHUD hideHUDForView:page.view animated:YES];
-            
-        });
-   
+            /*
+             Cam *db_cam =  [[self_context.operatingDevice.nvr_cams objectsWhere:[NSString stringWithFormat:@"cam_id = '%@'",[NSString stringWithUTF8String:(block+i) -> camdid]]] firstObject];
+             NSPredicate *predicate = [NSPredicate predicateWithFormat:[NSString stringWithFormat:@"createtime == %d", (block+i) -> createtime]];
+             MediaEntity *cloud_media = [db_cam.cam_cloudMedias filteredArrayUsingPredicate:predicate].firstObject;
+             if (db_cam && !cloud_media) {
+             [db_cam.cam_cloudMedias addObject:media];
+             }
+             */
+        }
+        //            [page setMediasDict:muDict];
+        [page.tableView reloadData];
+        [page.tableView.mj_header endRefreshing];
+    });
     
-
+    
+    
     return 0;
 }
+
+
+
+#pragma mark - life circle
 - (void)viewDidLoad {
     [super viewDidLoad];
 
     [self.view setBackgroundColor:[UIColor whiteColor]];
-    cloud_set_pblist_callback((void *)self.operatingDevice.nvr_h,device_list_callback,(__bridge void *)self);
-
+    cloud_set_pblist_callback((void *)self.navigationController.operatingDevice.nvr_h,device_list_callback,(__bridge void *)self);
     
     
     [self.view addSubview:self.segmentedControl];
@@ -114,7 +126,7 @@ int device_list_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *pa
         for (RegionModel *region in regionList) {
 
             for (ItemModel *item in region.itemList) {
-                if (item.selected == YES && cloud_get_device_status((void *)self.operatingDevice.nvr_h) == CLOUD_DEVICE_STATE_CONNECTED) {
+                if (item.selected == YES && cloud_get_device_status((void *)self.navigationController.operatingDevice.nvr_h) == CLOUD_DEVICE_STATE_CONNECTED) {
 //                    cloud_device_cam_list_files((void *)self.cloudDevice.nvr_h,item.cam_id,SEC_00,SEC_24,RECORD_TYPE_ALL);
                 }
             }
@@ -137,6 +149,15 @@ int device_list_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *pa
 //    self.automaticallyAdjustsScrollViewInsets = NO;///MARK:针对 根视图第一个添加scrollView vc会自动调整一段 内容 y值 的Inset ，不就是容器嘛
     [self addListController];//添加子控制器Page vc
 }
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [self.segmentedControl setSelectedSegmentIndex:0]; //1. choose 中继
+    [self datepicker:self.datepicker didSelectDate:[NSDate date]];//2. choose today
+}
+
+
+
+
 
 - (NSArray *)setRegionList {
     NSMutableArray *dataArray = [NSMutableArray array];
@@ -154,7 +175,7 @@ int device_list_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *pa
 
     
     NSMutableArray *items = [NSMutableArray array];
-    for (Cam *cloudCam in self.operatingDevice.nvr_cams) {
+    for (Cam *cloudCam in self.navigationController.operatingDevice.nvr_cams) {
         ItemModel *item = [ItemModel new];
         [item setItemName:cloudCam.cam_name ? [cloudCam.cam_name uppercaseString] : [cloudCam.cam_id uppercaseString]];
         item.cam_id = cloudCam.cam_id;
@@ -186,15 +207,28 @@ int device_list_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *pa
     for (int i = 0 ; i <  self.segmentedControl.sectionTitles.count ;i++){
         PageController *page = [[PageController alloc] init];
         page.title = self.segmentedControl.sectionTitles[i];
-//        page.URL = self.arrayLists[i][@"urlString"];
+        //        page.URL = self.arrayLists[i][@"urlString"];
         [self addChildViewController:page];
-
+        
         if (!page.tableView.superview) {
             [self.scrollView addSubview:page.tableView];
             page.tableView.frame = CGRectMake(CGRectGetWidth(self.scrollView.bounds) * i, 0, CGRectGetWidth(self.scrollView.bounds), CGRectGetHeight(self.scrollView.bounds)); //scrollview 滚动原理 是改变自身的 bounds
+            
+            if ([self.segmentedControl.sectionTitles[i] isEqualToString:@"设备"]) {
+                
+                page.tableView.mj_header = [MJRefreshNormalHeader headerWithRefreshingBlock:^{
+                    
+                    if (self.navigationController.operatingDevice.nvr_status == CLOUD_DEVICE_STATE_CONNECTED) {
+                        cloud_device_cam_list_files((void *)self.navigationController.operatingDevice.nvr_h,NULL,  page.zero_seconds, page.zero_seconds + 24 * 3600,RECORD_TYPE_ALL);
+                    }else {
+                        [page.tableView.mj_header endRefreshing];
+                    }
+                }];
+            }
+          
         }
         [page didMoveToParentViewController:self];
-
+        
     }
 }
 - (void)filter:(id)sender {
@@ -222,11 +256,7 @@ int device_list_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *pa
     label.textAlignment = NSTextAlignmentCenter;
 }
 
-- (void)viewWillAppear:(BOOL)animated {
-    [super viewWillAppear:animated];
-    [self.segmentedControl setSelectedSegmentIndex:0]; //1. choose 中继
-    [self datepicker:self.datepicker didSelectDate:[NSDate date]];//2. choose today
-}
+
 
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:YES];
@@ -334,31 +364,25 @@ int device_list_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *pa
 #pragma mark -  DatePickerDelegate
 - (void)datepicker:(ScrollableDatepicker *)datepicker didSelectDate:(NSDate *)date {
     
-    int sec = [self showSelectedDate];
     if (self.segmentedControl.selectedSegmentIndex == 0) {
-        PageController *page = [self.childViewControllers  objectAtIndex:0];
-        [page setStart_daySec:sec];
-        if (cloud_get_device_status((void *)self.operatingDevice.nvr_h) == CLOUD_DEVICE_STATE_CONNECTED) { //get status
-            self.operatingDevice.listDelegate = page;
-            [MBProgressHUD showSpinningWithMessage:@"downloding..." toView:page.tableView];
-            cloud_device_cam_list_files((void *)self.operatingDevice.nvr_h,NULL,  sec,sec + 24 * 3600,RECORD_TYPE_ALL);
-        }else {
-            [MBProgressHUD showPromptWithText:@"device offline"];
-        }
+        PageController *page = self.childViewControllers[0];
+        int sec = [self showSelectedDate];
+        [page setZero_seconds:sec];
+        [page.tableView.mj_header beginRefreshing]; /// call getList....
     }
-    
+   
 }
-//日期格式
+/// get seconds & 日期格式
 - (int)showSelectedDate {
     NSDateFormatter *dateFormat = [[NSDateFormatter alloc] init];
     dateFormat.dateFormat = @"yyyy-MM-dd";//@"dd-MMMM YYYY" yyyy-MM-dd HH:mm:ss ,默认  00:00:00
     self.selectedDateLb.text = [dateFormat stringFromDate:self.datepicker.selectedDate];
     [self.datepicker scrollToSelectedDateWithAnimated:YES];
     
-    
-    NSDate *datenew = [dateFormat dateFromString:[dateFormat stringFromDate:self.datepicker.selectedDate]];
-  int sec =  [datenew timeIntervalSince1970];
+    NSDate *dateFromZero = [dateFormat dateFromString:[dateFormat stringFromDate:self.datepicker.selectedDate]];
+    int sec =  [dateFromZero timeIntervalSince1970];
     return  sec;
+
 }
 
 

@@ -7,20 +7,17 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "RTSpinKitView.h"
 #import "MBProgressHUD.h"
 
 
-typedef NS_ENUM(NSInteger, DeviceConnectStatus) {
-    DeviceConnecting = 0 ,
-    DeviceConnected = 1,
-    DeviceDisconnected = 2,
-};
+#import "cloud.h"
 
 
 @interface MBProgressHUD (HUD)
 //@property (nonatomic, strong) void(^callback)(id sender);
 @property (nonatomic, strong) UIButton *actionBtn;
+@property (nonatomic, strong) UIButton *backBtn;
+
 //纯 文本显示
 + (void)showPromptWithText:(NSString *)text inView:(UIView *)view;
 + (void)showPromptWithText:(NSString *)text;
@@ -49,7 +46,7 @@ typedef NS_ENUM(NSInteger, DeviceConnectStatus) {
 
 
 //======================= SpinKit =====================================
-+ (MBProgressHUD *)showStatus:(DeviceConnectStatus)status;
++ (MBProgressHUD *)showStatus:(cloud_device_state_t)status;
 
 
 

@@ -66,7 +66,8 @@ typedef enum {
     CLOUD_DEVICE_STATE_CONNECTED = 1,
     CLOUD_DEVICE_STATE_DISCONNECTED = -1 ,
     CLOUD_DEVICE_STATE_AUTHENTICATE_ERR = 3 ,
-    CLOUD_DEVICE_STATE_OTHER_ERR = 4 ,
+    CLOUD_DEVICE_STATE_UNINITILIZED = 4 ,
+    CLOUD_DEVICE_STATE_OTHER_ERR = 5 ,
 } cloud_device_state_t;
 
 typedef enum {
@@ -96,6 +97,9 @@ typedef enum {
     CLOUD_CB_RECORD_LIST = 6,
     CLOUD_CB_VIDEO_BS = 7,
     CLOUD_CB_AUDIO_BS = 8,
+    CLOUD_CB_CAM_CFG = 9,
+    CLOUD_CB_CAM_INFO = 10,
+    CLOUD_CB_CAM_SET_CFG = 11,
 
 } CLOUD_CB_TYPE;
 
@@ -166,7 +170,24 @@ typedef struct record_filelist_t {
     rec_file_block *blocks;
 } record_filelist_t;
 
+typedef struct device_cam_cfg_s {
+    char camdid[32]; //rf_id
+    int pir_sensitivity;
+    int battery_threshold;
+    int rotate;
+} device_cam_cfg_t;
 
+typedef struct device_camera_info_s {
+    char camdid[32]; //rf_id
+    int batttery;
+    int wifi;
+    char verison[32];
+} device_camera_info_t;
+
+typedef struct device_cam_result_s {
+    char camdid[32]; //rf_id
+    int ret_val;
+} device_cam_result_t;
 
 typedef int rec_pb_handle;
 //
@@ -188,8 +209,12 @@ if (type == CLOUD_CB_STATE) {
     record_filelist_t *info = (record_filelist_t *)param;
 } else if (type == CLOUD_CB_VIDEO_BS) {
     cb_video_bs_info_t *info = (cb_video_bs_info_t *)param;
-} else if (type == CLOUD_CB_AUDIO_BS) {
-    cb_audio_bs_info_t *info = (cb_audio_bs_info_t *)param;
+} else if (type == CLOUD_CB_CAM_CFG) {
+    device_cam_cfg_t *info = (device_cam_cfg_t *)param;
+} else if (type == CLOUD_CB_CAM_INFO) {
+    device_camera_info_t *info = (device_camera_info_t *)param;
+} else if (type == CLOUD_CB_CAM_SET_CFG) {
+    device_cam_result_t *info = (device_cam_result_t *)param;
 }
 */
 
@@ -197,6 +222,7 @@ if (type == CLOUD_CB_STATE) {
 int cloud_init(void);
 //云服务退出
 int cloud_exit(void);
+int cloud_set_appinfo(const char *appinfo);
 //根据设备id创建一个设备句柄，之后对设备的操作必须带入这个句柄。
 cloud_device_handle cloud_open_device(const char *did);
 //销毁设备句柄
@@ -205,6 +231,8 @@ int cloud_close_device(cloud_device_handle handle);
 cloud_device_type_t cloud_get_device_type(cloud_device_handle handle);
 //主动获取设备状态
 cloud_device_state_t cloud_get_device_status(cloud_device_handle handle);
+
+int cloud_device_get_version(cloud_device_handle handle, const char *version);
 //使用用户名和密码连接到设备，返回设备状态。
 cloud_device_state_t cloud_connect_device(cloud_device_handle handle, const char* username,const char *password);
 //重新连接到设备，返回设备状态。
@@ -266,6 +294,11 @@ int cloud_device_cam_pb_seek_file(cloud_device_handle handle,const char* cam_did
 int cloud_device_cam_pb_pause(cloud_device_handle handle,const char* cam_did);
 int cloud_device_cam_pb_resume(cloud_device_handle handle,const char* cam_did);
 
+int cloud_device_cam_get_info(cloud_device_handle handle,const char* cam_did);
+int cloud_device_cam_set_cfg(cloud_device_handle handle,const char* cam_did, device_cam_cfg_t *val);
+int cloud_device_cam_get_cfg(cloud_device_handle handle,const char* cam_did);
+
+int cloud_notify_network_changed(void);
 
 #ifdef __cplusplus
 }

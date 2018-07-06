@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 #import "RDVTabBarController.h"
 #import "LoginController.h"
-
+#import "NetWorkTools.h"
 @interface AppDelegate : UIResponder <UIApplicationDelegate>
 
 @property (strong, nonatomic) UIWindow *window; //全局的window
@@ -18,6 +18,7 @@
 //登录 和 内容控制器                        
 @property (strong, nonatomic)  LoginController *loginController;
 @property (nonatomic, strong)  RDVTabBarController *tabBarController;
+@property (nonatomic, strong)  AFHTTPSessionManager *manager;
 
 
 

@@ -20,11 +20,16 @@
     
     _fullScreen = fullScreen;
     if (fullScreen) {
+     
         [self.topImageView setHidden:NO];
         [self.lockBtn setHidden:NO];
+        [self .fullScreenBtn setSelected:YES]; 
+
     }else {
         [self.topImageView setHidden:YES];
         [self.lockBtn setHidden:YES];
+        [self .fullScreenBtn setSelected:NO];
+
   
     }
 }
@@ -45,7 +50,7 @@
         [self.topImageView mas_makeConstraints:^(MASConstraintMaker *make) {
             make.leading.trailing.equalTo(self);
             make.top.equalTo(self.mas_top).offset(0);
-            make.height.mas_equalTo(60);
+            make.height.mas_equalTo(70);
         }];
         
         [self addSubview:self.lockBtn];
@@ -64,7 +69,7 @@
         [self.bottomImageView mas_makeConstraints:^(MASConstraintMaker *make) {
             make.leading.trailing.equalTo(self);
             make.bottom.equalTo(self).offset(0);
-            make.height.mas_equalTo(60);
+            make.height.mas_equalTo(70);
         }];
     }
     [self.bottomImageView addSubview:self.fullScreenBtn];
@@ -95,17 +100,20 @@
 //}
 - (UIImageView *)topImageView {
     if (!_topImageView) {
-        _topImageView                        = [[UIImageView alloc] init];
         
+        
+        _topImageView                        = [[UIImageView alloc] init];
+        [_topImageView setUserInteractionEnabled:YES];
         [_topImageView addSubview:self.backBtn];
         [_topImageView addSubview:self.titleLabel];
         _topImageView.image                  = ZLPlayerImage(@"ZLPlayer_top_shadow");
         
         [self.backBtn mas_makeConstraints:^(MASConstraintMaker *make) {
             make.leading.equalTo(_topImageView.mas_leading).offset(10);
-            make.top.equalTo(_topImageView.mas_top).offset(20);
-            make.width.height.mas_equalTo(40);
+            make.centerY.equalTo(_topImageView).offset(0);
+            make.width.height.mas_equalTo(50);
         }];
+        
         [self.titleLabel mas_makeConstraints:^(MASConstraintMaker *make) {
             make.leading.equalTo(self.backBtn.mas_trailing).offset(5);
             make.centerY.equalTo(self.backBtn.mas_centerY);
@@ -139,6 +147,7 @@
 */
 
 - (UIButton *)fullScreenBtn {
+    
     if (!_fullScreenBtn) {
         _fullScreenBtn = [UIButton buttonWithType:UIButtonTypeCustom];
         [_fullScreenBtn setImage:ZLPlayerImage(@"ZLPlayer_fullscreen") forState:UIControlStateNormal];
@@ -148,7 +157,7 @@
     return _fullScreenBtn;
 }
 - (void)fullScreenBtnClick:(UIButton *)sender {
-    sender.selected = !sender.selected;
+//    sender.selected = !sender.selected;
     [self.delegate zl_controlView:self fullScreenAction:sender];
 }
 
@@ -193,7 +202,7 @@
 - (UIImageView *)bottomImageView {
     if (!_bottomImageView) {
         _bottomImageView                        = [[UIImageView alloc] init];
-        _bottomImageView.userInteractionEnabled = YES;
+       _bottomImageView.userInteractionEnabled = YES;
         _bottomImageView.alpha                  = 1;
         _bottomImageView.image                  = ZLPlayerImage(@"ZLPlayer_bottom_shadow");
          [_bottomImageView addSubview:self.fullScreenBtn];
@@ -235,6 +244,7 @@
     self.lockBtn.alpha            = 0;
     self.topImageView.alpha       = 0;
     self.bottomImageView.alpha    = 0;
+
 }
 - (void)showControl {
     
@@ -256,10 +266,14 @@
 
 
 - (void)resetControl {
+    
+    [self setState:ZLPlayerStateUnknwon];
+    ///默认半屏显示
     [self setFullScreen:NO];
     self.failBtn.hidden              = YES;
     self.backgroundColor             = [UIColor clearColor];
-    self.lockBtn.hidden              = !self.fullScreen; 
+    self.lockBtn.hidden              = !self.fullScreen;
+    
 }
 
 - (void)setState:(ZLPlayerState)state {
@@ -284,14 +298,16 @@
     }
 }
 
+
+
 //playback imp
 - (void)zl_playerCurrentTime:(NSInteger)currentTime totalTime:(NSInteger)totalTime sliderValue:(CGFloat)value {
     ;
 }
-- (void)zl_playerDraggedTime:(NSInteger)draggedTime totalTime:(NSInteger)totalTime isForward:(BOOL)forawrd hasPreview:(BOOL)preview {
+- (void)zl_changeSilderValueWithDraggedTime:(NSInteger)draggedTime totalTime:(NSInteger)totalTime isForward:(BOOL)forawrd hasPreview:(BOOL)preview {
     ;
 }
-- (void)zl_playerDraggedTime:(NSInteger)draggedTime sliderImage:(UIImage *)image {
+- (void)zl_showSilderValueWithDraggedTime:(NSInteger)draggedTime sliderImage:(UIImage *)image {
     ;
 }
 - (void)zl_playerDraggedEnd {

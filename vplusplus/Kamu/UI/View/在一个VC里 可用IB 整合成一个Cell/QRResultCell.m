@@ -10,11 +10,13 @@
 #import "NSString+StringFrame.h"
 #import "ReactiveObjC.h"
 
+#import "AppDelegate.h"
 
-#import "PlaybackViewController.h"
 
 #import "MainViewController.h"
 #import "PlayVideoController.h"
+#import "PlaybackViewController.h"
+
 #import "AddCamsViewController.h"
 #import "NvrSettingsController.h"
 #import "LibraryController.h"
@@ -44,9 +46,14 @@ int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *para
         cloud_device_state_t state = *((cloud_device_state_t *)param);
         dispatch_async(dispatch_get_main_queue(), ^{
             NSLog(@"设备状态改变");
-            [RLM transactionWithBlock:^{
-                d.nvr_status = state;
-            }];
+            
+            
+            
+            [RLM beginWriteTransaction];
+            d.nvr_status = state;
+            [RLM commitWriteTransaction];
+            
+            
             
         });
     }
@@ -93,11 +100,13 @@ int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *para
         
     }
     [self setSelectionStyle:UITableViewCellSelectionStyleNone];
-    [self shadow];
+/// cuz CELL 还没有展示！！ nextResponder = nil!!
+    [self showShadow];
+
     
     return self;
 }
-- (void)shadow {
+- (void)showShadow {
     self.layer.shadowOffset = CGSizeMake(1, 1);  //x 方向向右偏移0  ，y 方向向上偏移5 ，负为向上偏移
     self.layer.shadowOpacity = 0.4f; ///阴影透明度
     self.layer.shadowColor = [UIColor blackColor].CGColor;
@@ -110,20 +119,45 @@ int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *para
 
 #pragma mark - 视图数据源和代理
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
-    return  self.nvrModel.nvr_cams.count < 4 ? 4 : self.nvrModel.nvr_cams.count;
+    
+    
+    
+    if (self.nvrModel.nvr_type == CLOUD_DEVICE_TYPE_IPC) {
+        return 1;
+    }else {
+        
+        if (self.nvrModel.nvr_cams.count < 4) {
+            return  4;
+        }else {
+            [MBProgressHUD showPromptWithText:@"cams num must less than 4!!"];
+            return 0;
+        }
+        
+    }
+    
 }
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
-    NSLog(@"2");
-    //会注册多次，可以不使用 reuseID
-    [self.QRcv registerClass:[VideoCell class] forCellWithReuseIdentifier: [NSString stringWithFormat:@"%@",indexPath]];
-    VideoCell *videoCell = [self.QRcv dequeueReusableCellWithReuseIdentifier:[NSString stringWithFormat:@"%@",indexPath] forIndexPath:indexPath];
+    NSString *reuseID = [NSString stringWithFormat:@"%@",indexPath];
+    [self.QRcv registerClass:[VideoCell class] forCellWithReuseIdentifier:reuseID ];
+    VideoCell *videoCell = [self.QRcv dequeueReusableCellWithReuseIdentifier:reuseID forIndexPath:indexPath];
+    
+    
     if (indexPath.item < self.nvrModel.nvr_cams.count) {
-        [RLM transactionWithBlock:^{
-            videoCell.cam.cam_index = (int)indexPath.item; //update cam_index
-        }];
-   
+
         [videoCell setCam:self.nvrModel.nvr_cams[indexPath.item]];
+        
+        //            RLMRealm *realm = [RLMRealm realmWithConfiguration:RLM.configuration error:nil];
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [RLM beginWriteTransaction];
+            videoCell.cam.cam_index = (int)indexPath.item;
+            [RLM commitWriteTransaction];
+        }) ;
+       
+
+        
+        
     }else {
         [videoCell setCam:nil];
     }
@@ -131,21 +165,12 @@ int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *para
 }
 
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath{
-    //中途会掉线
-    if (_nvrModel.nvr_status == CLOUD_DEVICE_STATE_CONNECTED) {
-        if (indexPath.item < self.nvrModel.nvr_cams.count) {
-            [((AMNavigationController *)self.vc.navigationController) pushViewController:[PlayVideoController new] deviceModel:self.nvrModel camModel:self.nvrModel.nvr_cams[indexPath.row]];
-        } else {
-            [((AMNavigationController *)self.vc.navigationController) pushViewController:[AddCamsViewController new] deviceModel:self.nvrModel camModel:self.nvrModel.nvr_cams[indexPath.row]];
-        }
-    }
-    //    else if (_nvrModel.nvr_status == CLOUD_DEVICE_STATE_UNKNOWN) {
-    //        [MBProgressHUD showPromptWithText:@"正在连接中...请等待"];
-    //    }else {
-    //        [MBProgressHUD showPromptWithText:@"设备已离线，请检查网络"];
-    //        return;
-    //    }
     
+    if (indexPath.item < self.nvrModel.nvr_cams.count) {
+        [self.vc.navigationController pushViewController:[PlayVideoController new] deviceModel:self.nvrModel camModel:self.nvrModel.nvr_cams[indexPath.row]];
+    } else {
+        [self.vc.navigationController pushViewController:[AddCamsViewController new] deviceModel:self.nvrModel camModel:nil];
+    }
 }
 
 
@@ -158,61 +183,116 @@ int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *para
     NSLog(@"======================= 获取到Cams:%d =======================",camsNum);
     if (camsNum) {
         
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+
+            [RLM beginWriteTransaction];
+            [self.nvrModel.nvr_cams removeAllObjects];
+            [RLM commitWriteTransaction];
+        }) ;
+        
+        
         for (NSInteger i = 0; i < camsNum; i++) {
             
             Cam *searchedCam = [Cam new];
             searchedCam.cam_id = [NSString stringWithUTF8String:ipc_info[i].camdid];
-            searchedCam.cam_state = 1;
-
-            Cam *db_cam =  [[self.nvrModel.nvr_cams objectsWhere:[NSString stringWithFormat:@"cam_id = '%@'",searchedCam.cam_id]] firstObject];
-            if (!db_cam) {
-                [RLM transactionWithBlock:^{
-                    [self.nvrModel.nvr_cams addObject:searchedCam]; //if 别人往中继 添加cam？？
-                }];
-            }
-            [RLM transactionWithBlock:^{
-                db_cam.cam_state = 1;
-            }];
-        
+//            Cam *find_db_cam =  [[self.nvrModel.nvr_cams objectsWhere:[NSString stringWithFormat:@"cam_id = '%@'",searchedCam.cam_id]] firstObject];
+//            if (!find_db_cam) {
             
+            dispatch_async(dispatch_get_main_queue(), ^{
+                RLMRealm *realm = [RLMRealm realmWithConfiguration:RLM.configuration error:nil];
+
+                [realm beginWriteTransaction];
+                [self.nvrModel.nvr_cams addObject:searchedCam];
+                [realm commitWriteTransaction];
+            }) ;
+//            }
         }
-        
     }
-//    [self.QRcv reloadData]; //state will trigger nvr_cams notification???  nvr_cams In realm not add and delete
-    
 }
 
+
+- (MainViewController *)vc {
+    return  (MainViewController *)[self getViewController];
+}
+
+///nextResponder -superview ,cell未加载出来，next responder == nil
 - (void)setNvrModel:(Device *)nvrModel {
     
     if (_nvrModel != nvrModel) {
-
+        ///prepare :
         [RLM transactionWithBlock:^{
-            nvrModel.nvr_status = CLOUD_DEVICE_STATE_UNKNOWN; //from db set status unknown！
+//            nvrModel.nvr_status = CLOUD_DEVICE_STATE_UNKNOWN; //from db set status unknown！
             nvrModel.nvr_h = (long)cloud_open_device([nvrModel.nvr_id UTF8String]);
         }];
         _nvrModel = nvrModel;
    
+
+        
         __weak typeof (self) ws = self;
         //add & delete opration can not trigger notification!! cuz its not oberseve self.resluts
         self.device_token = [nvrModel addNotificationBlock:^(BOOL deleted, NSArray<RLMPropertyChange *> * _Nullable changes, NSError * _Nullable error) {
             if (deleted) {
-                NSLog(@"设备已经删除！");
+                [MBProgressHUD showError:@"设备已经删除"];
             }else {
                 for (RLMPropertyChange *property in changes) {
-                    
+
+                    ///1. status changed
                     if ([property.name isEqualToString:@"nvr_status"] ) {
                         NSLog(@"---------------DEVICE CHANGED STATUS:%@ ---------------",property.value);
-                        [[NSNotificationCenter defaultCenter] postNotificationName:@"CLOUD_DEVICE_STATE" object:ws.nvrModel];
                         
+                        UINavigationController *nav = self.vc.navigationController;
+                        UIViewController *visibleController = nav.visibleViewController;
+
                         if ([property.value intValue] == CLOUD_DEVICE_STATE_CONNECTED) {
-                            [ws.maskView setHidden:YES];
-                            [ws upadteCams];
+                           
+
                             
-                        
+//                            AFHTTPSessionManager *m = [(AppDelegate *)   [UIApplication sharedApplication].delegate manager];
+//                            [m.reachabilityManager startMonitoring]; ///when connected  监测 网络状态 改变！！
+                            
+                            
+                            
+                            
+                            [ws upadteCams];
+                            //Home page state
+                            [ws.maskView setHidden:YES];
+                            //playable button state
+                            for (VideoCell *connect_c in self.QRcv.visibleCells) {
+                                [connect_c.playBtn setHidden:NO];
+                            }
+                            //operating state
+                            if ([ws.nvrModel.nvr_id isEqualToString:nav.operatingDevice.nvr_id] && nav.viewControllers.count > 1) {
+                                self.vc.navigationController.operatingDevice = ws.nvrModel;
+                                [MBProgressHUD showStatus:CLOUD_DEVICE_STATE_CONNECTED];
+                                
+                                
+                                
+                                if ([visibleController isKindOfClass:[PlayVideoController class]]) {
+                                    [((PlayVideoController *)visibleController).vp lv_start];
+                                }else if ([visibleController isKindOfClass:[PlaybackViewController class]]) {
+                                    [((PlaybackViewController *)visibleController).vp pb_start];
+                                }
+                                
+                            }
+                            
                         } else {
-                            [ws.maskView setHidden:NO]; //Home page
+                            
+                            
+                            [ws.maskView setHidden:NO];
                             [ws.spinner stopAnimating];
-                     
+                            
+                            for (VideoCell *disconnect_c in self.QRcv.visibleCells) {
+                                [disconnect_c.playBtn setHidden:YES];
+                            }
+                            
+                            if ([ws.nvrModel.nvr_id isEqualToString:nav.operatingDevice.nvr_id] &&  nav.viewControllers.count > 1) {
+                                self.vc.navigationController.operatingDevice = ws.nvrModel;
+                                MBProgressHUD *hud =   [MBProgressHUD showStatus:CLOUD_DEVICE_STATE_DISCONNECTED];
+                                [hud.actionBtn setHidden:NO];
+                                [hud.actionBtn addTarget:self.vc.navigationController action:@selector(reconnect:) forControlEvents:UIControlEventTouchUpInside];
+                            }
+                            
                             if ([property.value intValue] ==  CLOUD_DEVICE_STATE_DISCONNECTED) {
                                 [ws.statusLabel setText:@"DISCONNECTED"];
                             }else if ([property.value intValue] == CLOUD_DEVICE_STATE_AUTHENTICATE_ERR) {
@@ -226,26 +306,14 @@ int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *para
                         }
                     }
                     
+                    
+                    ///2. cams changed
                     else if ([property.name isEqualToString:@"nvr_cams"]) {
-                        
-                        if ([property.value count] > [property.previousValue count]) {
-                            /*
-                             NSMutableSet *moreValue = [NSMutableSet setWithArray:property.value];
-                             NSMutableSet *lessValue = [NSMutableSet setWithArray:property.previousValue];
-                             [moreValue minusSet:lessValue];
-                             Cam *cam = moreValue.anyObject;
-                             */
-                            NSLog(@"XXXXXXXXXXXXXX%@",property.value);
-                            [MBProgressHUD showSuccess:@"cam 已经删除"];     //delete   cam
-                        } else if ([property.value count] < [property.previousValue count]) {
-                            [MBProgressHUD showSuccess:@"cam 已经添加"];   ; //add   cam
-                            NSLog(@"XXXXXXXXXXXXXX%@",property.value);
-                            
-                        }
-                        
                         [self.QRcv reloadData];
                     }
                     
+                    
+                    ///3. name changed
                     else if ([property.name isEqualToString:@"nvr_name"]) {
                         [self.footer.deviceLb setText:property.value];
                     }
@@ -254,8 +322,12 @@ int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *para
             }
         }];
         
+        
+        
+        
+        
+        
         cloud_set_status_callback((void *)nvrModel.nvr_h,my_device_callback,(__bridge void *)nvrModel);
-        cloud_set_event_callback((void *)nvrModel.nvr_h, my_device_callback,(__bridge void *)nvrModel);
         
         RLMThreadSafeReference *deviceRef = [RLMThreadSafeReference
                                              referenceWithThreadConfined:nvrModel];
@@ -271,16 +343,40 @@ int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *para
         });
         
         [self.footer.deviceLb setText:nvrModel.nvr_name];
-        // load defaut data from db
     }
+}
+
+///动态设置每个Item的尺寸大小
+-(CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath{
+    
+    
+    if (self.nvrModel.nvr_type == CLOUD_DEVICE_TYPE_IPC) {
+        return CGSizeMake(AM_SCREEN_WIDTH , 201);
+    }else {
+        return CGSizeMake( (AM_SCREEN_WIDTH - 1) * 0.5, 100);
+    }
+}
+
+///动态设置每行的间距大小
+- (CGFloat)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout minimumLineSpacingForSectionAtIndex:(NSInteger)section {
+
+     return 1.f;
+}
+
+///动态设置每列的间距大小
+- (CGFloat)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout minimumInteritemSpacingForSectionAtIndex:(NSInteger)section {
+    return 1.f;
 }
 
 
 #pragma mark - getter
+
 - (UICollectionViewFlowLayout *)QRflowLayout {
     
     if (!_QRflowLayout) {
         _QRflowLayout = [[UICollectionViewFlowLayout alloc] init];
+        
+        /*
         // _QRflowLayout.estimatedItemSize = CGSizeMake(AM_SCREEN_WIDTH , 200); //预估宽高 ，Cell约束高度宽度
         if (@available(iOS 10.0, *)) {
             _QRflowLayout.itemSize = UICollectionViewFlowLayoutAutomaticSize;
@@ -290,6 +386,8 @@ int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *para
         _QRflowLayout.itemSize = CGSizeMake( (AM_SCREEN_WIDTH - 1) * 0.5, 100);
         _QRflowLayout.minimumInteritemSpacing = 1.f;
         _QRflowLayout.minimumLineSpacing = 1.f;
+         */
+        
         _QRflowLayout.scrollDirection = UICollectionViewScrollDirectionVertical;
         
         
@@ -339,7 +437,7 @@ int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *para
 }
 - (RTSpinKitView *)spinner {
     if (!_spinner) {
-        _spinner = [[RTSpinKitView alloc] initWithStyle:RTSpinKitViewStyleThreeBounce color:[UIColor whiteColor] spinnerSize:25.f];
+        _spinner = [[RTSpinKitView alloc] initWithStyle:RTSpinKitViewStyleThreeBounce color:[UIColor whiteColor] spinnerSize:15.f];
         [_spinner setHidesWhenStopped:YES];
     }
     
@@ -347,32 +445,34 @@ int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *para
    
 }
 
-- (UIViewController *)vc {
-    return [self getViewController];
-}
 
 #pragma mark - getter
 - (DeviceFooter *)footer {
     
     if (!_footer) {
+        
         _footer = [[DeviceFooter alloc] init];
         WeakObj(self);
+        
+        
         _footer.setNvr = ^(DeviceFooter *footer){
             QRootElement *rootForm = [[DataBuilder new] createForNvrSettings:ws.nvrModel]; //创建数据
             NvrSettingsController *nvrSettingsVc = [[NvrSettingsController alloc] initWithRoot:rootForm];
-                 [(AMNavigationController *)ws.vc.navigationController pushViewController:nvrSettingsVc deviceModel:ws.nvrModel camModel:nil];
+            [ws.vc.navigationController pushViewController:nvrSettingsVc deviceModel:ws.nvrModel camModel:nil];
             nvrSettingsVc .deleteNvr = ^{
                 Popup *p = [[Popup alloc] initWithTitle:@"提示" subTitle:@"请确认是否需要删除该设备？" cancelTitle:@"取消" successTitle:@"确认" cancelBlock:nil successBlock:^{
                     [(MainViewController *)ws.vc deleteNvr:[NSIndexPath indexPathForRow:0 inSection:ws.path.section]];
                 }];
-           
+                
                 [p setIncomingTransition:PopupIncomingTransitionTypeFallWithGravity];
                 [p setBackgroundBlurType:PopupBackGroundBlurTypeDark];
                 [p showPopup];
             };
         };
-          _footer.entryMedias = ^(DeviceFooter *footer) {
-              [(AMNavigationController *)ws.vc.navigationController pushViewController:[LibraryController new] deviceModel:ws.nvrModel camModel:nil];
+        
+        
+        _footer.entryMedias = ^(DeviceFooter *footer) {
+            [ws.vc.navigationController pushViewController:[LibraryController new] deviceModel:ws.nvrModel camModel:nil];
         };
     }
     return _footer;

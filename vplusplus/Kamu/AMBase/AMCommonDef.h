@@ -7,6 +7,7 @@
 //
 
 
+
 #pragma mark -
 #pragma mark define
 
@@ -165,6 +166,23 @@
 
 
 
+//#define OP_DEVICE_HANDLE       (self.navigationController.operatingDevice.nvr_h)
+//
+//
+//#define OP_CAM                     (self.navigationController.operatingCam)
+//#define OP_CAM_ID                  (self.navigationController.operatingCam.cam_id)
+//
+//#define OP_DEVICE                  (self.navigationController.operatingDevice)
+//#define OP_DEVICE_STATUS           (self.navigationController.operatingDevice.nvr_status)
+////#define OP_DEVICE_HANDLE           (self.navigationController.operatingDevice.nvr_h)
+//
+//
+//#define OP_MEDIA                   (self.navigationController.operatingMedia)
+
+
+
+
+
 // 颜色值RGB
 #define RGBA(r,g,b,a)                       [UIColor colorWithRed:r/255.0f green:g/255.0f blue:b/255.0f alpha:a]
 // 图片路径
@@ -186,4 +204,5 @@ static CGFloat const kTextFieldH = 40;
 
 
 static CGFloat FunctionbarH = 40;
+
 

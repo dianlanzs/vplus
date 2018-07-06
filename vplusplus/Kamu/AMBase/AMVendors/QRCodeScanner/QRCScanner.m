@@ -33,9 +33,53 @@ static  CGFloat const kTorch_H  = 30;
 @end
 @implementation QRCScanner
 #pragma mark - 初始化
-- (instancetype)initQRCScannerWithView:(UIView *)view{
+
+- (void)addTorchLabel {
+    _torchLb = [[UILabel alloc] initWithFrame:CGRectZero];
+    _torchLb.font = [UIFont systemFontOfSize:12.f];
+    [_torchLb setTextColor:[UIColor lightGrayColor]];
+    _torchLb.textAlignment = NSTextAlignmentCenter;
+    [_torchLb sizeToFit];
+    [self addSubview:_torchLb];
+}
+#pragma mark 添加手电筒功能按钮
+- (void)addLightButton:(CGRect)rect{
+    _lightButton = [[UIButton alloc] init];
+    _lightButton.center = CGPointMake((3 * AM_SCREEN_WIDTH + SCANE_W) * 0.25, AM_SCREEN_HEIGHT * 0.5);
+    _lightButton.bounds = CGRectMake(0.f, 0.f, 25.f, 25.f);
+    _lightButton.contentMode = UIViewContentModeScaleAspectFit;
+    
+    [_lightButton setImage:[UIImage imageNamed:@"button_torch_normal"] forState:UIControlStateNormal];
+    [_lightButton setImage:[UIImage imageNamed:@"button_torch_selected"] forState:UIControlStateSelected];
+    [_lightButton addTarget:self action:@selector(torchSwitch:) forControlEvents:UIControlEventTouchUpInside];
+    [_lightButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    [self addSubview:_lightButton];
+}
+
+//    [self addLightButton:_clearDrawRect];
+//    [self addNoticeInfoLable:_clearDrawRect];
+//    [self addTorchLabel];
+
+
+// TorchLabel 约束：
+//    [_torchLb mas_makeConstraints:^(MASConstraintMaker *make) {
+//        make.centerX.equalTo(self.lightButton);
+//        make.top.equalTo(self.lightButton.mas_bottom).offset(8.f);
+//
+//    }];
+
+
+
+
+
+
+
+- (instancetype)initQRCScannerWithView:(UIView *)view lightButton:(UIButton *)button{
     QRCScanner *qrcView = [[QRCScanner alloc]initWithFrame:view.frame];
     [qrcView initDataWithView:view];
+    
+    [self setLightButton:button];
+
     return qrcView;
 }
 
@@ -47,6 +91,8 @@ static  CGFloat const kTorch_H  = 30;
         _transparentAreaSize = CGSizeMake(SCANE_W, SCANE_H);
         _cornerLineColor = [UIColor redColor];
         _scanningLieColor = [UIColor redColor];
+        
+        
     }
     return self;
 }
@@ -98,14 +144,9 @@ static  CGFloat const kTorch_H  = 30;
 #pragma mark - UI
 #pragma mark 私有方法
 - (void)updateLayout{
-//    CGRect screenRect = self.frame;
-//    CGSize screenSize = screenRect.size;
+
     CGRect screenDrawRect = CGRectMake(0, 0, AM_SCREEN_WIDTH,AM_SCREEN_HEIGHT);
-    
     CGSize transparentArea = _transparentAreaSize;
-    
-    
-    
     //中间清空的矩形框  -64 if no nav translucent
     _clearDrawRect = CGRectMake((screenDrawRect.size.width - transparentArea.width) * 0.5 ,
                                       (screenDrawRect.size.height  - transparentArea.height) * 0.5,
@@ -117,25 +158,6 @@ static  CGFloat const kTorch_H  = 30;
     [self addCornerLineWithContext:ctx rect:_clearDrawRect];
     [self addScanLine:_clearDrawRect];
     
-    
-    
-    
-    
-    
-    
-    
-    [self addLightButton:_clearDrawRect];
-//    [self addNoticeInfoLable:_clearDrawRect];
-    [self addTorchLabel];
-    
-    
-    // TorchLabel 约束：
-    [_torchLb mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.centerX.equalTo(self.lightButton);
-        make.top.equalTo(self.lightButton.mas_bottom).offset(8.f);
-        
-    }];
-    
     if (self.scanLineTimer == nil) {
         
         [self moveUpAndDownLine];
@@ -144,26 +166,6 @@ static  CGFloat const kTorch_H  = 30;
 }
 #pragma mark 添加提示提心Lable
 
-- (void)addTorchLabel {
-    
-//    _torchLb = [[UILabel alloc] initWithFrame:CGRectMake((3 * AM_SCREEN_WIDTH + SCANE_W) * 0.25 - kTorch_H, AM_SCREEN_HEIGHT * 0.5 + kTorch_H, 0, 0)];
-    _torchLb = [[UILabel alloc] initWithFrame:CGRectZero];
-
-//    _torchLb.center = CGPointMake((3 * AM_SCREEN_WIDTH + SCANE_W) * 0.25, AM_SCREEN_HEIGHT * 0.5 + kTorch_H );
-    
- 
-
-//    _torchLb.bounds = CGRectMake(0, 0, 30, 20);
-    _torchLb.font = [UIFont systemFontOfSize:12.f];
-    //默认 电筒按钮是关闭 的 所以 设置默认 标题文字 "打开电筒"
-//    [_torchLb setText:@"打开电筒"];
-    [_torchLb setTextColor:[UIColor lightGrayColor]];
-    //系统默认是 靠左 ，需要设置居中
-    _torchLb.textAlignment = NSTextAlignmentCenter;
-    [_torchLb sizeToFit];
-
-    [self addSubview:_torchLb];
-}
 - (void)addNoticeInfoLable:(CGRect)rect{
     
     _noticeInfoLable = [[UILabel alloc]initWithFrame:CGRectMake(0, (rect.origin.y + rect.size.height+10), self.bounds.size.width, 20)];
@@ -174,35 +176,7 @@ static  CGFloat const kTorch_H  = 30;
      
    
 }
-#pragma mark 添加手电筒功能按钮
-- (void)addLightButton:(CGRect)rect{
-    
-//    _lightButton = [[UIButton alloc] initWithFrame:CGRectMake((3 * AM_SCREEN_WIDTH + SCANE_W) * 0.25 - 20, AM_SCREEN_HEIGHT * 0.5, 40, 40)];
-    
-    _lightButton = [[UIButton alloc] init];
-    _lightButton.center = CGPointMake((3 * AM_SCREEN_WIDTH + SCANE_W) * 0.25, AM_SCREEN_HEIGHT * 0.5);
-    _lightButton.bounds = CGRectMake(0.f, 0.f, 25.f, 25.f);
-    _lightButton.contentMode = UIViewContentModeScaleAspectFit;
-    
-    
-    
 
-    [_lightButton setImage:[UIImage imageNamed:@"button_torch_normal"] forState:UIControlStateNormal];
-    [_lightButton setImage:[UIImage imageNamed:@"button_torch_selected"] forState:UIControlStateSelected];
- 
-    /*
-            [_lightButton setTitleColor:[UIColor whiteColor] forState:UIControlStateSelected];
-            [_lightButton.titleLabel setFont:[UIFont systemFontOfSize:10.f]];
-            [_lightButton setTitle:@"关闭电筒" forState:UIControlStateSelected];
-            [_lightButton setTitle:@"打开电筒" forState:UIControlStateNormal];
-            [_lightButton setTitleColor:[UIColor lightGrayColor] forState:UIControlStateNormal];
-*/
-    
-    [_lightButton addTarget:self action:@selector(torchSwitch:) forControlEvents:UIControlEventTouchUpInside];
-    [_lightButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-//    _isOn = NO;
-    [self addSubview:_lightButton];
-}
 #pragma mark 画背景
 - (void)addScreenFillRect:(CGContextRef)ctx rect:(CGRect)rect {
     CGContextSetRGBFillColor(ctx, 40 / 255.0,40 / 255.0,40 / 255.0,0.5);
@@ -303,19 +277,14 @@ static  CGFloat const kTorch_H  = 30;
 }
 #pragma mark 照明灯切换
 - (void)torchSwitch:(UIButton *)sender {
-    
-    //切换选中 状态 NO --> YES
     sender.selected = !sender.selected;
-    
-    if (sender.selected) {
+//    if (sender.selected) {
 //        [_torchLb setText:@"关闭电筒"];
-        [_torchLb setTextColor:[UIColor whiteColor]];
-    }
-    else{
-        
+//        [_torchLb setTextColor:[UIColor whiteColor]];
+//    }else{
 //        [_torchLb setText:@"开启电筒"];
-        [_torchLb setTextColor:[UIColor lightGrayColor]];
-    }
+//        [_torchLb setTextColor:[UIColor lightGrayColor]];
+//    }
     
     AVCaptureDevice *device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
     NSError *error;
@@ -323,14 +292,12 @@ static  CGFloat const kTorch_H  = 30;
     if (device.hasTorch) {  // 判断设备是否有闪光灯
         BOOL b = [device lockForConfiguration:&error];
         if (!b) {
-            
             if (error) {
                 NSLog(@"lock torch configuration error:%@", error.localizedDescription);
             }
             return;
         }
-        device.torchMode =
-        (device.torchMode == AVCaptureTorchModeOff ? AVCaptureTorchModeOn : AVCaptureTorchModeOff);
+        device.torchMode = (device.torchMode == AVCaptureTorchModeOff ? AVCaptureTorchModeOn : AVCaptureTorchModeOff);
         [device unlockForConfiguration];
     }
 }
@@ -385,13 +352,9 @@ static  CGFloat const kTorch_H  = 30;
 }
 
 #pragma mark - AVCaptureMetadataOutputObjectsDelegate
-- (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputMetadataObjects:(NSArray *)metadataObjects fromConnection:(AVCaptureConnection *)connection
-{
-    
+- (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputMetadataObjects:(NSArray *)metadataObjects fromConnection:(AVCaptureConnection *)connection {
     ///停止，‘不然会不停调用 didScaned 代理方法’  导致内存升高！
-
     [self.session stopRunning];
-    
     //实时预览 相机输出 视图 ，暂时 不移除  。如果关闭 会卡住 不输出 实时画面 ，可用于视频抓图
     [self.preview removeFromSuperlayer];
     

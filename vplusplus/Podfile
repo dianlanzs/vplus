@@ -17,6 +17,7 @@ pod 'SDWebImage', '~> 4.2'
 pod 'Realm', '~> 3.0'
 pod 'MGSwipeTableCell'
 pod 'JPush', '3.0.2'
+pod 'MJRefresh','~>3.1'
 #pod 'ZFPlayer'
 
 end

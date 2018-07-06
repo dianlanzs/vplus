@@ -75,7 +75,7 @@
     QSection *section = [_tableView.root getVisibleSectionForIndex:index];
     return [_tableView.root.appearance heightForFooterInSection:section andTableView:_tableView andIndex:index];
 }
-
+///zhoulei mark
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
     QSection *section = [_tableView.root getVisibleSectionForIndex:indexPath.section];
     QElement *element = [section getVisibleElementForIndex: indexPath.row];
