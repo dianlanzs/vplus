@@ -12,7 +12,7 @@
 
 @property (nonatomic, assign) SEL selector;
 @property (nonatomic, copy) NSString *navTitle;
-@property (nonatomic, strong) RLMResults<Device *> *results;
+@property (nonatomic, strong) RLMArray<Device *> *devices;
 
 
 

@@ -96,6 +96,10 @@
 
 #pragma mark - 视图生命周期
 
+
+
+
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     [self.navigationBar setTranslucent:NO];
@@ -105,6 +109,7 @@
         //重新签代理
 //        self.interactivePopGestureRecognizer.delegate = weakSelf;
         self.interactivePopGestureRecognizer.enabled = NO;
+//        self.interactivePopGestureRecognizer.delaysTouchesBegan = NO; YES for Prevent
     }
     
 
@@ -203,7 +208,7 @@
         NSString *cid =  [extras valueForKey:@"cid"];
         NSString *file =  [extras valueForKey:@"file"];
 */
-    Device *find_db_device =  [[self.results objectsWhere:[NSString stringWithFormat:@"nvr_id = '%@'",did]] firstObject];
+    Device *find_db_device =  [[self.devices objectsWhere:[NSString stringWithFormat:@"nvr_id = '%@'",did]] firstObject];
     Cam  *find_db_cam =  [[find_db_device.nvr_cams objectsWhere:[NSString stringWithFormat:@"cam_id = '%@'",cid]] firstObject];
     
     if ([jumpIdx isEqualToString:@"1"]) {
@@ -310,13 +315,14 @@
     
     if (!_appDelegate) {
         _appDelegate =  (AppDelegate *)[UIApplication sharedApplication].delegate;
+        
     }
     return _appDelegate;
 }
 
 
-- (RLMResults<Device *> *)results {
-    return [Device allObjects];
+- (RLMArray<Device *> *)devices {
+    return USER.user_devices;
 }
 
 

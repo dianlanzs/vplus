@@ -23,6 +23,8 @@
     QPresentationMode _presentationMode;
 }
 
+///这行代码会创造一个带下划线前缀的实例变量名，同时使用这个属性生成getter 和 setter 方法。使用@synthesize 只有一个目的——给实例变量起个别名，或者说为同一个变量添加两个名字。
+
 
 @synthesize title = _title;
 @synthesize sections = _sections;
@@ -127,8 +129,11 @@
 - (UITableViewCell *)getCellForTableView:(QuickDialogTableView *)tableView controller:(QuickDialogController *)controller {
     UITableViewCell *cell = [super getCellForTableView:tableView controller:controller];
     cell.selectionStyle = UITableViewCellSelectionStyleBlue;
-    if (_title!= nil)
+    if (_title!= nil) {
         cell.textLabel.text = [NSString stringWithFormat:@"%@", _title];
+        cell.accessoryType = (self.sections!= nil) ; ///zhoulei modify
+    }
+
     return cell;
 }
 

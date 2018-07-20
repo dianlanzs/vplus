@@ -6,25 +6,25 @@
 //  Copyright © 2018年 com.Kamu.cme. All rights reserved.
 //
 
-#import <AFNetworking/AFNetworking.h>
+//#import <AFNetworking/AFNetworking.h>
 
 
 @protocol NetWorkToolsProtcol <NSObject>
 
 @optional
-- (NSURLSessionDataTask *)dataTaskWithHTTPMethod:(NSString *)method
-                                       URLString:(NSString *)URLString
-                                      parameters:(id)parameters
-                                  uploadProgress:(nullable void (^)(NSProgress *uploadProgress)) uploadProgress
-                                downloadProgress:(nullable void (^)(NSProgress *downloadProgress)) downloadProgress
-                                         success:(void (^)(NSURLSessionDataTask *, id))success
-                                         failure:(void (^)(NSURLSessionDataTask *, NSError *))failure;
+- (NSURLSessionDataTask *_Nullable)dataTaskWithHTTPMethod:(NSString *_Nullable)method
+                                                URLString:(NSString *_Nullable)URLString
+                                               parameters:(id _Nullable )parameters
+                                           uploadProgress:(nullable void (^)(NSProgress * _Nullable uploadProgress)) uploadProgress
+                                         downloadProgress:(nullable void (^)(NSProgress * _Nullable downloadProgress)) downloadProgress
+                                                  success:(void (^_Nullable)(NSURLSessionDataTask *_Nullable, id _Nullable ))success
+                                                  failure:(void (^_Nullable)(NSURLSessionDataTask *_Nullable, NSError *_Nullable))failure;
 @end
 
 
 
 @interface AMRequestManager : AFHTTPSessionManager <NetWorkToolsProtcol>
 
-+ (instancetype)defaultManager;
++ (instancetype _Nullable )defaultManager;
 
 @end

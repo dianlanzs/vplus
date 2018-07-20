@@ -77,16 +77,17 @@
     return _speakerBtn_vertical;
 }
 - (void)setActionForSpeaker:(UIButton *)sender {
-    [sender addTarget:self action:@selector(recordStart:) forControlEvents:UIControlEventTouchDown];
-    [sender addTarget:self action:@selector(recordEnd:) forControlEvents:UIControlEventTouchUpInside];
-    [sender addTarget:self action:@selector(recordCancel:) forControlEvents:UIControlEventTouchDragOutside];  ///canceled when tochUp outside //UIControlEventTouchUpOutside
+//      [sender addTarget:self action:@selector(recordStart:) forControlEvents:UIControlEventTouchUpInside];
+    [sender addTarget:self action:@selector(recordStart:) forControlEvents:UIControlEventTouchDown]; ///按下后就触发
+//    [sender addTarget:self action:@selector(recordEnd:) forControlEvents:UIControlEventTouchUpInside];///按下后抬起触发
+    [sender addTarget:self action:@selector(recordCancel:) forControlEvents:UIControlEventTouchDragOutside | UIControlEventTouchUpInside];  ///canceled when tochUp outside //UIControlEventTouchUpOutside
 }
 - (void)recordStart:(UIButton *)sender{
     [self.delegate recordStart:sender];
 }
-- (void)recordEnd:(UIButton *)sender {
-    [self.delegate recordEnd:sender];
-}
+//- (void)recordEnd:(UIButton *)sender {
+//    [self.delegate recordEnd:sender];
+//}
 - (void)recordCancel:(UIButton *)sender {
     [self.delegate recordCancel:sender];
 }

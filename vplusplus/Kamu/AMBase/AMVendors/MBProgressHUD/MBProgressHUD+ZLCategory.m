@@ -25,6 +25,21 @@
 //    hud.frame = CGRectMake(0, 0, AM_SCREEN_WIDTH, 64);
 //}
 #pragma mark - 纯文本提示框
+
+///top prompt
++ (void)showTopPromptWithText:(NSString *)text inView:(UIView *)view {
+    [MBProgressHUD hideHUD];
+    if (view == nil) view = [[UIApplication sharedApplication] keyWindow];
+    MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:view animated:YES];
+    hud.mode = MBProgressHUDModeText;
+    hud.label.text = NSLocalizedString(text, @"HUD message title");
+    hud.offset = CGPointMake(0.f, -1000);
+    [hud hideAnimated:YES afterDelay:1.f];
+}
+
+
+
+///bottom prompt
 + (void)showPromptWithText:(NSString *)text inView:(UIView *)view {
     [MBProgressHUD hideHUD];
     if (view == nil) view = [[UIApplication sharedApplication] keyWindow];
@@ -38,6 +53,21 @@
 + (void)showPromptWithText:(NSString *)text {
     [MBProgressHUD showPromptWithText:(NSString *)text inView:nil];
 }
++ (void)showTopPromptWithText:(NSString *)text {
+    [MBProgressHUD showTopPromptWithText:(NSString *)text inView:nil];
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #pragma mark - 自定义视图
@@ -163,7 +193,7 @@
 
             hud.actionBtn = [UIButton buttonWithType:UIButtonTypeCustom];
             [self setButton:hud.actionBtn  title:@"重连"];
-            [hud.actionBtn addTarget:[(RDVTabBarController *)root_vc selectedViewController] action:@selector(reconnect:) forControlEvents:UIControlEventTouchUpInside];
+            [hud.actionBtn addTarget:[(MMDrawerController *)root_vc centerViewController] action:@selector(reconnect:) forControlEvents:UIControlEventTouchUpInside];
             [stateView addSubview:hud.actionBtn];
             
             

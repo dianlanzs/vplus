@@ -9,7 +9,6 @@
 #import "AMRequestManager.h"
 
 
-
 @interface AMRequestManager () 
 
 @end
@@ -25,61 +24,74 @@
         
         //一个App通常访问的服务器是固定的注意： 末尾需要包含 ‘/’
         
-        NSURL *url =[NSURL URLWithString:@"http://push.iotcplatform.com/"];
+//        NSURL *url =[NSURL URLWithString:@"http://push.iotcplatform.com/"];
+        NSURL *url =[NSURL URLWithString:@"https://cloud.ygtek.cn:8443"];
         //        sharedInstance = (AMRequestManager *)[AFHTTPSessionManager manager];
         sharedInstance =[[self alloc] initWithBaseURL:url];  //只初始化一次父类配置
         
         
         
-        //默认提交请求的数据是二进制的,返回格式是JSON,  如果提交数据是JSON的,需要将请求格式设置为AFJSONRequestSerializer
-        sharedInstance.requestSerializer = [AFJSONRequestSerializer serializer];
+        //默认提交请求的数据是二进制(http URL email = dianlanzs@163.com & password = 123)的,返回格式是JSON,  如果提交数据是JSON的,需要将请求格式设置为AFJSONRequestSerializer
+        sharedInstance.requestSerializer = [AFJSONRequestSerializer serializer];  /// JSON body {email:dianlanzs@163.com ,passwoard:123 }
         
-        // AFHTTPResponseSerializer就是正常的HTTP请求响应结果: NSData
+        ///http body http URL  = email = dianlanzs@163.com & password = 123
+//        sharedInstance.requestSerializer = [AFHTTPRequestSerializer serializer];
+        /// AFHTTPResponseSerializer就是正常的HTTP请求响应结果: NSData  bytes
         // 当请求的返回数据不是JSON,XML,PList,UIImage之外,使用AFHTTPResponseSerializer
         // 例如返回一个html,text...实际上就是AFN没有对响应数据做任何处理的情况
-        sharedInstance.responseSerializer = [AFHTTPResponseSerializer serializer];//申明返回的结果是json类型
-        sharedInstance.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"application/json",
-                                                                    @"text/json",
-                                                                    @"text/javascript",
-                                                                    @"text/html", nil];
+        
+  
+        
+
+        
+        ///zhoulei modify  AFHTTPResponseSerializer - > AFJSONResponseSerializer！！
+        sharedInstance.responseSerializer = [AFHTTPResponseSerializer serializer];//AFHTTPResponseSerializer申明返回的结果是 data 二进制 类型
+
+//        sharedInstance.responseSerializer = [AFJSONResponseSerializer serializer];//AFHTTPResponseSerializer申明返回的结果是json string类型
+        sharedInstance.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"application/json",@"text/json", @"text/javascript", @"text/html", @"text/plain", nil];
         
         
+//        sharedInstance.securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModePublicKey];
         
-        
+        ///---------------------------- 忽略证书 ----------------------------
+        sharedInstance.securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeNone];
+        sharedInstance.securityPolicy.allowInvalidCertificates = YES;
+        [sharedInstance.securityPolicy setValidatesDomainName:NO];
+      
         
         //================= 检测网络状况 =====================
-        AFNetworkReachabilityManager *manager = [AFNetworkReachabilityManager sharedManager];
-       
-        [manager setReachabilityStatusChangeBlock:^(AFNetworkReachabilityStatus status) {
-            switch (status) {
-                case AFNetworkReachabilityStatusUnknown:
-                    NSLog(@"未知网络");
-                    break;
-                    
-                case AFNetworkReachabilityStatusNotReachable:
-                    NSLog(@"无法联网");
-                    //                    [AMAlertWindow alert:@"" message:LS(@"NoNetwork") confirm:LS(@"ISeeConfirm") action:nil];
-                    [MBProgressHUD showError:@"NoNetWork"];
-                    break;
-                    
-                case AFNetworkReachabilityStatusReachableViaWiFi:
-                    NSLog(@"WiFi");
-                    break;
-                    
-                case AFNetworkReachabilityStatusReachableViaWWAN:
-                    NSLog(@"蜂窝网络");
-                    break;
-                    
-                default:
-                    break;
-            }
-        }];
-        
-        
-        
-         [manager startMonitoring];
-        
-        
+//        AFNetworkReachabilityManager *manager = [AFNetworkReachabilityManager sharedManager];
+//
+//        [manager setReachabilityStatusChangeBlock:^(AFNetworkReachabilityStatus status) {
+//            switch (status) {
+//                case AFNetworkReachabilityStatusUnknown:
+//                    NSLog(@"未知网络");
+//                    break;
+//
+//                case AFNetworkReachabilityStatusNotReachable:
+//                    NSLog(@"无法联网");
+//                    //                    [AMAlertWindow alert:@"" message:LS(@"NoNetwork") confirm:LS(@"ISeeConfirm") action:nil];
+//                    [MBProgressHUD showError:@"NoNetWork"];
+//                    break;
+//
+//                case AFNetworkReachabilityStatusReachableViaWiFi:
+//                    NSLog(@"WiFi");
+//                    break;
+//
+//                case AFNetworkReachabilityStatusReachableViaWWAN:
+//                    NSLog(@"蜂窝网络");
+//                    break;
+//
+//                default:
+//                    break;
+//            }
+//        }];
+//
+//
+//
+//         [manager startMonitoring];
+//
+//
     });
     
     return sharedInstance;

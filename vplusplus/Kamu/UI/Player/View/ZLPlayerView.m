@@ -46,7 +46,7 @@ typedef NS_ENUM(NSInteger, PanDirection){
 };
 
 
-@interface ZLPlayerView () <UIGestureRecognizerDelegate,UIAlertViewDelegate,ZLNvrDelegate,PlayerControlDelegate,ASValueTrackingSliderDataSource>
+@interface ZLPlayerView () <UIGestureRecognizerDelegate,UIAlertViewDelegate,PlayerControlDelegate,ASValueTrackingSliderDataSource>
 
 @property (nonatomic, assign) CGFloat                sliderLastValue;
 
@@ -128,8 +128,6 @@ typedef NS_ENUM(NSInteger, PanDirection){
             else if (self.chekingFlag == 0 && OP_DEVICE_STATUS == CLOUD_DEVICE_STATE_DISCONNECTED) {
                 [self.functionControl setState:ZLPlayerStateFailed];
             }
-            
-         
         });
     }
   
@@ -322,7 +320,9 @@ typedef NS_ENUM(NSInteger, PanDirection){
     [self.glvc setPaused:NO];
     
     cloud_set_event_callback((void *)OP_DEVICE_HANDLE, device_event_callback_camInfo,(__bridge void *)self);
+    cloud_set_data_callback((void *)OP_DEVICE_HANDLE, device_data_callback, (__bridge void *)self);
 
+    NSLog(@"%lu,%@",self.vc.navigationController.operatingDevice.nvr_h,self.vc.navigationController.operatingCam.cam_id);
     
     
     cloud_device_play_video((void *)OP_DEVICE_HANDLE,[OP_CAM_ID UTF8String]);
@@ -345,7 +345,7 @@ typedef NS_ENUM(NSInteger, PanDirection){
 }
 
 - (void)pb_start {
-    
+    cloud_set_data_callback((void *)OP_DEVICE_HANDLE, device_data_callback, (__bridge void *)self);
     [self.glvc setPaused:NO];
     [OP_DEVICE setAvDelegate:self];
     cloud_device_cam_pb_play_file((void *)OP_DEVICE_HANDLE,[OP_CAM_ID UTF8String], [OP_MEDIA.fileName UTF8String]);
@@ -706,6 +706,8 @@ int device_event_callback_camInfo(cloud_device_handle handle,CLOUD_CB_TYPE type,
         device_camera_info_t *info = (device_camera_info_t *)param;
         
         dispatch_sync(dispatch_get_main_queue(), ^{
+            
+         
             [cs.funcBar setBatteryProgress:info -> batttery];
             [cs.funcBar setWifiProgress:info -> wifi];
             [RLM transactionWithBlock:^{

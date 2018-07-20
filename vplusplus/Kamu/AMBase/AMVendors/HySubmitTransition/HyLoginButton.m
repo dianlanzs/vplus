@@ -18,29 +18,43 @@
 
 @property (nonatomic, strong) HyAnimationCompletion animationCompletion;
 
-@property (nonatomic, strong) UIColor *color;
+@property (nonatomic, strong) UIColor *buttonColor;
 
 
 @end
 
 @implementation HyLoginButton
 
--(instancetype) initWithFrame:(CGRect)frame {
-    self = [super initWithFrame:frame];
-    if (self) {
-        _spinerLayer = [[HySpinerLayer alloc] initWithFrame:self.frame];
-        _shrinkCurve = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear];
-        _expandCurve = [CAMediaTimingFunction functionWithControlPoints:0.95 :0.02 :1 :0.05];
-        self.shrinkDuration = 0.1;
-        [self.layer addSublayer:_spinerLayer];
-        [self setup];
+//-(instancetype)initWithFrame:(CGRect)frame {
+- (instancetype)initWithHeight:(CGFloat)h {
+
+//    self = [super initWithFrame:frame];
+    
+        if (self = [super init]) {
+//        _spinerLayer = [[HySpinerLayer alloc] initWithFrame:self.frame];
+            [self setButton_h:h];
+            [self setup];
     }
     return self;
+       
 }
 
--(void)setup {
-    self.layer.cornerRadius = CGRectGetHeight(self.bounds) / 2;
-    self.clipsToBounds = true;
+- (void)awakeFromNib {
+    [super awakeFromNib];
+    [self setup];
+}
+
+-(void)setup{
+
+    _spinerLayer = [HySpinerLayer spinnerLayerWithHeight:self.button_h];
+    _shrinkCurve = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear];
+    _expandCurve = [CAMediaTimingFunction functionWithControlPoints:0.95 :0.02 :1 :0.05];
+    self.shrinkDuration = 0.1;
+    [self.layer addSublayer:_spinerLayer];
+    
+    
+    self.layer.cornerRadius = self.button_h / 2;
+    self.clipsToBounds = YES;
     [self addTarget:self action:@selector(scaleToSmall)
    forControlEvents:UIControlEventTouchDown | UIControlEventTouchDragEnter];
     
@@ -48,8 +62,7 @@
 //   forControlEvents:UIControlEventTouchUpInside];
 
     
-    [self addTarget:self action:@selector(scaleToDefault)
-   forControlEvents:UIControlEventTouchDragExit];
+    [self addTarget:self action:@selector(scaleToDefault) forControlEvents:UIControlEventTouchDragExit];
 }
 
 - (void)scaleToSmall {
@@ -121,7 +134,7 @@
     shrinkAnim.timingFunction = _shrinkCurve;
     shrinkAnim.fillMode = kCAFillModeForwards;
     shrinkAnim.removedOnCompletion = false;
-    _color = self.backgroundColor;
+    _buttonColor = self.backgroundColor;
     
     CABasicAnimation *backgroundColor = [CABasicAnimation animationWithKeyPath:@"backgroundColor"];
 //    backgroundColor.toValue  = (__bridge id)[UIColor redColor].CGColor;
@@ -166,10 +179,10 @@
     expandAnim.fromValue = @(1.0);
     expandAnim.toValue = @(33.0);
     expandAnim.timingFunction = _expandCurve;
-    expandAnim.duration = 0.3;
+    expandAnim.duration = 0.2;
     expandAnim.delegate = self;
     expandAnim.fillMode = kCAFillModeForwards;
-    expandAnim.removedOnCompletion = false;
+    expandAnim.removedOnCompletion = true;
     [self.layer addAnimation:expandAnim forKey:expandAnim.keyPath];
     [_spinerLayer stopAnimation];
 }

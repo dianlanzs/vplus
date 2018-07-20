@@ -11,24 +11,30 @@
 
 @implementation HySpinerLayer
 
--(instancetype)initWithFrame:(CGRect)frame {
-    self = [super init];
-    if (self) {
-        CGFloat radius = CGRectGetHeight(frame) / 4;
-        self.frame = CGRectMake(0, 0, CGRectGetHeight(frame), CGRectGetHeight(frame));
-        CGPoint center = CGPointMake(CGRectGetHeight(frame) / 2, CGRectGetMidY(self.bounds));
+
+//-(instancetype)initWithFrame:(CGRect)frame {
++(instancetype)spinnerLayerWithHeight:(CGFloat)button_h {
+
+//    self = [super init];
+//    if (self) {
+    
+        HySpinerLayer *shapeLayer = [HySpinerLayer new];
+        CGFloat radius = button_h / 4;
+        shapeLayer.frame = CGRectMake(0, 0, button_h, button_h);
+        CGPoint center = CGPointMake(button_h/ 2, button_h / 2);
+//        CGRectGetHeight(frame)//CGRectGetMidY(self.bounds)
         CGFloat startAngle = 0 - M_PI_2;
         CGFloat endAngle = M_PI * 2 - M_PI_2;
         BOOL clockwise = true;
-        self.path = [UIBezierPath bezierPathWithArcCenter:center radius:radius startAngle:startAngle endAngle:endAngle clockwise:clockwise].CGPath;
-        self.fillColor = nil;
-        self.strokeColor = [UIColor whiteColor].CGColor;
-        self.lineWidth = 1;
+        shapeLayer.path = [UIBezierPath bezierPathWithArcCenter:center radius:radius startAngle:startAngle endAngle:endAngle clockwise:clockwise].CGPath;
+        shapeLayer.fillColor = nil;
+        shapeLayer.strokeColor = [UIColor whiteColor].CGColor;
+        shapeLayer.lineWidth = 1;
         
-        self.strokeEnd = 0.4;
-        self.hidden = true;
-    }
-    return self;
+        shapeLayer.strokeEnd = 0.4;
+        shapeLayer.hidden = true;
+//    }
+    return shapeLayer;
 }
 
 -(void)beginAnimation {

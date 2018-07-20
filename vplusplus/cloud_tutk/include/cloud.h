@@ -299,6 +299,7 @@ int cloud_device_cam_set_cfg(cloud_device_handle handle,const char* cam_did, dev
 int cloud_device_cam_get_cfg(cloud_device_handle handle,const char* cam_did);
 
 int cloud_notify_network_changed(void);
+int cloud_notify_network_changed_block(void);
 
 #ifdef __cplusplus
 }

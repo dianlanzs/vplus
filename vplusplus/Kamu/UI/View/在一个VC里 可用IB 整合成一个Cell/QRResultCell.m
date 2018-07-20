@@ -46,15 +46,9 @@ int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *para
         cloud_device_state_t state = *((cloud_device_state_t *)param);
         dispatch_async(dispatch_get_main_queue(), ^{
             NSLog(@"设备状态改变");
-            
-            
-            
             [RLM beginWriteTransaction];
             d.nvr_status = state;
             [RLM commitWriteTransaction];
-            
-            
-            
         });
     }
 
@@ -146,9 +140,6 @@ int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *para
     if (indexPath.item < self.nvrModel.nvr_cams.count) {
 
         [videoCell setCam:self.nvrModel.nvr_cams[indexPath.item]];
-        
-        //            RLMRealm *realm = [RLMRealm realmWithConfiguration:RLM.configuration error:nil];
-
         dispatch_async(dispatch_get_main_queue(), ^{
             [RLM beginWriteTransaction];
             videoCell.cam.cam_index = (int)indexPath.item;
@@ -185,7 +176,6 @@ int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *para
         
         
         dispatch_async(dispatch_get_main_queue(), ^{
-
             [RLM beginWriteTransaction];
             [self.nvrModel.nvr_cams removeAllObjects];
             [RLM commitWriteTransaction];
@@ -220,9 +210,8 @@ int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *para
 - (void)setNvrModel:(Device *)nvrModel {
     
     if (_nvrModel != nvrModel) {
-        ///prepare :
+        ///db prepare :
         [RLM transactionWithBlock:^{
-//            nvrModel.nvr_status = CLOUD_DEVICE_STATE_UNKNOWN; //from db set status unknown！
             nvrModel.nvr_h = (long)cloud_open_device([nvrModel.nvr_id UTF8String]);
         }];
         _nvrModel = nvrModel;
@@ -245,15 +234,6 @@ int my_device_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *para
                         UIViewController *visibleController = nav.visibleViewController;
 
                         if ([property.value intValue] == CLOUD_DEVICE_STATE_CONNECTED) {
-                           
-
-                            
-//                            AFHTTPSessionManager *m = [(AppDelegate *)   [UIApplication sharedApplication].delegate manager];
-//                            [m.reachabilityManager startMonitoring]; ///when connected  监测 网络状态 改变！！
-                            
-                            
-                            
-                            
                             [ws upadteCams];
                             //Home page state
                             [ws.maskView setHidden:YES];

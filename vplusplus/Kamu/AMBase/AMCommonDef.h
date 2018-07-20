@@ -8,6 +8,7 @@
 
 
 
+
 #pragma mark -
 #pragma mark define
 
@@ -156,6 +157,12 @@
 #define RLM_R_CAM(cam_id) [[Cam objectsWhere:[NSString stringWithFormat:@"cam_id = '%@'",cam_id]] firstObject];
 #define RLM_R_NVR(nvr_id) [[Device objectsWhere:[NSString stringWithFormat:@"nvr_id = '%@'",nvr_id]] firstObject];
 #define RLM_R_NVR_STATUS(nvr_status) [Device objectsWhere:[NSString stringWithFormat:@"nvr_status = %d",nvr_status]] ;
+
+#define USER [(AppDelegate  *)[UIApplication sharedApplication].delegate user]
+#define APP_DELEGATE (AppDelegate  *)[UIApplication sharedApplication].delegate
+
+
+//#define RLM_R_USER(user_id) [[User objectsWhere:[NSString stringWithFormat:@"user_id = '%d'",user_id]] firstObject];
 
 
 //#define WS(weakSelf)  __weak __typeof(&*self)weakSelf = self;

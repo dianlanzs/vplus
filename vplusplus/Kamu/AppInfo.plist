@@ -79,5 +79,7 @@
 	</array>
 	<key>View controller-based status bar appearance</key>
 	<false/>
+	<key>UIStatusBarStyle</key>
+	<string>UIStatusBarStyleLightContent</string>
 </dict>
 </plist>

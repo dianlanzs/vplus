@@ -15,7 +15,6 @@
 
 #import <Foundation/Foundation.h>
 #import "QuickDialogEntryElementDelegate.h"
-
 @class QRootElement;
 
 
@@ -31,4 +30,6 @@
 
 - (QRootElement *)createForCamSettings:(Cam *)cam;
 - (QRootElement *)createForNvrSettings:(Device *)device;
+- (QRootElement *)createForUserSettings:(User *)user;
+
 @end

@@ -12,7 +12,7 @@
 
 @property (nonatomic, strong) UIView *batteryView;
 @property (nonatomic, strong) UILabel *batteryLabel;
-
+@property (nonatomic, strong) UIImageView *lightingLogo;
 @property (nonatomic, strong) UIView *wifi;
 
 

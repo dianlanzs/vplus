@@ -15,7 +15,15 @@
         //create use elm's controllerName first ,if none ,then use default!
         [self.navigationController pushViewController:newController animated:YES];
     } else {
-        [self presentViewController:[[UINavigationController alloc] initWithRootViewController:newController] animated:YES completion:nil];
+        
+        AMNavigationController *navigationController = [[AMNavigationController alloc] initWithRootViewController :newController];
+        //        newController.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:self action:@selector(dismissModalViewController)];
+        //
+        newController.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"nav_close"] style:UIBarButtonItemStylePlain target:self action:@selector(dismissModalViewController)];
+        navigationController.modalPresentationStyle = UIModalPresentationFormSheet;
+        [self presentViewController:navigationController animated:YES completion:nil];
+        ///zhoulei modify
+//        [self presentViewController:[[UINavigationController alloc] initWithRootViewController:newController] animated:YES completion:nil];
     }
 }
 
@@ -33,12 +41,17 @@
     
     ///MARK:创建 'NavigationController'
     else if (mode == QPresentationModeModalForm) {
-        UINavigationController *navigation = [[UINavigationController alloc] initWithRootViewController :newController];
+        AMNavigationController *navigationController = [[AMNavigationController alloc] initWithRootViewController :newController];
+        
+        
+        ///zhoulei modify 
 //        newController.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:self action:@selector(dismissModalViewController)];
 //
         newController.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"nav_close"] style:UIBarButtonItemStylePlain target:self action:@selector(dismissModalViewController)];
-        navigation.modalPresentationStyle = UIModalPresentationFormSheet;
-        [self presentModalViewController:navigation animated:YES];
+        navigationController.modalPresentationStyle = UIModalPresentationFormSheet;
+        [self presentViewController:navigationController animated:YES completion:nil];
+        
+        
     }
     
     else if (mode == QPresentationModeModalFullScreen) {

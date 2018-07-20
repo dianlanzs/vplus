@@ -31,7 +31,6 @@
     [self vp]; //config vp UI
     if (self.navigationController.operatingDevice.nvr_status == CLOUD_DEVICE_STATE_CONNECTED) {
         [self.vp pb_start];
-        cloud_set_data_callback((void *)self.navigationController.operatingDevice.nvr_h, device_data_callback, (__bridge void *)self.vp);
     }
 }
 

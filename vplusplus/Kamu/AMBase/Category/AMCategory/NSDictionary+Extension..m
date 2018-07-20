@@ -29,7 +29,7 @@
     if ([number isKindOfClass:[NSNull class]]) {
         return [NSNumber numberWithInteger:0];
     } else if ([number isKindOfClass:[NSString class]]) {
-        return [NSNumber numberWithDouble:[number doubleValue]];
+        return [NSNumber numberWithDouble:[number doubleValue]];///inteager  == long!!
     }
     return number;
 }

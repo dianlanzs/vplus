@@ -88,6 +88,11 @@ typedef enum
     IOTYPE_USER_DEVICE_GETCAMS                  = 0x0103,
 	IOTYPE_USER_DEVICE_PROBECAM 				= 0x0104,
 
+	IOTYPE_USER_DEVICE_ADDCAM_RESP 				= 0x0121,
+	IOTYPE_USER_DEVICE_DELCAM_RESP 				= 0x0122,
+    IOTYPE_USER_DEVICE_GETCAMS_RESP             = 0x0123,
+	IOTYPE_USER_DEVICE_PROBECAM_RESP 			= 0x0124,
+
     IOTYPE_USER_DEVICE_GET_CAMINFO_REQ	        = 0x0105,
     IOTYPE_USER_DEVICE_GET_CAMINFO_RESP	        = 0x0106,
     IOTYPE_USER_DEVICE_GET_CAMCFG_REQ	        = 0x0107,
@@ -1120,10 +1125,20 @@ typedef struct
 	char szAppKey[128];                  // App Key (reserved)
 	char szSecret[128];                  // Secret  (reserved)
 }SMsgAVIoctrlSetDropbox;
+/*
+    IOTYPE_USER_DEVICE_GETCAMS                  = 0x0103,
+	IOTYPE_USER_DEVICE_PROBECAM 				= 0x0104,
+
+    param: NULL,size 0
+ */
+
 
 /*
 	IOTYPE_USER_DEVICE_ADDCAM 					= 0x0101,
 	IOTYPE_USER_DEVICE_DELCAM 					= 0x0102,
+	IOTYPE_USER_DEVICE_PROBECAM_RESP 			= 0x0124,
+    IOTYPE_USER_DEVICE_GET_CAMINFO_REQ	        = 0x0105,
+    IOTYPE_USER_DEVICE_GET_CAMCFG_REQ	        = 0x0107,
  */
 typedef struct
 {
@@ -1133,7 +1148,7 @@ typedef struct
 } SMsgAVIoctrlCamera;
 
 /*
-	IOTYPE_USER_DEVICE_GETCAMS 					= 0x0103,
+    IOTYPE_USER_DEVICE_GETCAMS_RESP             = 0x0123,
  */
 typedef struct
 {
@@ -1142,6 +1157,7 @@ typedef struct
 	char szCameraID[8][64];
 	unsigned char reserved[4];
 } SMsgAVIoctrlCameraS;
+
 /*
 	IOTYPE_USER_IPCAM_SENDUSERDATA 					= 0x0110,
  */
@@ -1153,7 +1169,7 @@ typedef struct
 } SMsgAVIoctrlUserData;
 
 /*
-	IOTYPE_USER_DEV_CAMINFO
+    IOTYPE_USER_DEVICE_GET_CAMINFO_RESP	        = 0x0106,
  */
 typedef struct
 {
@@ -1165,7 +1181,8 @@ typedef struct
 } SMsgAVIoctrlCamInfo;
 
 /*
-	IOTYPE_USER_DEV_CAMCFG
+    IOTYPE_USER_DEVICE_GET_CAMCFG_RESP	        = 0x0108,
+    IOTYPE_USER_DEVICE_SET_CAMCFG_REQ	        = 0x0109,
  */
 typedef struct
 {
@@ -1201,8 +1218,11 @@ typedef struct
 	unsigned char *event;		// The first memory address of the events in this package
 }SMsgAVIoctrlListYGEventResp;
 
+
 /*
-IOTYPE_USER_DEVICE_SET_CAMCFG_RESP
+	IOTYPE_USER_DEVICE_ADDCAM_RESP 				= 0x0121,
+	IOTYPE_USER_DEVICE_DELCAM_RESP 				= 0x0122,
+    IOTYPE_USER_DEVICE_SET_CAMCFG_RESP	        = 0x010A,
 */
 typedef struct
 {
@@ -1210,20 +1230,6 @@ typedef struct
 	int result;
 	unsigned char reserved[4];
 }SMsgAVIoctrlCamResp;
-#if 0
-/*
-IOTYPE_USER_DEVICE_INFO_RESP			= 0x0110,
-** @struct SMsgAVIoctrlDeviceInfo
-*/
-typedef struct
-{
-	unsigned char model[16];	// IPCam mode
-	unsigned char vendor[16];	// IPCam manufacturer
-	unsigned int version;		// IPCam firmware version	ex. v1.2.3.4 => 0x01020304;  v1.0.0.2 => 0x01000002
-	unsigned int cap;		// bit 0: cam, bit 1: gw , bit 2: nvr
-
-}SMsgYGIoctrlDeviceInfoResp;
-#endif
 
 #define    APP_ID_LENGTH    128
 

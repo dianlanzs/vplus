@@ -20,7 +20,7 @@
 @implementation NetWorkTools
 
 
--(void)request:(AMRequestMethod)method urlString:(NSString *)urlString parameters:(id)parameters finished:(void (^)(id responseObject,NSError *error))finished{
+- (void)request:(AMRequestMethod)method urlString:(NSString *)urlString parameters:(id)parameters finished:(void (^)(id responseObject,NSError *error))finished{
     
     NSString *methodName = (method == GET)? @"GET":@"POST";
     
@@ -38,24 +38,18 @@
 }
 
 
-
-
-
-
-
-- (void)sendWithCommond:(NSString *)cmd {
-
-    [self  request:self.method urlString:cmd parameters:self.params finished:self.finished];
-
+- (void)requestData:(NSString *)URL {
+    [self request:self.method urlString:URL parameters:self.params finished:self.finished];
 }
 
 
-
-
-- (void)configPramsWith:(id)data{
+#pragma mark - subclass imp method
+- (void)configURLPrams:(id)data{
+    self.params = data;
 }
 
 - (void)excute{
+    ;
 }
 @end
 

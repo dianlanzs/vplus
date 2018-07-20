@@ -12,6 +12,7 @@
 
 + (id)dictionaryWithJSONData:(NSData *)data {
     id object = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:nil];
+    NSLog(@"-------/n%@",[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
     if (![object isKindOfClass:[NSDictionary class]]) {
         if ([object isKindOfClass:[NSArray class]]) {
             return [object objectAtIndex:0];

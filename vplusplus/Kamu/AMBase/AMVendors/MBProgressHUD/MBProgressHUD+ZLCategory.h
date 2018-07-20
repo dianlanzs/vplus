@@ -21,7 +21,7 @@
 //纯 文本显示
 + (void)showPromptWithText:(NSString *)text inView:(UIView *)view;
 + (void)showPromptWithText:(NSString *)text;
-//自定义 显示
++ (void)showTopPromptWithText:(NSString *)text;
 //+ (void)showCustom:(NSString *)text icon:(UIImage *)image inView:(UIView *)view;
 
 

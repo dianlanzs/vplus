@@ -8,16 +8,32 @@
 
 #import <UIKit/UIKit.h>
 #import "RDVTabBarController.h"
-#import "LoginController.h"
 #import "NetWorkTools.h"
+#import "MMDrawerController.h"
+#import "PersonalController.h"
+
+
+@class LoginController;
 @interface AppDelegate : UIResponder <UIApplicationDelegate>
 
 @property (strong, nonatomic) UIWindow *window; //全局的window
+@property (strong, nonatomic) User *user; //全局的window
 
 
-//登录 和 内容控制器                        
+///window root controller
 @property (strong, nonatomic)  LoginController *loginController;
+@property (nonatomic,strong)  MMDrawerController * drawerController;
 @property (nonatomic, strong)  RDVTabBarController *tabBarController;
+
+
+
+
+
+
+
+
+
+
 @property (nonatomic, strong)  AFHTTPSessionManager *manager;
 
 
@@ -33,7 +49,7 @@
 
 //    self.m_pYUVData = new Byte[1920 * 1080 * 3 / 2]; //数组容量  ptr[m]
 @property(nonatomic,assign)int netStatus;
-@property (nonatomic, strong) NSDictionary *triggerOptions;
-
+//@property (nonatomic, strong) NSDictionary *triggerOptions;
+- (void)configJpushWith:(NSDictionary *)launchOptions;
 @end
 

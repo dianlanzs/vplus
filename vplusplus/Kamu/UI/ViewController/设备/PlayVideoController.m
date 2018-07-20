@@ -41,9 +41,9 @@
 #import "ZLBrightnessView.h"
 
 
-
-typedef int (^mydevice_data_callback)(int type, void *param, void *context);
-mydevice_data_callback callBack;
+//
+//typedef int (^mydevice_data_callback)(int type, void *param, void *context);
+//mydevice_data_callback callBack;
 
 
 @interface PlayVideoController () <ZLPlayerDelegate>
@@ -90,8 +90,6 @@ mydevice_data_callback callBack;
     [self vp]; //config vp UI
     if (self.navigationController.operatingDevice.nvr_status  == CLOUD_DEVICE_STATE_CONNECTED) {
         [self.vp lv_start];
-        cloud_set_data_callback((void *)self.navigationController.operatingDevice.nvr_h, device_data_callback, (__bridge void *)self.vp);
-
     }
     
     self.navigationItem.title = self.navigationController.operatingCam .cam_name? [self.navigationController.operatingCam.cam_name uppercaseString] : [self.navigationController.operatingCam.cam_id uppercaseString];
@@ -159,9 +157,9 @@ mydevice_data_callback callBack;
 //- (void)executeCameraCtrl:(int)param value:(NSInteger)value{
 //}
 
-//- (BOOL)shouldAutorotate {
-//    return NO; ///设置statusBar旋转 会 调用
-//}
+- (BOOL)shouldAutorotate {
+    return NO; ///设置statusBar旋转 会 调用
+}
 - (UIInterfaceOrientationMask)supportedInterfaceOrientations {
     
     ///可能 默认是 开启 陀螺仪的 ，每次旋转设备 会调用

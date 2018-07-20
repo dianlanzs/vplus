@@ -291,10 +291,10 @@ static cloud_device_t *find_device(const char *did)
     CLOUD_PRINTF("device %s is not found in DEVICE_NUM_MAX\n",did);
     return NULL;
 }
-
 int cloud_init()
 {
 	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
+
 	int ret = IOTC_Initialize2(0);
 	//CLOUD_PRINTF("IOTC_Initialize() ret = %d\n", ret);
 	if(ret != IOTC_ER_NoERROR)
@@ -379,6 +379,45 @@ int cloud_notify_network_changed(void)
         cloud_cmd_put(device->msgq,cmd);
         pthread_mutex_unlock(&device->lock);
     }
+    return 0;
+}
+int cloud_notify_network_changed_block(void)
+{
+    printf("cloud_notify_network_changed_block:enter\n");
+    cloud_device_t *device;
+    int i;
+    for (i=0;i<DEVICE_NUM_MAX;i++) {
+
+        if (g_device_list[i] == NULL) {
+            continue;
+        }
+        printf("g_device_list[%d] = %p\n ",i,g_device_list[i]);
+        device = g_device_list[i];
+        pthread_mutex_lock(&device->lock);
+        cloud_cmd_t *cmd = new_cmd(DEVICE_DISCONNECT,0);
+        if (cmd == NULL) {
+            CLOUD_PRINTF("err:new cmd fail!\n");
+            pthread_mutex_unlock(&device->lock);
+            continue;
+        }
+        cloud_cmd_put(device->msgq,cmd);
+
+        pthread_mutex_unlock(&device->lock);
+    }
+    for (i=0;i<DEVICE_NUM_MAX;i++) {
+
+        if (g_device_list[i] == NULL) {
+            continue;
+        }
+        device = g_device_list[i];
+        while (device->state == CLOUD_DEVICE_STATE_CONNECTED) {
+            usleep(1000);
+            continue;
+        }
+        printf("g_device_list[%d] disconnected\n ",i);
+    }
+    printf("cloud_notify_network_changed_block:leave\n");
+
     return 0;
 }
 cloud_device_handle cloud_open_device(const char *did)
@@ -539,7 +578,7 @@ int cloud_disconnect_device(cloud_device_handle handle)
 	return 0;
 }
 
-int cloud_device_get_version(cloud_device_handle handle, const char *version)
+int cloud_device_get_version(cloud_device_handle handle,const char *version)
 {
 	CLOUD_PRINTF("__%s__\n",__FUNCTION__);
 
@@ -601,7 +640,7 @@ int cloud_device_add_cam(cloud_device_handle handle, const char* cam_did)
 
     int index = -1;
     int i;
-    for(i=0;i<DEVICE_CAM_NUM_MAX;i++) {
+    for(i=1;i<DEVICE_CAM_NUM_MAX;i++) {
         if (device->cam[i].valid == 0) {
             index = i;
             break;
@@ -1358,7 +1397,7 @@ typedef struct {
 
 static void process_recv_cmd(cloud_device_t *device, unsigned int ioType,char *ioCtrlBuf)
 {
-    if (ioType == IOTYPE_USER_DEVICE_PROBECAM) {
+    if (ioType == IOTYPE_USER_DEVICE_PROBECAM_RESP) {
 
         SMsgAVIoctrlCamera *addcam_param = (SMsgAVIoctrlCamera *)ioCtrlBuf;
 
@@ -1616,7 +1655,7 @@ static int _cloud_connect_device(cloud_device_t *device)
 	SMsgAVIoctrlCameraS cams;
     ret = avRecvIOCtrl(avIndex, &ioType, (char *)&cams, sizeof(SMsgAVIoctrlCameraS), 5000);
     if(ret >= 0) {
-        if (ioType != IOTYPE_USER_DEVICE_GETCAMS) {
+        if (ioType != IOTYPE_USER_DEVICE_GETCAMS_RESP) {
             CLOUD_PRINTF("avIndex[%d], avRecvIOCtrl ioType = %x\n",avIndex, ioType);
             goto conn_err;
         }
@@ -1951,8 +1990,8 @@ int _cloud_device_cam_pb_ctrl(cloud_device_t *device,SMsgAVIoctrlPlayRecord *pbc
             return -1;
         }
         send_size += 64;
-        device->audio_cam_id = pbctrl->channel;
         device_audio_init(device);
+        device->audio_cam_id = pbctrl->channel;
 
         device->cam_play_num ++;
         char *fname = (char *)pbctrl + sizeof(SMsgAVIoctrlPlayRecord);
@@ -2801,11 +2840,16 @@ static int device_audio_init(cloud_device_t *device)
     device->audio_codec_ctx->bits_per_raw_sample = 16;
 	if(avcodec_open2(device->audio_codec_ctx, audioCodec, NULL) < 0) {
 		CLOUD_PRINTF("avcodec_open2 error\n");
+        av_free(device->audio_codec_ctx);
+        device->audio_codec_ctx = NULL;
 		return -1;
 	}
     device->audio_pFrame_ = ALLOC_FRAME();
     if (!device->audio_pFrame_) {
         CLOUD_PRINTF("Could not allocate audio frame\n");
+        avcodec_close(device->audio_codec_ctx);
+        av_free(device->audio_codec_ctx);
+        device->audio_codec_ctx = NULL;
         return -1;
     }
 	av_init_packet(&device->audio_packet);
@@ -2819,6 +2863,8 @@ static int device_audio_deinit(cloud_device_t *device)
 	av_free_packet(&device->audio_packet);
 	FREE_FRAME(&device->audio_pFrame_);
 
+	device->audio_pFrame_ = NULL;
+    device->audio_codec_ctx = NULL;
 	return 0;
 }
 
@@ -2916,6 +2962,7 @@ static void *thread_SendAudio(void *arg)
 			usleep(10 * 1000);
 			continue;
         }
+        frameInfo.cam_index = device->speak_cam_id;
         int ret = avSendAudioData(avIndex, buf, size, &frameInfo, sizeof(FRAMEINFO_t));
         if(ret == AV_ER_SESSION_CLOSE_BY_REMOTE)
         {

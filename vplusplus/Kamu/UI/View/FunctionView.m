@@ -13,6 +13,9 @@ CGFloat padding = 10.f;
 
 CGFloat batteryW = 30.f;
 CGFloat lineW = 1.f;
+CGFloat positiveWidth = 2.f;
+CGFloat lightingWidth = 15.f;
+
 CGFloat batteryH = 12.f;
 CGFloat cornerRadius = 2.f;
 @interface FunctionView()
@@ -51,9 +54,9 @@ CGFloat cornerRadius = 2.f;
         [self drawBatteryWidth:batteryW height:batteryH x:padding y:(CGRectGetHeight(self.bounds) - batteryH) / 2 lineW:lineW];
         [self addSubview:self.wifi];
         [self addSubview:self.signalLb];
-        
+        [self addSubview:self.lightingLogo];
         [self.signalLb mas_makeConstraints:^(MASConstraintMaker *make) {
-            make.leading.mas_equalTo(self.wifi.mas_trailing).offset(5.f);
+            make.leading.mas_equalTo(self.wifi.mas_trailing).offset(10.f);
             make.centerY.equalTo(self);
         }];
         
@@ -61,6 +64,13 @@ CGFloat cornerRadius = 2.f;
             make.leading.mas_equalTo(self.batteryLabel.mas_trailing).offset(padding);
             make.centerY.equalTo(self).offset(-2.f);//fine tuning
             make.size.mas_equalTo(CGSizeMake(CGRectGetHeight(self.bounds) * 0.5, CGRectGetHeight(self.bounds) * 0.5));
+        }];
+        
+        
+        [self.lightingLogo mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.leading.equalTo(self).offset(batteryW + padding + positiveWidth);
+            make.centerY.equalTo(self.batteryView);
+            make.size.mas_equalTo(CGSizeMake(lightingWidth, lightingWidth));
         }];
         
     }
@@ -114,7 +124,12 @@ CGFloat cornerRadius = 2.f;
 //
 //    return _wifiBtn;
 //}
-
+- (UIImageView *)lightingLogo {
+    if (!_lightingLogo) {
+        _lightingLogo = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"bar_lighting"]];
+    }
+    return _lightingLogo;
+}
 - (UIView *)wifi {
     if (!_wifi) {
         _wifi = [[UIView alloc] init];
@@ -264,7 +279,7 @@ CGFloat cornerRadius = 2.f;
     [path2 moveToPoint:CGPointMake(x + w + 1, y + h / 3)];//正极1/3位置
     [path2 addLineToPoint:CGPointMake(x + w + 1, y + h * 2 / 3)];//2/3 位置
     CAShapeLayer *layer2 = [CAShapeLayer layer];
-    layer2.lineWidth = 2; //lineWidth
+    layer2.lineWidth = positiveWidth; //lineWidth
     layer2.strokeColor = [UIColor lightGrayColor].CGColor;
     layer2.fillColor = [UIColor clearColor].CGColor;
     layer2.path = [path2 CGPath];
@@ -273,12 +288,12 @@ CGFloat cornerRadius = 2.f;
     //绘制进度 嵌套 solid view
     self.batteryView = [[UIView alloc]initWithFrame:CGRectMake(x + 2 * lineW ,y + 2 * lineW, 0, h - 2 * (lineW * 2) )];
     self.batteryView.layer.cornerRadius = 1;
-    self.batteryView.backgroundColor = [UIColor colorWithRed:0.324 green:0.941 blue:0.413 alpha:1.000];
+    self.batteryView.backgroundColor = [UIColor colorWithRed:0.324 green:0.941 blue:0.413 alpha:1.000]; ///亮绿色
     [self addSubview:self.batteryView];
     
     
-    
-    self.batteryLabel = [[UILabel alloc]initWithFrame:CGRectMake(x+w+5, (CGRectGetHeight(self.bounds)- [@"20%" boundingRectWithFont:[UIFont systemFontOfSize:14.f]]) / 2, 0, 0)];
+    // -(x) + w + 5 |
+    self.batteryLabel = [[UILabel alloc]initWithFrame:CGRectMake(padding + batteryW + positiveWidth + lightingWidth , (CGRectGetHeight(self.bounds)- [@"20%" boundingRectWithFont:[UIFont systemFontOfSize:14.f]]) / 2, 0, 0)];
     self. batteryLabel.textColor = [UIColor whiteColor];
     self.batteryLabel.textAlignment = NSTextAlignmentLeft;
     self. batteryLabel.font = [UIFont systemFontOfSize:14.f];
@@ -287,14 +302,23 @@ CGFloat cornerRadius = 2.f;
 }
 
 - (void)setBatteryProgress:(NSInteger)progressValue{
- 
+    
+    float eQulity = progressValue;
+    if (progressValue >= 1000) {
+        eQulity -= 1000;
+        [self.lightingLogo setHidden:NO];
+    }else {
+        [self.lightingLogo setHidden:YES];
+
+    }
     [UIView animateWithDuration:1 animations:^{
         CGRect frame = self.batteryView.frame;
-        frame.size.width = (progressValue * (batteryW - lineW * 2)) / 100; //battery include width of stroke line
+        float percent = eQulity / 100.f;
+        frame.size.width = percent * (batteryW - lineW * 4); //battery include width of stroke line
         self.batteryView.frame  = frame;
-        self.batteryLabel.text = [[NSString stringWithFormat:@"%lu",(long)progressValue] stringByAppendingString:@"%"];
+        self.batteryLabel.text = [[NSString stringWithFormat:@"%lu",(long)eQulity] stringByAppendingString:@"%"];
 
-        if (progressValue < 20) {
+        if (eQulity < 20) {
             self.batteryView.backgroundColor = [UIColor redColor];
         }else{
             self.batteryView.backgroundColor = [UIColor greenColor];

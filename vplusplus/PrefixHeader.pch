@@ -34,7 +34,6 @@
 #import "MBProgressHUD+ZLCategory.h" //HUD
 
 
-//Cell
 //#import "MGSwipeButton.h"
 #import "NSString+StringFrame.h"
 
@@ -51,16 +50,15 @@
 //颜色
 #import "UIColor+Hexadecimal.h"
 
-//弹框 , HUD  Spin
 #import "Popup.h"
-//#import <SpinKit/RTSpinKitView.h>
 #import "RTSpinKitView.h"
 #import "UIScrollView+EmptyDataSet.h"
 
 
 #import "Device.h"
 #import "cloud.h"
-//#import "DeviceManager.h"
+#import "User.h"
+
 
 #import "UIView+EqualMargin.h"
 #import "AMNavigationController.h"
@@ -69,5 +67,7 @@
 #import "UIView+ViewController.h"
 #import "AMViewController.h"
 #import "UINavigationController+operating.h"
+
+#import "AppDelegate.h"
 #endif
 #endif

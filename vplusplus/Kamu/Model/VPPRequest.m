@@ -18,24 +18,9 @@
 
 
 @implementation VPPRequest
-
-//请求URL
 - (void)excute {
-    
-//    if ([[self.params valueForKey:@"cmd"] isEqual:@"sync"]) {
-//         self.method = POST;
-//    }else {
-//        self.method = GET;
-//    }
-    
     self.method = GET;
-   __weak typeof(self) weakSelf = self;
-//    self.finished = ^(id responseObject, NSError *error) {
-//        if (!error) {
-//            NSLog(@"%@  SUCCESS:%@ -- ERROR:%@",[[weakSelf params] valueForKey:@"cmd"],[[NSString alloc] initWithData:responseObject encoding:NSUTF8StringEncoding],error); //调用的是最后一次  block ，只有一个任务
-//        }
-//    };
-    [self sendWithCommond:VPP_PUSH_URL(@"apns/apns.php")];
+    [self requestData:VPP_PUSH_URL(@"apns/apns.php")];
 }
 
 
@@ -46,17 +31,19 @@
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     return [NSDictionary dictionaryWithDictionary:dict];
 }
+
+
 //SIGIN ，加密
 - (void)sign{
     
 }
 
 
-- (void)configPramsWith:(NSDictionary *)dict{
+- (void)configURLPrams:(NSDictionary *)passedDict{
     
-    if (dict) {
+    if (passedDict) {
         //push token
-        NSString *inDeviceTokenStr = [[dict valueForKey:@"token"] description];
+        NSString *inDeviceTokenStr = [[passedDict valueForKey:@"token"] description];
         NSString *tokenString = [inDeviceTokenStr stringByTrimmingCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"<>"]];
         tokenString = [tokenString stringByReplacingOccurrencesOfString:@" " withString:@""];//替换空格
         tokenString = [[NSString alloc] initWithString:tokenString];
@@ -70,6 +57,10 @@
         NSString *uuid = [[[ASIdentifierManager sharedManager] advertisingIdentifier] UUIDString]; //广告标识符
         NSString *langCode = [self getLangCode];
         
+        
+        
+        ///--------------------------- URL prams --------------------------------
+        
         self.params = [NSMutableDictionary dictionaryWithDictionary:@{
                                                                       @"cmd":@"reg_client",
                                                                       @"token":tokenString,
@@ -82,7 +73,6 @@
                                                                       @"appver":appVer,
                                                                       @"model":encodeUrl
                                                                       }];
-
     }
     
 }

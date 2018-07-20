@@ -22,9 +22,9 @@
     [super viewDidLoad];
     
     //设置 尾部视图
-    QSection *section1 = [self.root.sections objectAtIndex:0];
-    [section1 setFooterView:self.formFooter];
-    [section1.footerView setBounds:CGRectMake(0, 0, AM_SCREEN_WIDTH, 140.f)];
+    QSection *section = [self.root.sections objectAtIndex:0];
+    [section setFooterView:self.formFooter];
+    [section.footerView setBounds:CGRectMake(0, 0, AM_SCREEN_WIDTH, 140.f)];
     
 
 }

@@ -6,11 +6,8 @@
 //  Copyright © 2018年 com.Kamu.cme. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
-#import "LoginView.h"
 
+#import "ZLLoginView.h"
 @interface LoginController : UIViewController
-
-@property (nonatomic, strong) LoginView *loginView;
-
+@property (nonatomic, strong) ZLLoginView *loginView;
 @end

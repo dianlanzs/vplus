@@ -98,7 +98,19 @@
 - (void)setHeaderImage:(NSString *)imageName {
     _headerImage = imageName;
     self.headerView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:_headerImage]];
-    self.headerView.contentMode = UIViewContentModeCenter;
+
+    ///zhoulei modify--------
+//    UIImageView *imv_cover = [[UIImageView alloc] initWithImage:[UIImage imageNamed:_headerImage]];
+//    [imv_cover setFrame:self.headerView.bounds];
+//    [self.headerView addSubview:imv_cover];
+    ///------------------------
+    
+    
+    
+//    self.headerView.contentMode = UIViewContentModeCenter;
+    
+    ///zhoulei modify
+    self.headerView.contentMode =  UIViewContentModeScaleToFill;
 }
 
 - (QSection *)initWithTitle:(NSString *)sectionTitle {

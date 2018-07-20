@@ -10,15 +10,13 @@
 
 #import "NetWorkTools.h"
 
-
+///VPP  vplusplus
 
 static NSString * const host_pushURL = @"http://push.iotcplatform.com";
-#define VPP_PUSH_URL(cmd)  [NSString stringWithFormat:@"%@/%@", host_pushURL, cmd]
+#define VPP_PUSH_URL(resourcePath)  [NSString stringWithFormat:@"%@/%@", host_pushURL, resourcePath]
 
 @interface VPPRequest : NetWorkTools
 
 
 
-- (void)excute;
-- (void)configPramsWith:(NSDictionary *)dict;
 @end

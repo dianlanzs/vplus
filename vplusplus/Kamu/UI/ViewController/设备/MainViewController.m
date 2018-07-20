@@ -25,7 +25,11 @@
 
 #import "MGSwipeButton.h"
 #import "ReactiveObjC.h"
+#import "KMReqest.h"
+#import "NSDictionary+JSON.h"
 
+#import "MMDrawerBarButtonItem.h"
+#import "UIViewController+MMDrawerController.h"
 
 @interface MainViewController() <UITableViewDelegate,UITableViewDataSource,MGSwipeTableCellDelegate>
 
@@ -55,17 +59,18 @@
     [self.tableView setTableHeaderView:[[UIView alloc] initWithFrame:CGRectMake(0, 0, AM_SCREEN_WIDTH, CGFLOAT_MIN)]];//set header  nil
     self.tableView.scrollEnabled = YES;
     if (!self.navigationItem.rightBarButtonItem) {
-        [self setNavBar];
+        [self setRightBarButtonItem];
     }
 }
 - (void)viewDidLoad {
     [super viewDidLoad];
-    if (((AMNavigationController *)self.navigationController).results.count == 0) {
+    if (USER.user_devices.count == 0) {
         [self emptyInterface];
     }else {
         [self deviceInterface];
     }
     self.navigationItem.title = @"设备";
+    [self setLeftBarButtonItem];
     [self.view setBackgroundColor:[UIColor groupTableViewBackgroundColor]];
     [self.view addSubview:self.tableView];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(addNew:) name:@"addNew" object:nil];
@@ -73,44 +78,52 @@
 
 - (void)addNew:(NSNotification *)notification {
     
-    if (((AMNavigationController *)self.navigationController).results.count == 0) {
+    if (USER.user_devices.count == 0) {
         [self deviceInterface];
     }
 
     //异步方式 write
     [RLM transactionWithBlock:^{
-        [RLM addObject:notification.object];
+        [USER.user_devices addObject:notification.object];
         /*
         1.  __imp_ = (__imp_ = "The Realm is already in a write transaction")
 
          [self.tableView insertSections:[NSIndexSet indexSetWithIndex:self.results.count - 1] withRowAnimation:UITableViewRowAnimationBottom]; //will auto call sections  // mabey  嵌套写事务了 cuz crash !!
          turn out :插入的时候 调用 了 section  row  和 cellForRow的方法了
-         
          2. Cannot register notification blocks from within write transactions.
          */
     }];
    
-    [self.tableView insertSections:[NSIndexSet indexSetWithIndex:((AMNavigationController *)self.navigationController).results.count - 1] withRowAnimation:UITableViewRowAnimationFade];
-
+    [self.tableView insertSections:[NSIndexSet indexSetWithIndex:USER.user_devices.count - 1] withRowAnimation:UITableViewRowAnimationFade];
 }
 
 - (void)deleteNvr:(NSIndexPath *)path {
-   if (((AMNavigationController *)self.navigationController).results.count == 1) {
+   if (USER.user_devices.count == 1) {
         [self emptyInterface];
     }
-    cloud_close_device((void *)[((AMNavigationController *)self.navigationController).results objectAtIndex:path.section].nvr_h);
+    Device *deleteDevice = [USER.user_devices objectAtIndex:path.section];
+    cloud_close_device((void *)deleteDevice.nvr_h);
     [RLM transactionWithBlock:^{
-        [RLM deleteObject:[((AMNavigationController *)self.navigationController).results objectAtIndex:path.section]];
+        [USER.user_devices removeObjectAtIndex:path.section];
     }];
-    
+   [[[NetWorkTools alloc] init] request:GET urlString:KM_API_URL(@"drop") parameters:@{@"uid":deleteDevice.nvr_id} finished:^(id responseObject, NSError *error) {
+       NSLog(@"%@",[NSDictionary dictionaryWithJSONData:responseObject]);
+    }];
     [self.tableView deleteSections:[NSIndexSet indexSetWithIndex:path.section] withRowAnimation:UITableViewRowAnimationTop];
-    
     [self.navigationController popToRootViewControllerAnimated:YES];
-    [MBProgressHUD showSuccess:@"设备 已经删除"];
+    [MBProgressHUD showSuccess:@"设备 已成功删除"];
 }
     
-- (void)setNavBar {
+- (void)setRightBarButtonItem {
     self.navigationItem.rightBarButtonItem = [UIBarButtonItem barItemWithimage:[UIImage imageNamed:@"nav_add"]  highImage:nil target:self action:@selector(addNvr:) title:@"添加新设备"];
+ 
+}
+- (void)setLeftBarButtonItem {
+    ///个人中心 按钮侧滑
+    self.navigationItem.leftBarButtonItem = [[MMDrawerBarButtonItem alloc] initWithTarget:self action:@selector(leftDrawerButtonPress:)];
+}
+-(void)leftDrawerButtonPress:(id)sender{
+    [self.mm_drawerController toggleDrawerSide:MMDrawerSideLeft animated:YES completion:nil];
 }
 
 
@@ -149,7 +162,7 @@
 #pragma mark - Table view 数据源回调方法
 //swipe  删除会调用 numberOfSection  ，和 numberOfRows 方法
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    return ((AMNavigationController *)self.navigationController).results.count;
+    return USER.user_devices.count;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
@@ -158,7 +171,7 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     
-    Device *nonCams_device = ((AMNavigationController *)self.navigationController).results[indexPath.section];
+    Device *nonCams_device = USER.user_devices[indexPath.section];
 //    [RLM transactionWithBlock:^{
 //        nonCams_device.nvr_type = CLOUD_DEVICE_TYPE_IPC;
 //    }];

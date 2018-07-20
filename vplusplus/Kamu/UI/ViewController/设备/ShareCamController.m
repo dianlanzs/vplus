@@ -284,7 +284,7 @@
         _form = [[QRootElement alloc] init];
         _form.presentationMode = QPresentationModeModalForm;
         _form.title = @"添加好友";
-        _form.controllerName = @"addFriend"; //表单在这个控制器里
+//        _form.controllerName = @"addFriend"; //表单在这个控制器里
         _form.grouped = YES;
         
         QSection *section1 = [[QSection alloc] initWithTitle:@"Information"];

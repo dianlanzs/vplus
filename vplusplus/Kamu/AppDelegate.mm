@@ -32,6 +32,9 @@
 
 
 #import "MainViewController.h"
+#import "LoginController.h"
+#import "DataBuilder.h"
+
 static NSString *appKey = @"ab43e34db3569dc318b8fc47";
 static NSString *channel = @"AppStore";
 static BOOL isProduction = NO;
@@ -41,12 +44,15 @@ static BOOL isProduction = NO;
 
 
 @property (nonatomic, copy) NSDictionary *dict;
+@property (nonatomic, copy) NSDictionary *triggerLaunchOptions;
+
 @property (nonatomic, strong) NSMutableArray *navigationControllers;
 @property (nonatomic, strong) NSString *token;
 
-@property (nonatomic, strong)VPPRequest *vp_pushReq;
 
+@property (nonatomic, strong) VPPRequest *vp_pushReq;
 @property (nonatomic, assign) BOOL isTutkPushRegistered;
+
 @end
 
 
@@ -54,30 +60,28 @@ static BOOL isProduction = NO;
 @implementation AppDelegate
 
 
-void sigpipe_handler(int unused){
-    printf("Caught signal SIGPIPE %d\n",unused);
-    
-}
+//void sigpipe_handler(int unused){
+//    printf("Caught signal SIGPIPE %d\n",unused);
+//    
+//}
 
 ///锁屏触发事件
 - (void)applicationProtectedDataWillBecomeUnavailable:(UIApplication *)application{
-    
     NSLog(@"Lock screen.");
-    cloud_notify_network_changed();
-
 }
 ///解锁事件
-- (void) applicationProtectedDataDidBecomeAvailable:(UIApplication *)application
-{
+- (void) applicationProtectedDataDidBecomeAvailable:(UIApplication *)application {
 //    [[NSNotificationCenter defaultCenter] postNotificationName:UN_LOCK_SCREEN_NOTIFY
 //                                                        object:nil];
     NSLog(@"UnLock screen.");
+    cloud_notify_network_changed_block();
+
 }
 -(void)dealloc{
     [[NSNotificationCenter defaultCenter]removeObserver:self name:@"netWorkChangeEventNotification" object:nil];
 }
 
--(void)sendNotation:(NSDictionary *)launchOptions{
+-(void)sendNotation:(NSDictionary *)launchOptions {
     
 //    NSDictionary *userInfo = [launchOptions objectForKey: UIApplicationLaunchOptionsRemoteNotificationKey];
 //    if (userInfo) {
@@ -85,50 +89,99 @@ void sigpipe_handler(int unused){
 //
 //    }
 }
+- (LoginController *)loginController {
+    if (!_loginController) {
+        _loginController = [[LoginController alloc] init]; // ------> view did load
+        
+        WeakObj(self); /// _loginController 创建 loginview
+        [_loginController.loginView setUserLogin:^(User *user) {
+            [ws setUser:user];
+            [ws.window setRootViewController:ws.drawerController];
+            [ws setLoginController:nil];
+            [JPUSHService setTags:nil alias:[NSString stringWithFormat:@"%@",user.user_id ] fetchCompletionHandle:^(int iResCode, NSSet *iTags, NSString *iAlias) {
+                NSLog(@"%@已登录 - %d",iAlias,iResCode);
+            }];
+        }];
+        
+        NSLog(@"🎟LOGIN-VIEW %@",_loginController.loginView);
+
+        
+    }
+    return _loginController;
+}
+- (MMDrawerController *)drawerController {
+    if (!_drawerController) {
+        
+        MainViewController * mainController = [[MainViewController alloc] init];
+        
+        
+        QRootElement *userModel = [[DataBuilder new] createForUserSettings:self.user];
+        PersonalController * personalController = [[PersonalController alloc] initWithRoot:userModel];
+        WeakObj(self);
+        [personalController setUserLogout:^(User *user) {
+            [ws.window setRootViewController:self.loginController];
+            [ws setDrawerController:nil];
+            [RLM transactionWithBlock:^{
+                ws.user.user_isLogin = NO;
+                ws.user.user_lastLoginTime = (int)[[NSDate date] timeIntervalSince1970];
+            }];
+            NSLog(@"============%d",USER.user_lastLoginTime);
+            
+            [JPUSHService setTags:nil alias:nil fetchCompletionHandle:^(int iResCode, NSSet *iTags, NSString *iAlias) {
+                NSLog(@"%@退出登录",user);
+            }];
+        }];
+        
+        AMNavigationController * personalNav = [[AMNavigationController alloc] initWithRootViewController:personalController];
+        AMNavigationController * mainNav = [[AMNavigationController alloc] initWithRootViewController:mainController];
+        _drawerController = [[MMDrawerController alloc] initWithCenterViewController:mainNav leftDrawerViewController:personalNav];
+        [_drawerController setShowsShadow:YES];
+        [_drawerController setMaximumRightDrawerWidth:200.0];
+        [_drawerController setStatusBarViewBackgroundColor:[UIColor redColor]];
+        [_drawerController setOpenDrawerGestureModeMask:MMOpenDrawerGestureModeNone];
+        [_drawerController setCloseDrawerGestureModeMask:MMOpenDrawerGestureModeNone];
+    }
+    
+    return _drawerController;
+}
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     
     cloud_init();
-   
     
-   
-//signal(SIGPIPE, SIG_IGN);
-//    sigaction(SIGPIPE, &(struct sigaction){sigpipe_handler}, NULL);
-
-    ///Jpush Message Notification
-//    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(networkDidReceiveMessage:) name:kJPFNetworkDidReceiveMessageNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(networkDidLogin:) name:kJPFNetworkDidLoginNotification object:nil];
-
-    self.triggerOptions = launchOptions;
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    
+    
+    /*
+     //没有登录过 ，---> 模态 展现登录控制器
+     if (![[NSUserDefaults standardUserDefaults] boolForKey:@"Login"]) {//everLaunched
+     [self.window setRootViewController:self.loginController];
+     } else {
+     //        [[NSUserDefaults standardUserDefaults] setBool:NO forKey:@"firstLaunch"];
+     [self.window setRootViewController:self.drawerController];    //登录过  ---> 配置 navigations
+     }
+     */
+    [self setTriggerLaunchOptions:launchOptions];
+    if (!self.user.user_isLogin) {
+        [self.window setRootViewController:self.loginController];
+    } else {
+        [self.window setRootViewController:self.drawerController];
+    }
+    
     [self.window makeKeyAndVisible];
-    [self.window setRootViewController:self.tabBarController];
+    [self setMRButtonAppearance];
+    [self.manager.reachabilityManager startMonitoring];
 
   
-    [self setMRButtonAppearance];
-    [self configJpushWith:launchOptions];//根据版本第一次加载
-    [self.manager.reachabilityManager startMonitoring];
+    
+    
+    
+    
     //Steve
 //    self.y_data = new Byte[1920 * 1080 * 1]; //数组容量  ptr[m]
 //    self.u_data = new Byte[1920 * 1080 * 1/4]; //数组容量  ptr[m]
 //    self.v_data = new Byte[1920 * 1080 * 1/4]; //数组容量  ptr[m]
 
-    /*
-     //没有登录过 ，---> 模态 展现登录控制器
-     if (![[NSUserDefaults standardUserDefaults] boolForKey:@"everLaunched"]) {
-     [self.window setRootViewController:self.loginController];
-     
-     // 第一次登录 ：是
-     [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"firstLaunch"];
-     // 已经登录  ：是
-     [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"everLaunched"];
-     }
-     //登录过  ---> 配置 navigations
-     else {
-     [self.window setRootViewController:self.tabBarController];
-     // 第一次登录 ： 不是
-     [[NSUserDefaults standardUserDefaults] setBool:NO forKey:@"firstLaunch"];
-     }
-     */
+  
     //模拟 服务器请求 token
     //    if (!self.token) {
     //         [self.window setRootViewController:self.loginController];
@@ -138,26 +191,32 @@ void sigpipe_handler(int unused){
     //    }
     //
    
-
-//    [self performSelector:@selector(sendNotation:) withObject:launchOptions afterDelay:0];
-
+//    [self.window setRootViewController:self.tabBarController];    //登录过  ---> 配置 navigations
+    [self setMRButtonAppearance];
     return YES;
 }
 
+
 - (void)configJpushWith:(NSDictionary *)launchOptions {
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(networkDidLogin:) name:kJPFNetworkDidLoginNotification object:nil];
+    
+    ///Jpush Message Notification
+    //    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(networkDidReceiveMessage:) name:kJPFNetworkDidReceiveMessageNotification object:nil];
+    
+    
     ///初始化APNs
     JPUSHRegisterEntity * entity = [[JPUSHRegisterEntity alloc] init];
     entity.types = JPAuthorizationOptionAlert|JPAuthorizationOptionBadge|JPAuthorizationOptionSound;
     [JPUSHService registerForRemoteNotificationConfig:entity delegate:self];
-
+    
     ///初始化Jpush
     [JPUSHService setupWithOption:launchOptions
                            appKey:appKey
                           channel:nil
                  apsForProduction:isProduction
             advertisingIdentifier:nil];
-
-
+    
+    
 }
 
 
@@ -165,13 +224,13 @@ void sigpipe_handler(int unused){
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
 //    [self configTutkPushWith:deviceToken];
     [JPUSHService registerDeviceToken:deviceToken];// Required - 上报DeviceToken给极光服务器
-  
-
 }
 - (void)networkDidLogin:(NSNotification *)notification {
-  const  char * rid =  [[JPUSHService registrationID] UTF8String];
-    if (rid) {
-        cloud_set_appinfo(rid);
+    
+    NSString *s = [NSString stringWithFormat:@"%@:%@",[JPUSHService registrationID],self.user.user_id];
+    const  char * info =  [s UTF8String];
+    if (info) {
+        cloud_set_appinfo(info);
     }
     
 }
@@ -280,12 +339,12 @@ void sigpipe_handler(int unused){
 }
 - (void)configTutkPushWith:(NSData *)token{
     NSMutableArray *tempArray = [NSMutableArray array];
-    VPPRequest *vp_pushReq = [[VPPRequest alloc] init];
-    [vp_pushReq configPramsWith:@{@"token":token}];
+    VPPRequest *vp_pushReq = [[VPPRequest alloc] init];  //push
+    [vp_pushReq configURLPrams:@{@"token":token}];
     
     
     
-    vp_pushReq.taskTag = @"register";
+    vp_pushReq.taskIdentifier = @"register";
     NSLog(@"client:%@",vp_pushReq.params);
     
     __block typeof(vp_pushReq) w_vp_pushReq = vp_pushReq;
@@ -296,13 +355,13 @@ void sigpipe_handler(int unused){
             VPPRequest *vp_pushReq2 = [[VPPRequest alloc] init];
             for (Device *nvr in [Device allObjects]) {
                 [tempArray addObject:nvr.nvr_id];
-                [vp_pushReq2 configPramsWith:@{@"token":token}];
+                [vp_pushReq2 configURLPrams:@{@"token":token}];
                 
                 [vp_pushReq2.params removeObjectsForKeys:@[@"osver",@"appver",@"model"]];
                 [vp_pushReq2.params setObject:nvr.nvr_id forKey:@"uid"];
                 [vp_pushReq2.params setValue:@"reg_mapping" forKey:@"cmd"];
                 [vp_pushReq2.params setObject:[NSNumber numberWithInteger:2] forKey:@"interval"];
-                vp_pushReq2.taskTag = @"mapping";
+                vp_pushReq2.taskIdentifier = @"mapping";
                 NSLog(@"mapping:%@",vp_pushReq2.params);
                 
                 __block typeof(vp_pushReq2) w_vp_pushReq2 = vp_pushReq2;
@@ -311,10 +370,10 @@ void sigpipe_handler(int unused){
                         NSLog(@"%@  SUCCESS:%@ -- ERROR:%@",[[w_vp_pushReq2 params] valueForKey:@"cmd"],[[NSString alloc] initWithData:responseObject encoding:NSUTF8StringEncoding],error); //调用的是最后一次  block ，只有一个任务
                         
                         VPPRequest *  vp_pushReq3 = [[VPPRequest alloc] init];
-                        [vp_pushReq3 configPramsWith:@{@"token":token}];
+                        [vp_pushReq3 configURLPrams:@{@"token":token}];
                         [vp_pushReq3.params setValue:@"mapsync" forKey:@"cmd"];
                         [vp_pushReq3.params setValue:tempArray forKey:@"map"];
-                        vp_pushReq3.taskTag = @"map_sync";
+                        vp_pushReq3.taskIdentifier = @"map_sync";
                         
                         __block typeof(vp_pushReq3) w_vp_pushReq3 = vp_pushReq3;
                         vp_pushReq3.finished = ^(id responseObject, NSError *error) {
@@ -554,8 +613,7 @@ void sigpipe_handler(int unused){
 - (void)applicationWillTerminate:(UIApplication *)application {
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     
-    AMNavigationController *nav = (AMNavigationController *)self.tabBarController.selectedViewController;
-    for (Device *d in nav.results) {
+    for (Device *d in self.user.user_devices) {
         [RLM transactionWithBlock:^{
             d.nvr_status = CLOUD_DEVICE_STATE_UNKNOWN;
         }];
@@ -643,15 +701,6 @@ void sigpipe_handler(int unused){
     
 }
 
-//Login Controller
-- (LoginController *)loginController {
-    
-    if (!_loginController) {
-        _loginController = [[LoginController alloc] init];
-    }
-    
-    return _loginController;
-}
 
 //controllers 配置文件
 - (NSDictionary *)dict {
@@ -673,12 +722,13 @@ void sigpipe_handler(int unused){
         
         NSString *title = [[self.dict valueForKey:@"navTitles"] objectAtIndex:index];
         UIViewController *vc = [NSClassFromString( [[self.dict valueForKey:@"vcNames"] objectAtIndex:index]) new];
-        
-        AMNavigationController *navigationVc = [[AMNavigationController alloc] initWithRootViewController:vc];//Convenience method pushes the root view controller without animation.
+        //Convenience method pushes the root view controller without animation.
+        AMNavigationController *navigationVc = [[AMNavigationController alloc] initWithRootViewController:vc];
         
         [vc setTitle:title];  // 如果nav 和 tab  没有设置标题 ， 该设置 可以同时设置 上下 和 vc 的标题！
         //        [vc.navigationItem setTitle:title];
         [navigationControllers addObject:navigationVc];
+        
         
         NSLog(@"✅%@,%ld",title,index);
         
@@ -816,4 +866,65 @@ void sigpipe_handler(int unused){
     return _manager;
 }
 
+
+
+//- (void)setUser:(User *)user {
+//    RLMResults<User *> *users = [User allObjects];
+//    NSLog(@"%@",users);
+//    if (user != _user) {
+//        _user = user;
+//        if (!users.count) {
+//            [self configJpushWith:self.triggerLaunchOptions];
+//        }
+//        if (!_user.user_portrait) {
+//            [RLM transactionWithBlock:^{
+//                _user.user_portrait = UIImageJPEGRepresentation([UIImage imageNamed:@"portrait"], 1.0);
+//
+//            }];
+//        }
+//
+//    }
+//}
+///测试 pre user
+- (User *)user {
+    if (!_user) {
+        _user = [User new];
+        RLMResults *users = [User allObjects];
+        if (users.count > 0) {
+            for (User *db_user in [User allObjects]) {
+                if (db_user.user_isLogin) {
+                    _user = db_user;
+                    return _user;
+                } else if (_user.user_lastLoginTime <= db_user.user_lastLoginTime) {
+                    _user = db_user;
+                }
+                
+            }
+        }
+        
+    }
+    return _user;
+}
+
+//
+//- (User *)loginUser {
+//
+//    if (!_loginUser.user_devices) {
+//
+//        RLMResults *users = [User allObjects];
+//        if (!users.count) { ///第一次安装
+//            _loginUser = [User new];
+//            _loginUser.user_portrait = UIImageJPEGRepresentation([UIImage imageNamed:@"portrait"], 1.0);
+//            [RLM transactionWithBlock:^{
+//                [RLM addObject:_loginUser];
+//            }];
+//        } else if (users.count == 1) {
+//            _loginUser = users.firstObject;
+//        }else {
+//            NSLog(@"User.count > 1");
+//        }
+//    }
+//
+//    return _loginUser;
+//}
 @end

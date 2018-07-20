@@ -187,7 +187,7 @@ static NSString  *rootControllerName = @"NvrSettingsController";
     
     [authorityElm addSection:section0];
     NSInteger authrizedNum = [[[NSUserDefaults standardUserDefaults] valueForKey:@"friends"] count];
-    authorityElm.value = [NSString stringWithFormat:@"(%ld)",authrizedNum];
+    authorityElm.value = [NSString stringWithFormat:@"(%zd)",authrizedNum];
     return authorityElm;
 }
 
@@ -237,8 +237,6 @@ static NSString  *rootControllerName = @"NvrSettingsController";
     QRootElement *infoElm = [[QRootElement alloc] init];
     infoElm.grouped = YES;
     infoElm.title = @"设备信息";
-    infoElm.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
-    
     
     
     QSection *section_0 = [[QSection alloc] initWithTitle:@"Device"];
@@ -255,6 +253,87 @@ static NSString  *rootControllerName = @"NvrSettingsController";
     
     
 }
+
+
+
+
+#pragma mark - 创建 个人中心 settings 界面
+- (QRootElement *)createForUserSettings:(User *)userModel {
+    
+    
+    QRootElement *userRoot = [[QRootElement alloc] init];
+    userRoot.grouped = YES;
+    userRoot.controllerName = @"PersonalController";
+    userRoot.title = @"个人中心";
+//    [userRoot setObject:userModel];
+    
+
+    QSection *section0 = [[QSection alloc] init];
+    section0.elements = [NSMutableArray arrayWithArray:@[[self userNameElm:userModel],[self qNaElm:userModel],[self helpElm:userModel],[self wipeCacheElm:userModel],[self aboutElm:userModel]]];
+
+    
+    
+    
+    [userRoot addSection:section0];
+    [self setAppearance:userRoot];
+    return userRoot;
+    
+    
+    
+}
+
+- (QElement *)userNameElm:(User *)user {
+    return [[QTextElement alloc] initWithText:@"Profile"];
+}
+- (QElement *)helpElm:(User *)person {
+    QRootElement *helpElm = [[QRootElement alloc] init];
+    helpElm.grouped = NO;
+    helpElm.presentationMode = QPresentationModeModalForm;
+
+    helpElm.title = @"help";
+    
+    QSection *section_0 = [[QSection alloc] initWithTitle:@""];
+    QTextElement *text = [[QTextElement alloc] initWithText:@"该图显示的是一副图像输出的情况下，各控制信号和数据信号的输出。图中，VGA=640X480 大小情况下，帧同步信号，行同步信号（HREF 或者 HSYNC,注：HSYNC 在其它场合下使用，CMOS 可以设置，更多时候用HREF 即可）如图："];
+    [section_0 addElement:text];
+    
+    [helpElm addSection:section_0];
+
+    return helpElm;
+}
+- (QElement *)wipeCacheElm:(User *)user {
+    return [[QTextElement alloc] initWithText:@"wipeCache"];
+}
+- (QElement *)qNaElm:(User *)user {
+    return [[QTextElement alloc] initWithText:@"Q&A"];
+}
+- (QElement *)aboutElm:(User *)user {
+    return [[QTextElement alloc] initWithText:@"about"];
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //自定义UI
 + (QAppearance *)customAppearance {

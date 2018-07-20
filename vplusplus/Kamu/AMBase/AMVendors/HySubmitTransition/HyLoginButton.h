@@ -14,11 +14,12 @@ typedef void(^HyAnimationCompletion)();
 @interface HyLoginButton : UIButton
 
 @property (nonatomic, strong) HySpinerLayer *spinerLayer;
+@property (nonatomic, assign) CGFloat button_h;
 - (void)scaleAnimation;
 - (void)scaleToSmall;
 
 -(void)failedAnimationWithCompletion:(HyAnimationCompletion)completion;
 
 -(void)succeedAnimationWithCompletion:(HyAnimationCompletion)completion;
-
+- (instancetype)initWithHeight:(CGFloat)h;
 @end

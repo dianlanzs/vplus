@@ -10,14 +10,16 @@ typedef enum {
 }nvr_type;
 
 @class Device;
-@protocol ZLNvrDelegate <NSObject>
 
 
-@optional
-- (void)device:(Device *_Nullable)nvr sendAvData:(void * _Nullable )data dataType:(int)type;
-- (void)device:(Device *_Nullable)nvr sendListData:(void * _Nullable )data dataType:(int)type;
 
-@end
+//@protocol ZLNvrDelegate <NSObject>
+
+//@optional
+//- (void)device:(Device *_Nullable)nvr sendAvData:(void * _Nullable )data dataType:(int)type;
+//- (void)device:(Device *_Nullable)nvr sendListData:(void * _Nullable )data dataType:(int)type;
+
+//@end
 
 
 
@@ -34,8 +36,8 @@ RLM_ARRAY_TYPE(Cam)
 
 @property  NSString * _Nullable nvr_pwd;
 
-@property (nonatomic, weak)  id<ZLNvrDelegate> _Nullable listDelegate;
-@property (nonatomic, weak)  id<ZLNvrDelegate> _Nullable avDelegate;
+@property (nonatomic, weak)  id _Nullable listDelegate;
+@property (nonatomic, weak)  id _Nullable avDelegate;
 
 
 @property  NSString * _Nullable nvr_name;

@@ -10,7 +10,8 @@
 
 @interface HySpinerLayer : CAShapeLayer
 
-- (instancetype)initWithFrame:(CGRect)frame;
+//- (instancetype)initWithFrame:(CGRect)frame;
++(instancetype)spinnerLayerWithHeight:(CGFloat)button_h;
 
 - (void)beginAnimation;
 

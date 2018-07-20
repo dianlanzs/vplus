@@ -33,7 +33,7 @@ typedef void(^AMRequestFinished)(id responseObject,NSError *error);
 
 @interface NetWorkTools : NSObject
 
-@property (nonatomic, copy)NSString *taskTag;
+@property (nonatomic, copy) NSString *taskIdentifier;
 @property (nonatomic, copy) NSString *commond;
 @property (nonatomic, strong) NSMutableDictionary *params;
 @property (nonatomic, assign) AMRequestMethod method;
@@ -53,15 +53,20 @@ typedef void(^AMRequestFinished)(id responseObject,NSError *error);
 
 
 
+///1
+- (void)configURLPrams:(id)data;
 
-- (void)configPramsWith:(id)data;
-- (void)sendWithCommond:(NSString *)cmd;
+///2
+- (void)excute;
+- (void)requestData:(NSString *)URL;
 
 
 
 
 
 - (void)request:(AMRequestMethod)method urlString:(NSString *)urlString parameters:(id)parameters finished:(void (^)(id responseObject,NSError *error))finished;
+
+
 
 
 
