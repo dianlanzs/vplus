@@ -77,7 +77,6 @@ static  CGFloat const kTorch_H  = 30;
 - (instancetype)initQRCScannerWithView:(UIView *)view lightButton:(UIButton *)button{
     QRCScanner *qrcView = [[QRCScanner alloc]initWithFrame:view.frame];
     [qrcView initDataWithView:view];
-    
     [self setLightButton:button];
 
     return qrcView;
@@ -91,8 +90,6 @@ static  CGFloat const kTorch_H  = 30;
         _transparentAreaSize = CGSizeMake(SCANE_W, SCANE_H);
         _cornerLineColor = [UIColor redColor];
         _scanningLieColor = [UIColor redColor];
-        
-        
     }
     return self;
 }
@@ -337,10 +334,11 @@ static  CGFloat const kTorch_H  = 30;
     //_output.metadataObjectTypes =@[AVMetadataObjectTypeQRCode];
     
     //增加条形码扫描
-    _output.metadataObjectTypes = @[AVMetadataObjectTypeEAN13Code,
-                                    AVMetadataObjectTypeEAN8Code,
-                                    AVMetadataObjectTypeCode128Code,
-                                    AVMetadataObjectTypeQRCode];
+    
+    // //以下为条形码，如果项目只需要扫描二维码，下面都不要写 AVMetadataObjectTypeEAN13Code, AVMetadataObjectTypeEAN8Code, AVMetadataObjectTypeUPCECode, AVMetadataObjectTypeCode39Code, AVMetadataObjectTypeCode39Mod43Code, AVMetadataObjectTypeCode93Code, AVMetadataObjectTypeCode128Code, AVMetadataObjectTypePDF417Code
+    
+    
+    _output.metadataObjectTypes = @[AVMetadataObjectTypeQRCode];
     
     // Preview
     _preview = [AVCaptureVideoPreviewLayer layerWithSession:_session];

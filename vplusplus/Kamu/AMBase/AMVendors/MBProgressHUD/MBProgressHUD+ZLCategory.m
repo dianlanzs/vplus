@@ -92,7 +92,10 @@
     [self showCustom:success icon:[UIImage imageNamed:@"Checkmark"] inView:view];
 }
 + (void)showSuccess:(NSString *)success {
+    
     [self showSuccess:success toView:nil];
+  
+    
 }
 
 + (void)showError:(NSString *)error {
@@ -107,7 +110,6 @@
     MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:view animated:YES];
     hud.label.text = message;
     hud.backgroundView.style = MBProgressHUDBackgroundStyleSolidColor;
-    //0~1 黑到白的变化值
     hud.backgroundView.color = [UIColor colorWithWhite:0.f alpha:0.7f];
     return hud;
 }
@@ -157,11 +159,13 @@
     
     MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:view animated:YES];
     [hud setSquare:NO];
+    [hud.bezelView setHidden:YES];
     //    [hud setMinSize:CGSizeMake(AM_SCREEN_WIDTH, 64)];
     //    [hud setMargin:0];
-    hud.mode = MBProgressHUDModeCustomView;
+    hud.mode = MBProgressHUDModeText;
     hud.backgroundView.style = MBProgressHUDBackgroundStyleSolidColor;
-    hud.frame = CGRectMake(0, 0, AM_SCREEN_WIDTH, 64);
+    hud.backgroundView.color = [UIColor colorWithWhite:0.f alpha:0.7f];
+    hud.frame = CGRectMake(0, 0, AM_SCREEN_WIDTH, 64);///zhoulei mark
     
     
     

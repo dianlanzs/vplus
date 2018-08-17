@@ -32,7 +32,7 @@ RLM_ARRAY_TYPE(Cam)
 @property (nonatomic, assign) long nvr_h;
 @property (nonatomic, assign) void * _Nullable nvr_data;
 @property  int nvr_dataType;
-
+@property  int nvr_index;
 
 @property  NSString * _Nullable nvr_pwd;
 
@@ -47,8 +47,11 @@ RLM_ARRAY_TYPE(Cam)
 
 @property  int nvr_status;
 @property  int alarmShowed;
+@property (readonly) RLMLinkingObjects * _Nullable nvr_users;
 
 @property RLMArray<Cam> * _Nullable nvr_cams;
+
+@property (nonatomic, assign) int nvr_owner;
 /*RLMArray 属性会确保其内部的插入次序不会被打乱。
 注意，目前暂时不支持对包含原始类型的 RLMArray 进行查询。 */
 

@@ -187,7 +187,7 @@
 
 - (void)setIsStatusBarHidden:(BOOL)isStatusBarHidden {
     _isStatusBarHidden = isStatusBarHidden;
-    [[UIWindow zl_currentViewController] setNeedsStatusBarAppearanceUpdate];
+    [[UIWindow zl_currentViewController] setNeedsStatusBarAppearanceUpdate];  ///---> call  prefferd statusBar hidden :   method!
 }
 
 - (void)setIsLandscape:(BOOL)isLandscape {

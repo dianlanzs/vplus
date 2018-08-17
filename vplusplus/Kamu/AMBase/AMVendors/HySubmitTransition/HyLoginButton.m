@@ -179,11 +179,11 @@
     expandAnim.fromValue = @(1.0);
     expandAnim.toValue = @(33.0);
     expandAnim.timingFunction = _expandCurve;
-    expandAnim.duration = 0.2;
+    expandAnim.duration = 0.1;
     expandAnim.delegate = self;
     expandAnim.fillMode = kCAFillModeForwards;
-    expandAnim.removedOnCompletion = true;
-    [self.layer addAnimation:expandAnim forKey:expandAnim.keyPath];
+    expandAnim.removedOnCompletion = false; ///ture 动画缩小到一个点！
+    [self.layer addAnimation:expandAnim forKey:expandAnim.keyPath];  
     [_spinerLayer stopAnimation];
 }
 

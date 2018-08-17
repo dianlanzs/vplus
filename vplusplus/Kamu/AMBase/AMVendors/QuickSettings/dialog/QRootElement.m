@@ -132,6 +132,7 @@
     if (_title!= nil) {
         cell.textLabel.text = [NSString stringWithFormat:@"%@", _title];
         cell.accessoryType = (self.sections!= nil) ; ///zhoulei modify
+        cell.detailTextLabel.text = [self.value description]; ///-- translate to string 
     }
 
     return cell;

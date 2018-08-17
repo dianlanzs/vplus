@@ -51,6 +51,8 @@ typedef NS_ENUM(NSInteger, ZLPlayerState) {
     
     ZLPlayerStateUnknwon,
     ZLPlayerStateFailed,     // 播放失败
+    ZLPlayerStateReplay,     // 重播
+
     ZLPlayerStateBuffering,  // 缓冲中
     ZLPlayerStatePlaying,    // 播放中
     ZLPlayerStateEnd,    // 停止播放

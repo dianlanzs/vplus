@@ -34,30 +34,11 @@
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
     
     if (self) {
-        self.navigationItem.title = @"Probe Camara";
+        self.navigationItem.title = LS(@"探测摄像头");
     }
     return self;
 }
 
-
-
-- (void)connectDevice {
-    
-//    RLMThreadSafeReference *deviceRef = [RLMThreadSafeReference
-//                                         referenceWithThreadConfined:OP_DEVICE];
-//    dispatch_async(dispatch_get_global_queue(0, 0), ^{
-//
-//        @autoreleasepool {
-//            RLMRealm *realm = [RLMRealm realmWithConfiguration:RLM.configuration error:nil];
-//            Device *device = [realm resolveThreadSafeReference:deviceRef];
-//            if (device) {
-    NSLog(@"%@",self.navigationController.operatingDevice);
-                cloud_device_probe_cam((void *)self.navigationController.operatingDevice.nvr_h, my_device_action_callback,  (__bridge void *)self);
-//            }
-//        }
-//
-//    });
-}
 
 //注册回调 cam 有数据的 时候会走 callback！
 int my_device_action_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *param,void *context) {
@@ -71,7 +52,7 @@ int my_device_action_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, voi
             [ctx.indicator setImage:[[UIImage imageNamed:@"icon_succeed"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal]];
             [ctx.indicator setContentMode:UIViewContentModeScaleAspectFit];
             
-            [ctx.specLable setAttributedText:[NSAttributedString attrText:@"我们已探测到您的CAM!，在继续下一步前，建议您更改设备名称！" withFont:[UIFont systemFontOfSize:17.f] color:[UIColor blackColor] aligment:NSTextAlignmentLeft]];
+            [ctx.specLable setAttributedText:[NSAttributedString attrText:LS(@"我们已探测到您的CAM!，在继续下一步前，建议您更改设备名称！") withFont:[UIFont systemFontOfSize:17.f] color:[UIColor blackColor] aligment:NSTextAlignmentLeft]];
             [ctx.specLable sizeToFit];
             [ctx.changeName setAttributedText:[NSAttributedString underlineAttrText:[NSString stringWithFormat:@"%@",ctx.probedCam.cam_id] withFont:[UIFont systemFontOfSize:17.f] color:[UIColor blueColor] aligment:NSTextAlignmentCenter]];
             [ctx.spinner stopAnimating];
@@ -98,8 +79,7 @@ int my_device_action_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, voi
     [super viewDidLoad];
     [self.view  setBackgroundColor:[UIColor whiteColor]];
     [self.view addSubview:self.ProbView];
-    
-    [self connectDevice];
+    cloud_device_probe_cam((void *)self.navigationController.operatingDevice.nvr_h, my_device_action_callback,  (__bridge void *)self);
 }
 
 - (void)didReceiveMemoryWarning {
@@ -127,35 +107,32 @@ int my_device_action_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, voi
     
 
     if ([[self.navigationController.operatingDevice.nvr_cams objectsWhere:[NSString stringWithFormat:@"cam_id = '%@'",self.probedCam.cam_id]] firstObject]) {
-        [MBProgressHUD showPromptWithText:@"该cam已经被添加"];
+        [MBProgressHUD showPromptWithText:LS(@"该摄像头已经被添加")];
     }else {
-        //局部变量会 出域 就释放了 不需要 ws
-        Popup *popup = [[Popup alloc] initWithTitle:@"更改设备名称"
-                                           subTitle:@"您想将设备放在何处？比如客厅,门廊,公司，家里..."
-                              textFieldPlaceholders:@[@"设置Cam名称.."]
+        ///局部变量会 出域 就释放了 不需要 ws    self 没有强引用popup 变量
+        Popup *popup = [[Popup alloc] initWithTitle:LS(@"更改设备名称")
+                                           subTitle:LS(@"您想将设备放在何处？比如客厅,门廊,公司，家里...")
+                              textFieldPlaceholders:@[LS(@"设置摄像头名称..")]
                                         cancelTitle:nil
-                                       successTitle:@"Confirm"
+                                       successTitle:LS(@"确认")
                                         cancelBlock:^{
                                         } successBlock:^{
-                                            
-
                                             cloud_device_add_cam((void *) self.navigationController.operatingDevice.nvr_h, [self.probedCam.cam_id UTF8String]);
-                                            
-                                           
-                                            [RLM transactionWithBlock:^{
+                                            Device *db_cam =     RLM_R_NVR(self.probedCam.cam_id);
+                                            if(db_cam) {
+                                                [RLM beginWriteTransaction];
+                                                 [self.navigationController.operatingDevice.nvr_cams addObject:db_cam];
+                                                [RLM commitWriteTransaction];
+                                            }else {
+                                                [RLM beginWriteTransaction];
                                                 [self.navigationController.operatingDevice.nvr_cams addObject:self.probedCam];
-                                                [self.navigationController popToRootViewControllerAnimated:YES];
-                                            }];
-                                            
-                                            [MBProgressHUD showSuccess:@"ADD CAM SUCCESS!"];
-                                            
+                                                [RLM commitWriteTransaction];
+                                            }
+                                             [self.navigationController popToRootViewControllerAnimated:YES];
+                                            [MBProgressHUD showSuccess:LS(@"添加摄像头成功")];
                                         }];
-        
-        
         [popup setDelegate:self];
         [popup setRoundedCorners:YES];
-        
-        
         [popup setBackgroundBlurType:PopupBackGroundBlurTypeDark];    //背景模糊
         [popup setIncomingTransition:PopupIncomingTransitionTypeFallWithGravity];
         [popup showPopup];
@@ -209,7 +186,7 @@ int my_device_action_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, voi
         [_specLable setNumberOfLines:0];
         _changeName = [[UILabel alloc] init];
         
-        NSAttributedString *aString = [NSAttributedString attrText:@"正在探测摄像头请等待...." withFont:[UIFont systemFontOfSize:17.f] color:[UIColor blackColor] aligment:NSTextAlignmentCenter];
+        NSAttributedString *aString = [NSAttributedString attrText:LS(@"正在探测摄像头请等待...." ) withFont:[UIFont systemFontOfSize:17.f] color:[UIColor blackColor] aligment:NSTextAlignmentCenter];
         
         
         
@@ -220,7 +197,7 @@ int my_device_action_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, voi
         
         _specLable.attributedText = aString;
         _addBtn = [[BButton alloc] initWithFrame:CGRectZero color:[UIColor grayColor]];
-        [_addBtn setTitle:@"add Cam" forState:UIControlStateNormal];
+        [_addBtn setTitle:LS(@"添加摄像头" ) forState:UIControlStateNormal];
         [_addBtn setEnabled:NO];
         
         [_addBtn addTarget:self action:@selector(toHome:) forControlEvents:UIControlEventTouchUpInside];

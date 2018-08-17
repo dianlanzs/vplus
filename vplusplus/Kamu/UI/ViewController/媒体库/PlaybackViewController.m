@@ -39,6 +39,7 @@
 
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
+    self.vp.frame = CGRectMake(0, 0, AM_SCREEN_WIDTH, AM_SCREEN_WIDTH * 0.5625);
     if (self.navigationController.operatingDevice.nvr_status == CLOUD_DEVICE_STATE_CONNECTED && self.vp.functionControl.state != ZLPlayerStateEnd) {
         [self.vp pb_pause];
         cloud_set_data_callback((void *)self.navigationController.operatingDevice.nvr_h, nil, nil);

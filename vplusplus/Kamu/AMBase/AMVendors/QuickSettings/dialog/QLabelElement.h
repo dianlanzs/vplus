@@ -31,7 +31,7 @@
 @property(nonatomic, strong) UIImage *image;
 @property(nonatomic, assign) NSString *imageNamed;
 @property(nonatomic, assign) UITableViewCellAccessoryType accessoryType;
-@property(nonatomic, strong) id value;
+//@property(nonatomic, strong) id value;
 
 
 @property(nonatomic) BOOL keepSelected;

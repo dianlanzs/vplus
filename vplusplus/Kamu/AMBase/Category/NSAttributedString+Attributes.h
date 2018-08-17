@@ -14,4 +14,6 @@
 
 
 + (NSAttributedString *)underlineAttrText:(NSString *)text withFont:(UIFont *)font color:(UIColor *)color aligment:(NSTextAlignment)aligment;
+
++ (NSAttributedString *)stringWithText:(NSString *)text withFont:(UIFont *)font color:(UIColor *)color aligment:(NSTextAlignment)aligment hasUnderline:(BOOL)underline headIndent:(CGFloat)indent;
 @end

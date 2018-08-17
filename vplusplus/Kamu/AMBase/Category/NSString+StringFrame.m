@@ -9,7 +9,7 @@
 #import "NSString+StringFrame.h"
 
 @implementation NSString (StringFrame)
-
+#pragma mark - 不固定宽度
 - (CGFloat)boundingRectWithFont:(UIFont *)useFont {
     
     //CGSizeMake(getScreenWidth(), CGFLOAT_MAX)注意：限制的宽度不同，计算的高度结果也不同。
@@ -32,7 +32,6 @@
     NSDictionary *attributes = @{NSForegroundColorAttributeName:[UIColor blackColor],
                                  NSParagraphStyleAttributeName:paragraphStyle,
                                  NSFontAttributeName:useFont
-                                 
                                  };
     
     CGFloat stringH = [self boundingRectWithSize:CGSizeMake([UIScreen mainScreen].bounds.size.width - 30, CGFLOAT_MAX)
@@ -43,11 +42,12 @@
 
 
 #pragma mark - 固定宽度和字体大小，获取label的frame
-- (CGSize) getSizeWithStr:(NSString *) str width:(float)width fontSize:(float)fontSize
-{
-    NSDictionary * attribute = @{NSFontAttributeName:[UIFont systemFontOfSize:fontSize]};
+- (CGSize)text:(NSString *)str width:(float)width font:(UIFont *)useFont {
+    NSDictionary * attribute = @{NSForegroundColorAttributeName:[UIColor blackColor],
+                                 NSFontAttributeName:useFont
+                                 };
     CGSize tempSize = [str boundingRectWithSize:CGSizeMake(width, MAXFLOAT)
-                                        options:NSStringDrawingUsesLineFragmentOrigin
+                                        options:NSStringDrawingUsesLineFragmentOrigin |NSStringDrawingUsesFontLeading
                                      attributes:attribute
                                         context:nil].size;
     return tempSize;

@@ -266,7 +266,7 @@ id (*objc_msgSendCreateCellWithIndexPath)(id self, SEL _cmd, NSIndexPath *) = (v
 //    [_mainTableView setTableFooterView:bottomView];
     
     [self.mainTableView mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.bottom.mas_equalTo(_bottomView.mas_top);
+        make.bottom.mas_equalTo(self.bottomView.mas_top);
         make.top.leading.trailing.mas_equalTo(self.view);
     }];
     
@@ -295,7 +295,7 @@ id (*objc_msgSendCreateCellWithIndexPath)(id self, SEL _cmd, NSIndexPath *) = (v
         NSString *resetString = @"sZYFilterReset";
         
         if ([resetString isEqualToString:@"sZYFilterReset"]) {
-            resetString = @"Reset";
+            resetString = LS(@"重置");
         }
         [_resetBtn setTitle:resetString forState:UIControlStateNormal];
         [_resetBtn setBackgroundColor:[UIColor lightGrayColor]];
@@ -313,7 +313,7 @@ id (*objc_msgSendCreateCellWithIndexPath)(id self, SEL _cmd, NSIndexPath *) = (v
         NSString *commitString = @"sZYFilterCommit";
         
         if ([commitString isEqualToString:@"sZYFilterCommit"]) {
-            commitString = @"Commit";
+            commitString = LS(@"提交");
         }
         [_commitBtn setTitle:commitString forState:UIControlStateNormal];
         [_commitBtn setBackgroundColor:[UIColor blueColor]];

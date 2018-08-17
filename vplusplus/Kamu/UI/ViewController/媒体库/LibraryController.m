@@ -200,7 +200,7 @@ int device_list_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *pa
                                                
     [self.navigationItem setLeftItemsSupplementBackButton:YES];
     
-    self.navigationItem.rightBarButtonItem = [UIBarButtonItem barItemWithimage:[UIImage imageNamed:@"button_filter_normal"] highImage:[UIImage imageNamed:@"button_filter_normal"] target:self action:@selector(filter:) title:@"筛选"];
+    self.navigationItem.rightBarButtonItem = [UIBarButtonItem barItemWithimage:[UIImage imageNamed:@"button_filter_normal"] highImage:[UIImage imageNamed:@"button_filter_normal"] target:self action:@selector(filter:) title:LS(@"筛选")];
 
 }
 - (void)addListController {
@@ -214,7 +214,7 @@ int device_list_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *pa
             [self.scrollView addSubview:page.tableView];
             page.tableView.frame = CGRectMake(CGRectGetWidth(self.scrollView.bounds) * i, 0, CGRectGetWidth(self.scrollView.bounds), CGRectGetHeight(self.scrollView.bounds)); //scrollview 滚动原理 是改变自身的 bounds
             
-            if ([self.segmentedControl.sectionTitles[i] isEqualToString:@"设备"]) {
+            if ([self.segmentedControl.sectionTitles[i] isEqualToString:LS(@"设备")]) {
                 
                 page.tableView.mj_header = [MJRefreshNormalHeader headerWithRefreshingBlock:^{
                     
@@ -320,7 +320,7 @@ int device_list_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *pa
     
     if (!_segmentedControl) {
         _segmentedControl = [[HMSegmentedControl alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(self.view.frame),40)];
-        _segmentedControl.sectionTitles = @[@"设备",@"手机"];
+        _segmentedControl.sectionTitles = @[LS(@"设备"),LS(@"手机")];
         _segmentedControl.backgroundColor = [UIColor blueColor];
         _segmentedControl.titleTextAttributes = @{NSForegroundColorAttributeName : [UIColor whiteColor] ,
                                                   NSFontAttributeName :[UIFont fontWithName:@"HelveticaNeue" size:15.f]};
@@ -376,7 +376,7 @@ int device_list_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *pa
 - (int)showSelectedDate {
     NSDateFormatter *dateFormat = [[NSDateFormatter alloc] init];
     dateFormat.dateFormat = @"yyyy-MM-dd";//@"dd-MMMM YYYY" yyyy-MM-dd HH:mm:ss ,默认  00:00:00
-    self.selectedDateLb.text = [dateFormat stringFromDate:self.datepicker.selectedDate];
+    self.selectedDateLb.text = LS([dateFormat stringFromDate:self.datepicker.selectedDate]);
     [self.datepicker scrollToSelectedDateWithAnimated:YES];
     
     NSDate *dateFromZero = [dateFormat dateFromString:[dateFormat stringFromDate:self.datepicker.selectedDate]];

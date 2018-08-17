@@ -105,6 +105,10 @@
     [self.navigationBar setTranslucent:NO];
     [self.appDelegate.tabBarController setTabBarHidden:YES];
     
+    
+    ///bg-color
+    [self.view setBackgroundColor:[UIColor groupTableViewBackgroundColor]];
+    
     if ([self respondsToSelector:@selector(interactivePopGestureRecognizer)]) {
         //重新签代理
 //        self.interactivePopGestureRecognizer.delegate = weakSelf;
@@ -233,10 +237,6 @@
     }
 }
 - (void)pushViewController:(UIViewController *)viewController animated:(BOOL)animated {
-
-   
-
-
     //拦截 push 之后 count > 1 ,push  之前 count > 0
     if (self.childViewControllers.count > 0) {
 //        if ([viewController isKindOfClass:NSClassFromString(@"QRDoneViewController")] ) {

@@ -10,5 +10,5 @@
 
 @interface ZLTextField : UITextField <UITextFieldDelegate>
 @property (nonatomic, copy) void(^filledNotify)(BOOL flag);
-
+@property (nonatomic, strong) UIImage *icon;
 @end

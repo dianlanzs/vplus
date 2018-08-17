@@ -25,9 +25,6 @@
 #define NSLog(format, ...)
 #endif
 
-#ifndef LS
-#define LS(string) NSLocalizedString(string, nil)
-#endif
 
 #ifndef NIB
 #define NIB(Class) NSStringFromClass([Class class])
@@ -168,7 +165,7 @@
 //#define WS(weakSelf)  __weak __typeof(&*self)weakSelf = self;
 //#define WeakObj(o) autoreleasepool{} __weak typeof(o) o##Weak = o;
 //#define WO(strongObj)__weak typeof(strongObj) strongObj##weakObj = weakObj;
-#define WeakObj(strongObj) __weak typeof(strongObj) ws = strongObj;
+#define WS(strongSelf) __weak typeof(strongSelf) ws = strongSelf;
 
 
 
@@ -198,6 +195,18 @@
 #define ZLPlayerImage(file)                 [UIImage imageNamed:ZLPlayerSrcName(file)] ? :[UIImage imageNamed:ZLPlayerFrameworkSrcName(file)]
 #define ZLPlayerOrientationIsLandscape      UIDeviceOrientationIsLandscape([UIDevice currentDevice].orientation)
 #define ZLPlayerOrientationIsPortrait       UIDeviceOrientationIsPortrait([UIDevice currentDevice].orientation)
+
+
+///调用  "LanguageTool" === getStringForKey Method
+//#define LS(string) [[LanguageTool sharedInstance] getStringForKey:string withTable:nil]
+
+#ifndef LS
+#define LS(string) NSLocalizedString(string, nil)
+#endif
+
+
+
+
 #pragma mark -常量
 
 static CGFloat const kTabBarHeight = 49.0;

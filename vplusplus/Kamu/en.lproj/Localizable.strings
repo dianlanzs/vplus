@@ -1,0 +1,220 @@
+/* 
+  Localizable.strings
+  Kamu
+
+  Created by YGTech on 2018/8/15.
+  Copyright © 2018 com.Kamu.cme. All rights reserved.
+*/
+
+
+"媒体库" = "Medias";
+"设置" = "Settings";
+"设备" = "Device";
+"添加新设备" = "Add New";
+
+
+
+
+
+
+//------------------  个人中心页面 ------------------
+"语言设置" = "Language";
+"个人中心" = "Personal Center";
+"个人信息" = "Profile";
+"用户ID" = "User ID";
+"持有设备" = "Owned Devices";
+"设备ID" = "Device ID";
+"帮助" = "Help";
+"清理缓存" = "Wipe Cache";
+"常见问题" = "Q&A";
+"关于" = "About";
+//"英文" = "English"
+"退出登录" = "Log Out";
+"从相册选择" = "Choose From Album";
+"拍照" = "Take Photo";
+
+"版本" = "version";
+"占位文字" = "Place Hoder Text";
+"重命名" = "rename";
+
+//------------------  摄像头设置页面 ------------------
+"摄像头名称" = "Cam Name";
+"摄像头设置" = "Cam Settings";
+"摄像头开关" = "ON-OFF";
+"电量剩余报警" = "Cam Battery Threshold";
+"图像旋转" = "Cam Rotate";
+"移动侦测灵敏度" = "Cam Pir Sensitivity";
+"视频清晰度设置" = "Video Qulity";
+
+"标准" = "Standard";
+"普通" = "Normal";
+"高清" = "High";
+"摄像头信息" = "Cam Info";
+"删除摄像头" = "Delete Cam";
+"重启摄像头" = "Restart Cam";
+"设置成功" = "Set Success";
+"设置失败" = "Set Failed";
+"提示" = "Promt";
+"取消" = "Cancel";
+"确认" = "Confirm";
+"保存" = "Save";
+"上传配置信息..." = "Uploading config info...";
+"请确认是否需要删除该摄像头 ？" = "Make sure delete this cam ?";
+"摄像头不存在" = " Not Find This Cam";
+"删除成功" = "Delete Sucess";
+"主摄像头不能删除!" = "Main cam can't be deleted !";
+
+
+
+
+
+
+
+//------------------  设备设置页面 ------------------
+"设备设置" = "Device Settings";
+"设备名称" = "Device Name";
+"本地存储" = "Local Storage";
+"授权访问" = "Authorized Access";
+"设备信息" = "Device Info";
+"标识" = "ID";
+"删除设备" = "Delete Device";
+"重启设备" = "Restart Device";
+
+
+
+// ------------------  扫描设备页面 ------------------
+"扫设备二维码" = "Scan Device QR Code";
+"设备号不正确" = "Device ID Not Correct";
+"请扫描机身或说明书上二维码进行设备添加"  =  "Please scan the qr code on the body or instruction manual to add the equipment";
+
+
+// ------------------  添加设备页面 ------------------
+
+"添加设备" = "Add Device";
+"扫描设备二维码" = "Scan Device QR Code";
+
+"使用以太网将基站连接至路由器,插入交流电源插座。" = "Connect the base station to the router using Ethernet and plug it into an ac socket.";
+"确保您的基站和路由器处于同一网段。" = "Make sure your base station and router are in the same network segment.";
+
+"按下基站背后 On-Off 按钮。" = "Press the on-off button behind the base station.";
+
+
+//------------------ 探测摄像头页面 ------------------
+
+"我们已探测到您的CAM!，在继续下一步前，建议您更改设备名称！" =  "We've detected your CAM! Before proceeding to the next step, it is recommended that you change the device name!";
+
+"该摄像头已经被添加" = "The camera has been added.";
+"更改设备名称" = "Change device name";
+"您想将设备放在何处？比如客厅,门廊,公司，家里..." ="Where do you want to put the equipment? The living room, the porch, the office, the home... ";
+"设置摄像头名称.." = "Set Camera Name.. ";
+"添加摄像头成功" = "Add Camera Success";
+"正在探测摄像头请等待...." = "Detecting cameras now, please wait... ";
+"添加摄像头" = "Add Camera";
+
+
+
+
+//------------------ 直播页面 ------------------
+"设备掉线,重连设备" = "device off line, equipment reconnected.";
+"播放超时,点击重播" = "Play timeout, hit replay";
+
+
+
+
+
+
+
+
+//------------------  首页 ------------------
+"欢迎进入Kamu新界面！" = "Welcome to Kamu new interface!";
+"点击此处'➕'按钮，扫描设备底部二维码，添加一个摄像机设备" = "Click here '➕' button qr code at the bottom of the scanning equipment, add a camera device";
+"正在连接请耐心等设备状态返回..." = "Connected, please wait patiently for the equipment status to return... ";
+"断开连接" = "DISCONNECTED";
+"其他错误" = "OTHER_ERR";
+"授权错误" = "AUTHENTICATE_ERR";
+"正在获取设备状态..." = "Getting Device Status";
+"请确认是否需要删除该设备？" =  "Do you need to delete the device ?";
+
+
+
+
+
+
+//------------------ 登录页面 ------------------
+"注册账户" = "Register Account";
+"注册 KAMU 账户" = "Register Kamu Account";
+"登录" = "Log In";
+"没有kamu账号？立即注册新账号!" = "No kamu account? Register account!";
+
+"邮箱:" = "email:";
+"密码:"  = "password:";
+"服务器访问错误" = "Server access error";
+
+
+
+
+//------------------  添加摄像头 说明页面 ------------------ 
+"按住摄像头上的 Sync 按钮约 2 秒钟,然后松开。(如果同步成功，摄像头上的蓝色 LED 会闪烁 10秒）" = "Hold the Sync button on the camera head for about 2 seconds, then release it. (if the synchronization is successful, the blue LED on the camera will flash for 10 seconds)";
+
+"蓝色LED指示灯未闪烁？" =  "No blue LED flash?";
+"探测摄像头" = "Detection camera";
+
+
+///回放
+"筛选" = "Filter";
+"手机" = "Moblie";
+"周日" = "SUN";
+"周一" = "MON";
+"周二" = "TUS";
+"周三" = "WEN";
+"周四" = "TUR";
+"周五" = "FRI";
+"周六" = "SAT";
+//月份
+"一月" = "JAN";
+"二月" = "FEB";
+"三月" = "MAR";
+"四月" = "APR";
+"五月" = "MAY";
+"六月" = "JUN";
+"七月" = "JUL";
+"八月" = "AUG";
+"九月" = "SEP";
+"十月" = "OCT";
+"十一月" = "NOV";
+"十二月" = "DEC";
+
+
+"重置" = "Reset";
+"提交" = "Commit";
+"选择摄像头" = "Choose Camera";
+
+
+
+
+//------------------  APP Delegate ------------------
+
+"退出中..." = "Log Out...";
+"成功" = "Success";
+"退出成功" = "Log Out Success";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -36,7 +36,7 @@
 
 #define OP_CAM_ID                   (self.vc.navigationController.operatingCam.cam_id)
 #define OP_CAM                      (self.vc.navigationController.operatingCam)
-
+#define P_SCALE               0.5625
 
 
 
@@ -117,29 +117,10 @@ typedef NS_ENUM(NSInteger, PanDirection){
 ////    self.functionControl.fastView.hidden = YES;
 //}
 
-- (void)checking {
-    
-    [self setChekingFlag:0];
-    if (self.timer.isValid) {  //  for sync: reloved timer dealay 2s
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            if (self.chekingFlag == 0 && OP_DEVICE_STATUS == CLOUD_DEVICE_STATE_CONNECTED) {
-                [self.functionControl setState:ZLPlayerStateBuffering];
-            }
-            else if (self.chekingFlag == 0 && OP_DEVICE_STATUS == CLOUD_DEVICE_STATE_DISCONNECTED) {
-                [self.functionControl setState:ZLPlayerStateFailed];
-            }
-        });
-    }
-  
-}
 
 //耳机插入、拔出事件
 //- (void)audioRouteChangeListenerCallback:(NSNotification*)notification {
 //}
-
-
-
-
 
 #pragma mark - Getter,Setter
 
@@ -228,17 +209,27 @@ typedef NS_ENUM(NSInteger, PanDirection){
     if (statusBarOri == orientation) {
         return;
     }
+    
+    
+    
+    
+    
+    [[UIApplication sharedApplication] setStatusBarOrientation:orientation animated:NO]; ///TURN-OUT  缝隙和 旋转状态栏有关系！！！！！！！！！！
     if (orientation == UIInterfaceOrientationPortrait) {
         window.bounds = CGRectMake(0, 0, MIN(AM_SCREEN_HEIGHT, AM_SCREEN_WIDTH),MAX(AM_SCREEN_HEIGHT, AM_SCREEN_WIDTH) );
         NSLog(@"portrait %@",NSStringFromCGRect(self.vc.view.bounds));
 
+ 
+        ///navgationBar 置顶  ，reslove  低版本的bug
+//        [self.vc.navigationController.view bringSubviewToFront:self.vc.navigationController.navigationBar];
+        /// reslove  低版本的bug
         [self.vc.navigationController setNavigationBarHidden:NO animated:NO];
         [self mas_remakeConstraints:^(MASConstraintMaker *make) {
-            make.top.mas_equalTo(self.vc.view).offset(FunctionbarH);
+            make.top.mas_equalTo(self.vc.view).offset(self.funcBar.isHidden ? 0 : FunctionbarH);
             make.leading.trailing.equalTo(self.vc.view);
-            make.height.mas_equalTo(211);
+            make.height.mas_equalTo( MIN(AM_SCREEN_HEIGHT, AM_SCREEN_WIDTH)  * P_SCALE);
         }];
-//        [self.vc.navigationController.view bringSubviewToFront:self.vc.navigationController.navigationBar];
+        
         [UIView animateWithDuration:.3f animations:^{
             [window setTransform:CGAffineTransformIdentity];
         }];
@@ -250,13 +241,20 @@ typedef NS_ENUM(NSInteger, PanDirection){
        
         window.bounds = CGRectMake(0, 0, MAX(AM_SCREEN_HEIGHT, AM_SCREEN_WIDTH),MIN(AM_SCREEN_HEIGHT, AM_SCREEN_WIDTH) );
         NSLog(@"fullscreen %@",NSStringFromCGRect(self.vc.view.bounds));
+        
+
+      
+        ///navgationBar （横屏 send到底部 ,player view在顶层） ，reslove  低版本的bug
+//        [self.vc.navigationController.view sendSubviewToBack:self.vc.navigationController.navigationBar];
+        /// reslove  低版本的bug
         [self.vc.navigationController setNavigationBarHidden:YES animated:NO];
         [self mas_remakeConstraints:^(MASConstraintMaker *make) {
-//            make.center.equalTo(self.vc.view);
-//            make.size.mas_equalTo(window.bounds.size);
-            make.edges.mas_equalTo(UIEdgeInsetsZero);
+       ///cuz  方案2 适配低版本 ，没有隐藏navigationBar  所以view 还在navgationBar 下面
+//        make.edges.mas_equalTo(UIEdgeInsetsZero);
+            make.edges.mas_equalTo(self.vc.navigationController.view).insets(UIEdgeInsetsZero);
+            
+            
         }];
-//        [self.vc.navigationController.view sendSubviewToBack:self.vc.navigationController.navigationBar];
         if (orientation == UIInterfaceOrientationLandscapeRight) {
             [UIView animateWithDuration:.3f animations:^{
                 [window setTransform:CGAffineTransformMakeRotation(M_PI_2)];
@@ -270,7 +268,7 @@ typedef NS_ENUM(NSInteger, PanDirection){
         [self.functionControl setFullScreen:YES];
     }
     
-    [[UIApplication sharedApplication] setStatusBarOrientation:orientation animated:NO];
+//    [[UIApplication sharedApplication] setStatusBarOrientation:orientation animated:NO];
 
 }
 
@@ -300,15 +298,61 @@ typedef NS_ENUM(NSInteger, PanDirection){
     return self.backgroundColor;
 }
 
-#pragma mark - 播放,暂停,静音,重连
+#pragma mark - cam重播,暂停,静音,设备重连
 - (void)reconnect {
      cloud_connect_device((void *)OP_DEVICE_HANDLE, "admin", "123");
-//    [self lv_start]; //play a  cam
 }
+- (void)lp_replay {
+    
+    [self setChekingFlag:0]; /// must 立即设置 。lv_stop & lv_start 耗时 ,期间 flag 会 不停增加
+    [self lv_stop];
+    [self lv_start];
+}
+- (void)checking {
+    
+    self.chekingFlag += 5;
+    NSLog(@"隔5s计时：----⏰%zd",self.chekingFlag);
+    if (self.timer.isValid) {  ///  for sync: reloved timer dealay 2s  --- invalid timer 同步 不调用 这里code
+        
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            ///正常出图情况 flag = 1 s 内  callback 修改 flag 值
+            if (self.chekingFlag == 1) {
+                ///cam 播放中...
+                //                NSLog(@"VC--%@,NVR---%@ ---- CAM--%@",self.vc.navigationController,self.vc.navigationController.operatingDevice,self.vc.navigationController.operatingCam.cam_id);
+                if(self.vc.navigationController && [self.functionControl isKindOfClass:[LivePlayControl class]]) {///保护 player不被释放前！
+                    NSLog(@"1s后更新电池电量");
+                    cloud_device_cam_get_info((void *)OP_DEVICE_HANDLE,[OP_CAM_ID UTF8String]);
+                }
+            }else {
+                if (OP_DEVICE_STATUS == CLOUD_DEVICE_STATE_CONNECTED) {
+                  
+                    if (self.chekingFlag >= 5 && self.chekingFlag < 20) {///缓冲
+                        [self.functionControl setState:ZLPlayerStateBuffering];
+                        
+                    }
+                    else if (self.chekingFlag >= 20) {///超时
+                        if([self.functionControl isKindOfClass:[LivePlayControl class]] ) {
+                            [self.timer invalidate];
+                            [MBProgressHUD showError:[NSString stringWithFormat:@"timeout = 15 -- Flag =%zd",self.chekingFlag]];
+                            [self.functionControl setState:ZLPlayerStateReplay];
+                        }
+                    }
+                }else {
+                        [self.timer invalidate];
+                        [self.functionControl setState:ZLPlayerStateFailed];
+                }
+            }
+            
+        });
+    }
+    
+}
+
 
 - (void)fireTimer {
     _timer = [NSTimer scheduledTimerWithTimeInterval:5.f target:self selector:@selector(checking) userInfo:nil repeats:YES];
     [_timer fire];
+
 }
 - (void)invalidTimer {
     [_timer invalidate];
@@ -317,34 +361,39 @@ typedef NS_ENUM(NSInteger, PanDirection){
 
 
 - (void)lv_start {
+  
     [self.glvc setPaused:NO];
-    
     cloud_set_event_callback((void *)OP_DEVICE_HANDLE, device_event_callback_camInfo,(__bridge void *)self);
     cloud_set_data_callback((void *)OP_DEVICE_HANDLE, device_data_callback, (__bridge void *)self);
 
     NSLog(@"%lu,%@",self.vc.navigationController.operatingDevice.nvr_h,self.vc.navigationController.operatingCam.cam_id);
     
-    
+//    cloud_device_cam_get_info((void *)OP_DEVICE_HANDLE,[OP_CAM_ID UTF8String]);
     cloud_device_play_video((void *)OP_DEVICE_HANDLE,[OP_CAM_ID UTF8String]);
     cloud_device_play_audio((void *)OP_DEVICE_HANDLE,[OP_CAM_ID UTF8String]);
     [AUTOOL startService:OP_DEVICE_HANDLE cam:OP_CAM_ID];
-    cloud_device_cam_get_info((void *)OP_DEVICE_HANDLE,[OP_CAM_ID UTF8String]);
-
+    
+    ///轮询检测设备连接状态 ,timer 立即执行 但换没有播放 ，会等出图 在获取 caminfo
+    [self fireTimer];
+    
 }
 - (void)lv_stop {
+    if (self.timer.isValid) {
+        [self invalidTimer];
+    }
     [self.glvc setPaused:YES];
     cloud_device_stop_video((void *)OP_DEVICE_HANDLE, [OP_CAM_ID UTF8String]);
     cloud_device_stop_audio((void *)OP_DEVICE_HANDLE, [OP_CAM_ID UTF8String]);
     [AUTOOL stopService];
     
-    if (self.timer.isValid) {
-        [self invalidTimer];
-    }
+   
     [PB_CONTROL setState:ZLPlayerStateEnd];
 
 }
 
 - (void)pb_start {
+    ///轮询检测设备连接状态
+    [self fireTimer];
     cloud_set_data_callback((void *)OP_DEVICE_HANDLE, device_data_callback, (__bridge void *)self);
     [self.glvc setPaused:NO];
     [OP_DEVICE setAvDelegate:self];
@@ -352,28 +401,28 @@ typedef NS_ENUM(NSInteger, PanDirection){
     [AUTOOL startService:OP_DEVICE_HANDLE cam:OP_CAM_ID];
     [PB_CONTROL setPlayerEnd:NO];
     
-  
+   
 }
 
 
 
 - (void)pb_end {
-    
-    [self.glvc setPaused:YES];
-    cloud_device_cam_pb_stop((void *)OP_DEVICE_HANDLE,[OP_CAM_ID UTF8String]);
-    [AUTOOL stopService];
     if (self.timer.isValid) {
         [self invalidTimer];
     }
+    [self.glvc setPaused:YES];
+    cloud_device_cam_pb_stop((void *)OP_DEVICE_HANDLE,[OP_CAM_ID UTF8String]);
+    [AUTOOL stopService];
+  
     [PB_CONTROL setState:ZLPlayerStateEnd];
 }
 
 - (void)pb_pause {
-    [self.glvc setPaused:YES];
-    cloud_device_cam_pb_pause((void *)OP_DEVICE_HANDLE,[OP_CAM_ID UTF8String]);
     if (self.timer.isValid) {
         [self invalidTimer];
     }
+    [self.glvc setPaused:YES];
+    cloud_device_cam_pb_pause((void *)OP_DEVICE_HANDLE,[OP_CAM_ID UTF8String]);
     [PB_CONTROL setState:ZLPlayerStatePause];
 }
 - (void)pb_resume {
@@ -385,15 +434,7 @@ typedef NS_ENUM(NSInteger, PanDirection){
     [self.functionControl setState:ZLPlayerStateBuffering];
 
 }
-- (void)zl_controlView:(UIView *)controlView muteAction:(UIButton *)muteButton {
-    if (muteButton.isSelected) {
-        cloud_device_stop_audio((void *)OP_DEVICE_HANDLE, [OP_CAM_ID UTF8String]);
-        [AUTOOL setInput:NO output:NO];
-    }else {
-        cloud_device_play_audio((void *)OP_DEVICE_HANDLE, [OP_CAM_ID UTF8String]);
-        [AUTOOL setInput:NO output:YES];
-    }
-}
+
 
 
 #pragma mark - Speaker
@@ -476,15 +517,44 @@ typedef NS_ENUM(NSInteger, PanDirection){
         [self.delegate zl_playerBackAction];
     }
 }
-- (void)zl_controlView:(UIView *)controlView failAction:(UIButton *)sender {
-    [self reconnect];
+- (void)zl_controlView:(CommonPlayerControl *)controlView failAction:(UIButton *)sender {
+    
+    if(controlView.state == ZLPlayerStateFailed) {
+         [self reconnect];///设备掉线 ，重连设备
+    }else if(controlView.state == ZLPlayerStateReplay) {
+        [self lp_replay];///设备连接    ，网络状况不好 重启 session --- 重新播放
+    }
+   
 }
 
-
+- (void)zl_controlView:(UIView *)controlView muteAction:(UIButton *)muteButton {
+    if (muteButton.isSelected) {
+        cloud_device_stop_audio((void *)OP_DEVICE_HANDLE, [OP_CAM_ID UTF8String]);
+        [AUTOOL setInput:NO output:NO];
+    }else {
+        cloud_device_play_audio((void *)OP_DEVICE_HANDLE, [OP_CAM_ID UTF8String]);
+        [AUTOOL setInput:NO output:YES];
+    }
+}
 
 - (void)zl_controlView:(UIView *)controlView lockScreenAction:(UIButton *)lockButton {
+    
+    ///记录 🔐 状态 data
     lockButton.selected             = !lockButton.isSelected;
     ZLPlayerShared.isLockScreen = lockButton.isSelected;
+    
+    
+    
+    ///UI
+    if(lockButton.isSelected) {
+        [self removeDeviceOrientationNotifications ];
+    }else {
+       [self addDeviceOrientationNotifications ];
+    }
+    [self.functionControl showControl];
+    
+    
+    
 }
 
 //麦克风对讲
@@ -664,6 +734,7 @@ typedef NS_ENUM(NSInteger, PanDirection){
             /// make hit-test in superview  cuz no  custom class of bottomImageview ! remakeConstrints excute  must delay  before super view  allocated
             [self addSubview:LP_CONTROL.speakerBtn_vertical];
             [self.vc.view addSubview:self.funcBar];//使用_funcBar，不显示，  cuz 没有走get 方法 self.funcBar!!
+            NSLog(@"%d",self.funcBar.isHidden);
         }
         
         
@@ -682,18 +753,18 @@ typedef NS_ENUM(NSInteger, PanDirection){
 //        cloud_set_event_callback((void *)OP_DEVICE_HANDLE, device_event_callback_camInfo,(__bridge void *)self);
         self.playerModel = vp_model;
         [self setHasPreviewView:NO];
-        [self addNotifications];
+        [self addAppStateNotifications];
+        [self addDeviceOrientationNotifications];
+        
         self.delegate = (id)vc;
     
         [vc.view addSubview:self];
-        self.frame = CGRectMake(0, 40, AM_SCREEN_WIDTH, AM_SCREEN_WIDTH * 0.5625); //16:9
         
         [vc addChildViewController:self.glvc];
         [self insertSubview:self.glvc.view atIndex:0];
         [self.glvc.view setFrame:self.bounds];
         [self.glvc didMoveToParentViewController:vc];
-        ///轮询检测设备连接状态
-        [self fireTimer];
+   
     }
     return self;
 }
@@ -706,10 +777,10 @@ int device_event_callback_camInfo(cloud_device_handle handle,CLOUD_CB_TYPE type,
         device_camera_info_t *info = (device_camera_info_t *)param;
         
         dispatch_sync(dispatch_get_main_queue(), ^{
-            
-         
+
             [cs.funcBar setBatteryProgress:info -> batttery];
             [cs.funcBar setWifiProgress:info -> wifi];
+            NSLog(@"BATTERY %d --WIFI %d",info -> batttery,info -> wifi);
             [RLM transactionWithBlock:^{
                 [cs.vc.navigationController.operatingCam setCam_version:[NSString stringWithUTF8String:info->verison]];
             }];
@@ -740,8 +811,7 @@ int device_data_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *pa
                 
                 if (cs.functionControl.state != ZLPlayerStatePlaying) {
                     [cs.functionControl setState:ZLPlayerStatePlaying];
-                }
-                else if ([cs.functionControl isKindOfClass:[PlaybackControl class]]) {
+                }else if ([cs.functionControl isKindOfClass:[PlaybackControl class]]) {
                     CGFloat totalTime = cs.vc.navigationController.operatingMedia.timelength;
                     CGFloat valuePercent = timestamp / totalTime;
                     [cs.functionControl zl_playerCurrentTime:timestamp totalTime:totalTime sliderValue:valuePercent];
@@ -757,14 +827,24 @@ int device_data_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *pa
     return 0;
 }
 #pragma mark - 观察者、设备通知
-- (void)addNotifications {
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(processAppNotification:) name:UIApplicationWillResignActiveNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(processAppNotification:) name:UIApplicationDidBecomeActiveNotification object:nil];
+
+- (void)addDeviceOrientationNotifications {
     [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications]; //陀螺仪计算 ，产生通知 ,这个方法有延迟
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(onDeviceOrientationChange)
                                                  name:UIDeviceOrientationDidChangeNotification
                                                object:nil];
+}
+
+- (void)removeDeviceOrientationNotifications {
+    [[UIDevice currentDevice] endGeneratingDeviceOrientationNotifications]; //陀螺仪计算 ，产生通知 ,这个方法有延迟
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIDeviceOrientationDidChangeNotification object:nil];
+}
+
+- (void)addAppStateNotifications {
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(processAppNotification:) name:UIApplicationWillResignActiveNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(processAppNotification:) name:UIApplicationDidBecomeActiveNotification object:nil];
+   
     // 监听耳机插入和拔掉通知
     //    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(audioRouteChangeListenerCallback:) name:AVAudioSessionRouteChangeNotification object:nil];
 //    [[NSNotificationCenter defaultCenter] addObserver:self
@@ -786,7 +866,8 @@ int device_data_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *pa
     //    ZLPlayerShared.isLockScreen = NO;
     //    [self.controlView zl_playerCancelAutoFadeOutControlView];
     // 移除通知
-
+     NSLog(@"-------- player 释放 ------------");
+   ///self 的域 已经释放 vc 已经释放 ，不能在这里 反注册！
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [[UIDevice currentDevice] endGeneratingDeviceOrientationNotifications];
     

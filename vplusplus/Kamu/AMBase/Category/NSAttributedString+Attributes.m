@@ -20,18 +20,15 @@
 
 
 + (NSAttributedString *)attrText:(NSString *)text withFont:(UIFont *)font color:(UIColor *)color aligment:(NSTextAlignment)aligment{
-    return [self stringWithText:text withFont:font color:color aligment:aligment  hasUnderline:NO];
+    return [self stringWithText:text withFont:font color:color aligment:aligment  hasUnderline:NO headIndent:0];
 }
 
 
 + (NSAttributedString *)underlineAttrText:(NSString *)text withFont:(UIFont *)font color:(UIColor *)color aligment:(NSTextAlignment)aligment{
-    return [self stringWithText:text withFont:font color:color aligment:aligment  hasUnderline:YES];
+    return [self stringWithText:text withFont:font color:color aligment:aligment  hasUnderline:YES headIndent:0];
 }
 
-
-
-
-+ (NSAttributedString *)stringWithText:(NSString *)text withFont:(UIFont *)font color:(UIColor *)color aligment:(NSTextAlignment)aligment hasUnderline:(BOOL)underline{
++ (NSAttributedString *)stringWithText:(NSString *)text withFont:(UIFont *)font color:(UIColor *)color aligment:(NSTextAlignment)aligment hasUnderline:(BOOL)underline headIndent:(CGFloat)indent{
     
     
 
@@ -40,12 +37,22 @@
     NSDictionary *attributes;
     //段落样式
     NSMutableParagraphStyle *paragraphStyle = [[ NSMutableParagraphStyle alloc ] init];
-    
-    //这是段落 格式！！！  居中对齐  、尾部最后一行自然对齐
+ 
+  
+   
+   
+    ///这是段落 格式！！！  居中对齐  、尾部最后一行自然对齐
     paragraphStyle.alignment = aligment;
-    //单词和字符的断行模式 ，单词断行！
+    ///单词和字符的断行模式 ，单词断行！
     paragraphStyle.lineBreakMode = NSLineBreakByWordWrapping;
     
+    
+    
+    ///首行缩进
+    paragraphStyle.firstLineHeadIndent = indent;
+    /// 头部缩进尾部缩进
+//    paragraphStyle.tailIndent = -10.0f;
+//    paragraphStyle.headIndent = 10.0f;
     
     if (underline) {
        attributes = @{NSFontAttributeName:font,

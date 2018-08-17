@@ -15,6 +15,7 @@
 
 
 @property (nonatomic, strong) RLMNotificationToken *cam_token;
+@property (nonatomic, strong) Device *cam_owner;
 @end
 
 
@@ -39,27 +40,32 @@
     return self;
 }
 
+- (void)dealloc {
+    NSLog(@"camToken 释放");
+    [self.cam_token invalidate];
+}
 #pragma mark - setter
 - (void)setCam:(Cam *)cam {
     
     
-    ///check cam pointer is a new cam ?  (maybe cam_id better!)
-    if (cam  && cam != _cam ) {
-        
+    ///check cam pointer is a new cam ?  (maybe cam_id better!) ///访问的是 旧的 _cam  cam_id 相同 也有可能是不同对象！！
+    if (cam  && cam != _cam ) { ///REALM   可以访问 _cam ， 但是不能访问其属性！！！
+        WS(self);
         _cam = cam;
         self.cam_token = [cam addNotificationBlock:^(BOOL deleted, NSArray<RLMPropertyChange *> * _Nullable changes, NSError * _Nullable error) {
             if (deleted) {
-                NSLog(@"Cam已经删除!");
-                [MBProgressHUD showSuccess:@"Cam已经删除!"];
+                NSLog(@"------REALM 监听 %@已经删除!- --------",ws.camLabel.text);
+                [MBProgressHUD showSuccess:[NSString stringWithFormat:@"REALM 监听%@ 已成功删除！",ws.camLabel.text]];
             }else {
                 
                 for (RLMPropertyChange *property in changes) {
-                    if ([property.name isEqualToString:@"cam_name"] ) {
-                        [self.camLabel setText:property.value];
-                    }
                     
+                    
+                    if ([property.name isEqualToString:@"cam_name"] ) {
+                        [ws.camLabel setText:property.value];
+                    }
                     else if ([property.name isEqualToString:@"cam_cover"]) {
-                        [self.playableView setImage:[UIImage imageWithData:property.value]];
+                        [ws.playableView setImage:[UIImage imageWithData:property.value]];
                     }
                     
                     
@@ -83,6 +89,8 @@
     
     
 }
+
+
 #pragma mark - 设置约束
 - (void)setupConstraints {
     
@@ -91,46 +99,41 @@
         make.leading.equalTo(self.contentView);
         make.trailing.equalTo(self.contentView);
         if (self.cam.nvrs.count == 1) {
-            
-            Device *d = self.cam.nvrs.firstObject;
-            if (d.nvr_type == CLOUD_DEVICE_TYPE_IPC) {
-                make.height.equalTo(@201);
-            }else if (d.nvr_type == CLOUD_DEVICE_TYPE_GW) {
-                make.height.equalTo(@100);
+            if (self.cam_owner.nvr_type == CLOUD_DEVICE_TYPE_IPC) {
+                make.height.mas_equalTo(COLLECTION_VIEW_H);
+            }else if (self.cam_owner.nvr_type == CLOUD_DEVICE_TYPE_GW) {
+                make.height.mas_equalTo(ITEM_H);
             }
-            
         }
     }];
+    
+    
     
     [self.camLabel mas_makeConstraints:^(MASConstraintMaker *make) {
         make.leading.equalTo(self.contentView);
         make.trailing.equalTo(self.contentView);
         make.bottom.equalTo(self.contentView).offset(0);
-        make.height.equalTo(@30);
+        make.height.mas_equalTo(LABEL_H);
     }];
+    
+    
     
     [self.playBtn mas_makeConstraints:^(MASConstraintMaker *make) {
         make.center.equalTo(self.playableView);
-        
         if (self.cam.nvrs.count == 1) {
-            
-            
-            Device *d = self.cam.nvrs.firstObject;
-            if (d.nvr_type == CLOUD_DEVICE_TYPE_IPC) {
-                make.size.mas_equalTo(CGSizeMake(80.0f ,80.0f));
-            }else if (d.nvr_type == CLOUD_DEVICE_TYPE_GW) {
-                make.size.mas_equalTo(CGSizeMake(40.0f ,40.0f));
-
+            if (self.cam_owner.nvr_type == CLOUD_DEVICE_TYPE_IPC) {
+                make.size.mas_equalTo(CGSizeMake(BUTTON_H * 2 ,BUTTON_H * 2));
+            }else if (self.cam_owner.nvr_type == CLOUD_DEVICE_TYPE_GW) {
+                make.size.mas_equalTo(CGSizeMake(BUTTON_H ,BUTTON_H));
             }
-            
-            
-            
         }
+        
     }];
 }
 
 
-#pragma mark - Required!!
+#pragma mark - getter
+
 - (UIImageView *)bgView {
     if (!_bgView) {
         _bgView = [[UIImageView alloc] init];
@@ -168,5 +171,12 @@
         [_playBtn setHidden:YES];
     }
     return _playBtn;
+}
+
+- (Device *)cam_owner {
+    if(!_cam_owner) {
+        _cam_owner = self.cam.nvrs.firstObject;
+    }
+    return _cam_owner;
 }
 @end

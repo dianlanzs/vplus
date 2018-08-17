@@ -35,7 +35,7 @@
 - (instancetype)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
     if (self) {
-        self.navigationItem.title = @"扫设备二维码";
+        self.navigationItem.title = LS(@"扫设备二维码");
     }
     return self;
 }
@@ -43,13 +43,8 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
-    //添加 Scannner
     [self addSubviews];
-    
-//
-//
-//    //设置右侧 item按钮
+   //设置右侧 item按钮
 //    UIImage *buttonItemimage =  [UIImage imageNamed:@"navigation_add"];
 //    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithImage:buttonItemimage style:UIBarButtonItemStylePlain target:self action:@selector(addButtonDidPressed:)];
 //    
@@ -95,7 +90,7 @@
             [self.navigationController pushViewController:QRdoneVc animated:YES];
             
         }else{
-            [MBProgressHUD showPromptWithText:@"设备号不正确"];
+            [MBProgressHUD showPromptWithText:LS(@"设备号不正确")];
         }
 }
 
@@ -106,13 +101,15 @@
 - (QRCScanner *)scanner {
     
     if (!_scanner) {
-        
-        UIButton *lightButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 100, 40)];
-        [lightButton setImage:[UIImage imageNamed:@"button_torch_normal"] forState:UIControlStateNormal];
-        [lightButton setImage:[UIImage imageNamed:@"button_torch_selected"] forState:UIControlStateSelected];
+        UIButton *lightButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 30, 30)];
+//        [lightButton setImage:[UIImage imageNamed:@"btn_torch"] forState:UIControlStateNormal];
+        [lightButton setBackgroundImage:[UIImage imageNamed:@"btn_torch"]  forState:UIControlStateNormal];
+        [lightButton setBackgroundImage:[UIImage imageNamed:@"button_torch_selected"] forState:UIControlStateSelected];
 
-        [lightButton setTitle:@"OFF" forState:UIControlStateNormal];
-        [lightButton setTitle:@"ON" forState:UIControlStateSelected];
+//        [lightButton setImage:[UIImage imageNamed:@"button_torch_selected"] forState:UIControlStateSelected];
+        [lightButton setContentMode:UIViewContentModeScaleAspectFill];
+//        [lightButton setTitle:@"OFF" forState:UIControlStateNormal];
+//        [lightButton setTitle:@"ON" forState:UIControlStateSelected];
 
         [lightButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
         [lightButton.titleLabel setFont:[UIFont systemFontOfSize:14.f]];
@@ -128,7 +125,9 @@
     
     return _scanner;
 }
-
+- (void)dealloc {
+    NSLog(@"ADD-DEVICE 释放");
+}
 #pragma mark - 添加子（QR）视图
 - (void)addSubviews {
     
@@ -165,7 +164,7 @@
 - (UILabel *)descLb {
     
     if (!_descLb) {
-        _descLb = [UILabel labelWithText:@"请扫描机身或说明书上二维码进行设备添加" withFont:
+        _descLb = [UILabel labelWithText:LS(@"请扫描机身或说明书上二维码进行设备添加") withFont:
                    [UIFont systemFontOfSize:15.f] color:
                    [UIColor lightGrayColor] aligment:NSTextAlignmentCenter];
         

@@ -222,6 +222,8 @@ if (type == CLOUD_CB_STATE) {
 int cloud_init(void);
 //云服务退出
 int cloud_exit(void);
+int cloud_restart(void);
+
 int cloud_set_appinfo(const char *appinfo);
 //根据设备id创建一个设备句柄，之后对设备的操作必须带入这个句柄。
 cloud_device_handle cloud_open_device(const char *did);
@@ -229,6 +231,7 @@ cloud_device_handle cloud_open_device(const char *did);
 int cloud_close_device(cloud_device_handle handle);
 //获取设备类型
 cloud_device_type_t cloud_get_device_type(cloud_device_handle handle);
+cloud_device_type_t cloud_get_device_type_by_did(const char *did);
 //主动获取设备状态
 cloud_device_state_t cloud_get_device_status(cloud_device_handle handle);
 
@@ -239,6 +242,9 @@ cloud_device_state_t cloud_connect_device(cloud_device_handle handle, const char
 cloud_device_state_t cloud_reconnect_device(cloud_device_handle handle);
 //断开与设备连接
 int cloud_disconnect_device(cloud_device_handle handle);
+
+int cloud_forget_device(cloud_device_handle handle);
+
 //获取当前设备下的camera数目
 int cloud_device_get_cams(cloud_device_handle handle, int max_num, device_cam_info_t* info);
 

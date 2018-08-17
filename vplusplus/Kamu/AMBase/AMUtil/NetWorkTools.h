@@ -34,7 +34,7 @@ typedef void(^AMRequestFinished)(id responseObject,NSError *error);
 @interface NetWorkTools : NSObject
 
 @property (nonatomic, copy) NSString *taskIdentifier;
-@property (nonatomic, copy) NSString *commond;
+@property (nonatomic, copy) NSString *URL;
 @property (nonatomic, strong) NSMutableDictionary *params;
 @property (nonatomic, assign) AMRequestMethod method;
 @property (nonatomic, copy) AMRequestFinished finished;

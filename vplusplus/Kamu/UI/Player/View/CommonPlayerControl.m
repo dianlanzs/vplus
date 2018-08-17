@@ -16,6 +16,8 @@
 
 @implementation CommonPlayerControl
 
+
+///MARK: diff 全屏&半屏 控件显示
 - (void)setFullScreen:(BOOL)fullScreen {
     
     _fullScreen = fullScreen;
@@ -135,8 +137,10 @@
     return _lockBtn;
 }
 - (void)lockScrrenBtnClick:(UIButton *)sender {
-    sender.selected = !sender.selected;
 //    [self zl_playerShowControlView];//show contorlView 时候要判断一下 ，锁定按钮状态
+    [self.delegate zl_controlView:self lockScreenAction:sender];
+   
+
 }
 /*
 - (void)zl_playerShowControlView {
@@ -185,10 +189,11 @@
 - (UIButton *)failBtn {
     if (!_failBtn) {
         _failBtn = [UIButton buttonWithType:UIButtonTypeSystem];
-        [_failBtn setTitle:@"加载失败,点击重试" forState:UIControlStateNormal];
+        [_failBtn setHidden:YES];
+        [_failBtn setTitle:LS(@"设备掉线,重连设备") forState:UIControlStateNormal];
         [_failBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
         _failBtn.titleLabel.font = [UIFont systemFontOfSize:14.0];
-        _failBtn.backgroundColor = [UIColor colorWithWhite:1 alpha:0.7];
+//        _failBtn.backgroundColor = [UIColor colorWithWhite:1 alpha:0.7];
         [_failBtn addTarget:self action:@selector(failBtnClick:) forControlEvents:UIControlEventTouchUpInside];
     }
     return _failBtn;
@@ -228,7 +233,7 @@
 
 - (void)autoFadeOutControlView {
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(hideCommonControl) object:nil];
-    [self performSelector:@selector(hideCommonControl) withObject:nil afterDelay:7.f];
+    [self performSelector:@selector(hideControl) withObject:nil afterDelay:7.f];
 }
 - (void)zl_playerCancelAutoFadeOutControlView {
     [NSObject cancelPreviousPerformRequestsWithTarget:self];
@@ -239,28 +244,32 @@
 
 
 
-- (void)hideControl {
-    
+- (void)hideControl  {
+  
     self.lockBtn.alpha            = 0;
     self.topImageView.alpha       = 0;
     self.bottomImageView.alpha    = 0;
+    if(self.isFullScreen) {
+        [[ZLBrightnessView sharedBrightnessView] setIsStatusBarHidden:YES];
+    }
 
 }
 - (void)showControl {
     
 
     self.lockBtn.alpha             = 1;
-    if (!self.lockBtn.isSelected) {
+    if (self.lockBtn.isSelected) {
+        self.topImageView.alpha    = 0;
+        self.bottomImageView.alpha = 0;
+    }else {
         self.topImageView.alpha    = 1;
         self.bottomImageView.alpha = 1;
     }
-    else {
-        self.topImageView.alpha    = 0;
-        self.bottomImageView.alpha = 0;
-    }
     
-    [ZLBrightnessView sharedBrightnessView].isStatusBarHidden = NO;
-
+    if(self.isFullScreen) {
+        [[ZLBrightnessView sharedBrightnessView] setIsStatusBarHidden:NO];
+        
+    }
 
 }
 
@@ -280,12 +289,15 @@
     
     if (state != _state) {
         _state = state;
-        if (state == ZLPlayerStateFailed) {
+        if (state == ZLPlayerStateFailed || state == ZLPlayerStateReplay) {
             [self.spinner stopAnimating];
+            if(state == ZLPlayerStateFailed) {
+                [self.failBtn setTitle:LS(@"播放超时,点击重播") forState:UIControlStateNormal];
+            }else {
+                [self.failBtn setTitle:LS(@"设备掉线,重连设备") forState:UIControlStateNormal];
+            }
             [self.failBtn setHidden:NO];
         } else {
-            
-            
             [self.failBtn setHidden:YES];
             if (state == ZLPlayerStateBuffering) {
                 [self.spinner startAnimating];

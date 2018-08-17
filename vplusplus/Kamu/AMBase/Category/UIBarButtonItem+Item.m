@@ -23,7 +23,7 @@
     [barButton setTitle:title forState:UIControlStateNormal];
     [barButton.titleLabel setFont:[UIFont systemFontOfSize:15.f]];
     
-    
+    [barButton setTitleEdgeInsets:UIEdgeInsetsMake(0, 10.f, 0, 0)];
     
     //[image imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
     

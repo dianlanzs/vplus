@@ -11,5 +11,5 @@
 @interface NSString (StringFrame)
 
 - (CGFloat)boundingRectWithFont:(UIFont *)useFont;
-
+- (CGSize)text:(NSString *)str width:(float)width font:(UIFont *)useFont;
 @end

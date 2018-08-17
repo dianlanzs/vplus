@@ -29,7 +29,7 @@
 
 
 
-
+@property (nonatomic, copy) void (^jpushFinished)(int ,int);
 
 
 

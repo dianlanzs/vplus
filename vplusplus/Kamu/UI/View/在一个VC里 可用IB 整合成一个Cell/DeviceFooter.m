@@ -34,7 +34,7 @@
         [_settingsBtn setTintColor:[UIColor blackColor]];
         UIImage *icon = [[UIImage imageNamed:@"button_settings"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
         [_settingsBtn setImage:icon forState:normal];
-        [_settingsBtn setTitle:@"settings" forState:UIControlStateNormal];
+        [_settingsBtn setTitle:LS(@"设置") forState:UIControlStateNormal];
         [_settingsBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
         [_settingsBtn addTarget:self action:@selector(entrySettings:) forControlEvents:UIControlEventTouchUpInside];
         
@@ -44,7 +44,7 @@
         [_meidiasBtn setTintColor:[UIColor blackColor]];
         UIImage *meidaIcon = [[UIImage imageNamed:@"mediaLib_unselected"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
         [_meidiasBtn setImage:meidaIcon forState:normal];
-        [_meidiasBtn setTitle:@"medias" forState:UIControlStateNormal];
+        [_meidiasBtn setTitle:LS(@"媒体库") forState:UIControlStateNormal];
         [_meidiasBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
         [_meidiasBtn addTarget:self action:@selector(entryMedias:) forControlEvents:UIControlEventTouchUpInside];
         

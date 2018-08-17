@@ -55,13 +55,47 @@
 
 
 - (UITableViewCell *)getCellForTableView:(QuickDialogTableView *)tableView controller:(QuickDialogController *)controller {
+    
+    
     QTableViewCell *cell = (QTableViewCell *) [super getCellForTableView:tableView controller:controller];
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
-    cell.textLabel.text = _title;
-    cell.detailTextLabel.text = [_value description];
-    cell.imageView.image = _image;
-    cell.accessoryType = _accessoryType != UITableViewCellAccessoryNone ? _accessoryType : self.controllerAccessoryAction != nil ? UITableViewCellAccessoryDetailDisclosureButton : ( self.sections!= nil || self.controllerAction!=nil ? UITableViewCellAccessoryDisclosureIndicator : UITableViewCellAccessoryNone);
-    cell.selectionStyle = self.sections!= nil || self.controllerAction!=nil || self.onSelected!=nil ? UITableViewCellSelectionStyleBlue: UITableViewCellSelectionStyleNone;
+    cell.textLabel.text = self.title;
+    cell.detailTextLabel.text = [self.value description]; ///zhoulei mark  show the the ending text
+    cell.imageView.image = self.image;
+    
+    
+    
+    
+    
+    ////zhou lei modify M
+    if (self.accessoryType != UITableViewCellAccessoryNone) {
+        cell.accessoryType = _accessoryType;
+    } else {
+        
+        if (self.controllerAction != nil) {
+            cell.accessoryType  = UITableViewCellAccessoryDetailDisclosureButton;
+        }else {
+            
+            if (self.sections != nil || self.controllerAction != nil) {
+                cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+            }else {
+                cell.accessoryType = UITableViewCellAccessoryNone;
+            }
+            
+        }
+    }
+    
+    
+    //    cell.accessoryType = _accessoryType != UITableViewCellAccessoryNone ? _accessoryType : self.controllerAccessoryAction != nil ? UITableViewCellAccessoryDetailDisclosureButton : ( self.sections!= nil || self.controllerAction!=nil ? UITableViewCellAccessoryDisclosureIndicator : UITableViewCellAccessoryNone);
+    
+    if ( self.sections != nil  || self.controllerAction != nil || self.onSelected != nil) {
+        cell.selectionStyle = UITableViewCellSelectionStyleBlue;
+    }else {
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    }
+    
+    //    cell.selectionStyle = self.sections!= nil || self.controllerAction!=nil || self.onSelected!=nil ? UITableViewCellSelectionStyleBlue: UITableViewCellSelectionStyleNone;
+    
     return cell;
 }
 

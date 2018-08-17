@@ -26,7 +26,6 @@
 #import "MGSwipeButton.h"
 #import "ReactiveObjC.h"
 #import "KMReqest.h"
-#import "NSDictionary+JSON.h"
 
 #import "MMDrawerBarButtonItem.h"
 #import "UIViewController+MMDrawerController.h"
@@ -34,7 +33,6 @@
 @interface MainViewController() <UITableViewDelegate,UITableViewDataSource,MGSwipeTableCellDelegate>
 
 @property (nonatomic, strong) UIView *emptyView;
-@property (nonatomic, strong) UITableView *tableView;
 
 //@property (nonatomic, strong) RLMResults<Device *> *results;
 
@@ -69,57 +67,108 @@
     }else {
         [self deviceInterface];
     }
-    self.navigationItem.title = @"设备";
+    self.navigationItem.title = LS(@"设备") ;
     [self setLeftBarButtonItem];
     [self.view setBackgroundColor:[UIColor groupTableViewBackgroundColor]];
     [self.view addSubview:self.tableView];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(addNew:) name:@"addNew" object:nil];
 }
-
+///添加  设备  ///添加device 表 会有2个 的bug
 - (void)addNew:(NSNotification *)notification {
     
-    if (USER.user_devices.count == 0) {
+    
+    
+//    [RLM transactionWithBlock:^{
+//        [USER.user_devices addObjects:[Device allObjects]];
+//    }];
+    
+    if (USER.user_devices.count > 0) {
         [self deviceInterface];
     }
-
-    //异步方式 write
-    [RLM transactionWithBlock:^{
-        [USER.user_devices addObject:notification.object];
-        /*
-        1.  __imp_ = (__imp_ = "The Realm is already in a write transaction")
-
-         [self.tableView insertSections:[NSIndexSet indexSetWithIndex:self.results.count - 1] withRowAnimation:UITableViewRowAnimationBottom]; //will auto call sections  // mabey  嵌套写事务了 cuz crash !!
-         turn out :插入的时候 调用 了 section  row  和 cellForRow的方法了
-         2. Cannot register notification blocks from within write transactions.
-         */
-    }];
-   
-    [self.tableView insertSections:[NSIndexSet indexSetWithIndex:USER.user_devices.count - 1] withRowAnimation:UITableViewRowAnimationFade];
-}
-
-- (void)deleteNvr:(NSIndexPath *)path {
-   if (USER.user_devices.count == 1) {
-        [self emptyInterface];
+    
+    ///remote sevice 退出登录 ，你并没有删除 所以 数据库里 device 还在！！！
+    NSLog(@"------------------------------插入%zd section",USER.user_devices.count);
+    NSLog(@"插入一条 section 设备"); ///增删Section 需要处理好numberOfSectionsInTableView返回的结果
+  
+    
+    
+    [MBProgressHUD showSuccess:[NSString stringWithFormat:@"添加了第%zd个设备",USER.user_devices.count]];
+    NSLog(@"🎟 USER表  ADD DEVICE %@",USER.user_devices);
+    
+    for (Device *p_device in [Device allObjects]) {
+        NSLog(@"🎟 DEVICE 表 ADD DEVICE %p",p_device);
     }
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.tableView beginUpdates];
+        [self.tableView insertSections:[NSIndexSet indexSetWithIndex:USER.user_devices.count - 1] withRowAnimation:UITableViewRowAnimationTop];
+        [self.tableView endUpdates];
+    });
+    
+//    dispatch_async(dispatch_get_main_queue(), ^{
+//        [self.tableView reloadData];
+//    });
+//
+}
+///删除  设备
+- (void)deleteNvr:(NSIndexPath *)path {
+    
+  
     Device *deleteDevice = [USER.user_devices objectAtIndex:path.section];
-    cloud_close_device((void *)deleteDevice.nvr_h);
-    [RLM transactionWithBlock:^{
-        [USER.user_devices removeObjectAtIndex:path.section];
+    NSString * deletePath = [NSString stringWithFormat:@"drop/%@",deleteDevice.nvr_id];
+    NSLog(@"------------删除设备%@------------",deleteDevice.nvr_id);
+    
+    
+    
+    
+   [[[NetWorkTools alloc] init] request:GET urlString:KM_API_URL(deletePath) parameters:nil finished:^(id responseObject, NSError *error) {//删除server
+       NSDictionary *dict = [NSDictionary dictionaryWithJSONData:responseObject];
+       NSString *success_s = [NSString stringWithFormat:@"%@",[[dict arrayValueForKey:@"success"] lastObject]];
+       NSString *fail_s = [NSString stringWithFormat:@"%@",[[dict arrayValueForKey:@"error"] lastObject]];
+
+
+       if (![dict valueForKey:@"success"]) {
+           if([fail_s isEqualToString:@"(null)"]) {
+               [MBProgressHUD showError:@"sessionID 过期"];
+           }else {
+               [MBProgressHUD showError:fail_s];
+           }
+       }else {
+         
+           cloud_set_status_callback((void *)deleteDevice.nvr_h,nil,nil); /// state callback set nil!!
+           cloud_forget_device((void *)deleteDevice.nvr_h);
+           cloud_close_device( (void *)deleteDevice.nvr_h);
+           [RLM transactionWithBlock:^{
+               for (Cam *del_c in deleteDevice.nvr_cams) {
+                   Device *cam_gw = del_c.nvrs[0];
+                   if([cam_gw.nvr_id isEqualToString:deleteDevice.nvr_id] ) {
+                       [RLM deleteObject:del_c];
+                   }
+               }
+                [RLM deleteObject:deleteDevice];
+           }];
+           
+           
+           
+           NSLog(@"🤪 USER 表 ：DELETE DEVICE %@",USER.user_devices);
+           NSLog(@"🤪 DEVICE 表 ：DELETE DEVICE %@",[Device allObjects]);
+           NSLog(@"🤪 CAM 表 ：DELETE DEVICE %@",[Cam allObjects]);
+
+           [MBProgressHUD showSuccess:success_s];
+           [self.navigationController popViewControllerAnimated:YES];
+           [self.tableView deleteSections:[NSIndexSet indexSetWithIndex:path.section] withRowAnimation:UITableViewRowAnimationTop];
+           if (USER.user_devices.count == 0) {
+               [self emptyInterface];
+           }
+       }
     }];
-   [[[NetWorkTools alloc] init] request:GET urlString:KM_API_URL(@"drop") parameters:@{@"uid":deleteDevice.nvr_id} finished:^(id responseObject, NSError *error) {
-       NSLog(@"%@",[NSDictionary dictionaryWithJSONData:responseObject]);
-    }];
-    [self.tableView deleteSections:[NSIndexSet indexSetWithIndex:path.section] withRowAnimation:UITableViewRowAnimationTop];
-    [self.navigationController popToRootViewControllerAnimated:YES];
-    [MBProgressHUD showSuccess:@"设备 已成功删除"];
 }
     
 - (void)setRightBarButtonItem {
-    self.navigationItem.rightBarButtonItem = [UIBarButtonItem barItemWithimage:[UIImage imageNamed:@"nav_add"]  highImage:nil target:self action:@selector(addNvr:) title:@"添加新设备"];
- 
+    self.navigationItem.rightBarButtonItem = [UIBarButtonItem barItemWithimage:[UIImage imageNamed:@"nav_add"]  highImage:nil target:self action:@selector(addNvr:) title:LS(@"添加新设备")];
 }
 - (void)setLeftBarButtonItem {
-    ///个人中心 按钮侧滑
+    //个人中心 按钮侧滑
     self.navigationItem.leftBarButtonItem = [[MMDrawerBarButtonItem alloc] initWithTarget:self action:@selector(leftDrawerButtonPress:)];
 }
 -(void)leftDrawerButtonPress:(id)sender{
@@ -143,6 +192,7 @@
 }
 
 - (void)dealloc {
+    NSLog(@"Main VC  释放了");
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
@@ -162,29 +212,25 @@
 #pragma mark - Table view 数据源回调方法
 //swipe  删除会调用 numberOfSection  ，和 numberOfRows 方法
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+    NSLog(@"SECTIONS :--%zd--",USER.user_devices.count);
     return USER.user_devices.count;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    NSLog(@"ROWS:--1--");
     return 1;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    
-    Device *nonCams_device = USER.user_devices[indexPath.section];
-//    [RLM transactionWithBlock:^{
-//        nonCams_device.nvr_type = CLOUD_DEVICE_TYPE_IPC;
-//    }];
-    
-    
-    
-    if (nonCams_device.nvr_type == CLOUD_DEVICE_TYPE_GW) {
+    NSLog(@"-- CELL FOR ROW --");
+    Device *db_device = USER.user_devices[indexPath.section];
+    if (db_device.nvr_type == CLOUD_DEVICE_TYPE_GW) {
         QRResultCell *nvrCell = [[QRResultCell alloc] init];
-        [nvrCell setNvrModel:nonCams_device];
+        [nvrCell setNvrModel:db_device];
         [nvrCell setPath:indexPath];
         return nvrCell;
     }
-    
+
 //    if (nonCams_device.nvr_type == CLOUD_DEVICE_TYPE_IPC) {
 //        QRResultCell *nvrCell = [[QRResultCell alloc] init];
 //        [nvrCell setNvrModel:nonCams_device];
@@ -193,22 +239,13 @@
 //    }
     /*
     else if (nonCams_device.nvr_type == CLOUD_DEVICE_TYPE_IPC) {
-    
-        
-        
         tableView.rowHeight = 200;
         DeviceListCell *ipcCell = [self.tableView dequeueReusableCellWithIdentifier:NSStringFromClass([DeviceListCell class]) forIndexPath:indexPath];
         ipcCell.ipcModel = nonCams_device;
         ipcCell.delegate = self;
         return ipcCell;
-        
-        
-        
-        
     }
-     
-     */
-    
+    */
     return nil;
 }
 
@@ -231,23 +268,59 @@
 
 - (UITableView *)tableView {
     if (!_tableView) {
-        _tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(self.view.bounds) - 0, CGRectGetHeight(self.view.bounds)) style:UITableViewStyleGrouped];
+        
+        ///cuz view Frame 在下面
+        _tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(self.view.bounds) - 0, CGRectGetHeight(self.view.bounds) - 64) style:UITableViewStyleGrouped];
         _tableView.tableFooterView = [UIView new]; //去除分隔线
         [_tableView setShowsVerticalScrollIndicator:NO];
+        [_tableView setRowHeight:COLLECTION_VIEW_H + FOOTER_H];
         
-//
-//        [_tableView setEstimatedRowHeight:200.f];
-//        [_tableView setRowHeight:UITableViewAutomaticDimension];
-        [_tableView setRowHeight:100 + 1 + 100 + 40];
-        _pullRefresh = [[UIRefreshControl alloc] init];
-        _pullRefresh.tintColor = [UIColor lightGrayColor];
-        _pullRefresh.attributedTitle = [NSAttributedString attrText:@"正在刷新..." withFont:[UIFont systemFontOfSize:15.f] color:[UIColor lightGrayColor] aligment:NSTextAlignmentCenter];
-        [_pullRefresh addTarget:self action:@selector(handleRefresh:) forControlEvents:UIControlEventValueChanged];
-        [_tableView addSubview:_pullRefresh];
+        //
+        //        [_tableView setEstimatedRowHeight:200.f];
+        //        [_tableView setRowHeight:UITableViewAutomaticDimension];
+        
+        
+       
+        WS(self);
+        _tableView.mj_header = [MJRefreshNormalHeader headerWithRefreshingBlock:^{
+            NSInteger idx = 0;
+            for (Device *state_device in USER.user_devices) {
+                
+                QRResultCell * state_cell = [ws.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:idx]];
+                if (state_device.nvr_status == CLOUD_DEVICE_STATE_CONNECTED) {
+                    [state_cell upadteCams];
+                }else {
+                    
+                    
+                    if (state_device.nvr_status == CLOUD_DEVICE_STATE_UNKNOWN) {
+                        [MBProgressHUD showPromptWithText:LS(@"正在连接请耐心等设备状态返回...")];
+                    }
+                    
+                    else if(state_device.nvr_status == CLOUD_DEVICE_STATE_DISCONNECTED) {
+                        [MBProgressHUD showPromptWithText:[NSString stringWithFormat:@"连接设备 %zd",state_device.nvr_h]];
+                        cloud_connect_device((void *)state_device.nvr_h, "admin", "123");
+                        [RLM transactionWithBlock:^{
+                            [state_device setNvr_status:CLOUD_DEVICE_STATE_UNKNOWN];
+                        }];
+                    }
+                    
+//                    else if (state_device.nvr_status == CLOUD_DEVICE_STATE_UNINITILIZED) {
+//                        return ;
+//                    }
+                    
+                    
+                    
+                }
+                
+                idx++;
+            }
+            
+            [ws.tableView.mj_header endRefreshing];
+            //disconnected 刷新 的情况  ，cuz设置了标志 ，第一次endRefreshing 了 ，，所以第二次 endRereshing 不起作用！
+        }];
         
         _tableView.delegate = self;
         _tableView.dataSource = self;
-        //注册 Cell
         [_tableView registerClass:[DeviceListCell class] forCellReuseIdentifier:NSStringFromClass([DeviceListCell class])];
     }
     
@@ -256,31 +329,10 @@
 }
 
 
-- (void) handleRefresh:(UIRefreshControl *)sender{
-    [sender endRefreshing];
-    NSInteger idx = 0;
-     RLMResults<Device *> *nvrs = RLM_R_NVR_STATUS(CLOUD_DEVICE_STATE_DISCONNECTED);
-    for (Device *nvr_disconnect in nvrs) { //这里是查询 DB 里的 属性 ，== inital value == 0  ,self,results 查询 没
-            RLMThreadSafeReference *deviceRef = [RLMThreadSafeReference referenceWithThreadConfined:nvr_disconnect];
-            dispatch_async(dispatch_get_global_queue(0, 0), ^{
-                @autoreleasepool {
-                    RLMRealm *realm = [RLMRealm realmWithConfiguration:RLM.configuration error:nil];
-                    Device *device = [realm resolveThreadSafeReference:deviceRef];
-                    if (device) {
-                        cloud_connect_device((void *)device.nvr_h, "admin", "123");
-                    }
-                }
-            });
-
-            QRResultCell * c = [self.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:idx]];
-            [c.statusLabel setText:@"getting device status"];
-            [c.spinner startAnimating];
-        idx++;
-    }
-
-
-    
-}
+//- (void) handleRefresh:(UIRefreshControl *)sender{
+//
+//
+//}
 
 //无数据展现视图
 - (UIView *)emptyView {
@@ -294,8 +346,8 @@
         addButton.imageView.image = [[UIImage imageNamed:@"add2"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
         [addButton addTarget:self action:@selector(addNvr:) forControlEvents:UIControlEventTouchUpInside];
         //富文本
-        UILabel *titleLabel = [UILabel labelWithText:@"欢迎进入视佳新界面！" withFont:[UIFont boldSystemFontOfSize:25.0f] color:[UIColor darkGrayColor] aligment:NSTextAlignmentCenter];
-        UILabel *describeLabel = [UILabel labelWithText:@"点击此处'➕'按钮，扫描设备底部二维码，添加一个摄像机设备" withFont:[UIFont systemFontOfSize:18.0f] color:[UIColor lightGrayColor] aligment:NSTextAlignmentCenter];
+        UILabel *titleLabel = [UILabel labelWithText:LS(@"欢迎进入Kamu新界面！") withFont:[UIFont boldSystemFontOfSize:25.0f] color:[UIColor darkGrayColor] aligment:NSTextAlignmentCenter];
+        UILabel *describeLabel = [UILabel labelWithText:LS(@"点击此处'➕'按钮，扫描设备底部二维码，添加一个摄像机设备") withFont:[UIFont systemFontOfSize:18.0f] color:[UIColor lightGrayColor] aligment:NSTextAlignmentCenter];
         
         //添加控件
         [_emptyView addSubview:addButton];
@@ -396,11 +448,6 @@
     return result;
 }
 
-#pragma mark - getter
-//
-//- (RLMResults<Device *> *)results {
-//    return [Device allObjects];
-//}
 
 
 

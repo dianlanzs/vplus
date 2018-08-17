@@ -151,7 +151,7 @@
     if (_onSelected!= nil)
         _onSelected();
 
-    if (self.controllerAction!=NULL){
+    if (self.controllerAction != NULL){
         SEL selector = NSSelectorFromString(self.controllerAction);
         
         if ([_controller respondsToSelector:selector]) {

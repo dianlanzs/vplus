@@ -18,6 +18,7 @@ pod 'Realm', '~> 3.0'
 pod 'MGSwipeTableCell'
 pod 'JPush', '3.0.2'
 pod 'MJRefresh','~>3.1'
+pod 'MJExtension'
 #pod 'ZFPlayer'
 pod 'MMDrawerController', '~> 0.5.7'
 

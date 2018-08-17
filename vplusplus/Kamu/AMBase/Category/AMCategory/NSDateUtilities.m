@@ -19,7 +19,7 @@
 
 // testing !!!
 - (NSString *)weekdayStr {
-    NSArray *weekdays = @[@"周日", @"周一", @"周二", @"周三", @"周四", @"周五", @"周六"];
+    NSArray *weekdays = @[LS(@"周日"), LS(@"周一"), LS(@"周二"), LS(@"周三"), LS(@"周四"), LS(@"周五"), LS(@"周六")];
     NSCalendar *calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
     NSTimeZone *timeZone = [[NSTimeZone alloc] initWithName:@"Asia/Shanghai"];
     [calendar setTimeZone: timeZone];

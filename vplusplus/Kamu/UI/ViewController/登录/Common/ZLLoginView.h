@@ -12,7 +12,6 @@
 
 typedef NS_ENUM(NSInteger,ZLLoginType){
     ZLLoginType_register = 0,
-    ZLLoginType_otherAccount = 1,
     ZLLoginType_prior,
     ZLLoginType_dismiss,
 };
@@ -28,7 +27,7 @@ typedef void(^loginFinshed)(User *,NSString *,NSError * );
 @interface ZLLoginView : UIView
 @property (nonatomic, weak) id <ZLLoginViewDelegate>delegate;
 
-@property (nonatomic, copy) void(^userLogin)(User *);
+@property (nonatomic, copy) void(^userLogin)(HyLoginButton *, User *);
 @property (nonatomic, copy) loginFinshed finished;
 
 
@@ -40,7 +39,7 @@ typedef void(^loginFinshed)(User *,NSString *,NSError * );
 @property (nonatomic, strong) ZLTextField *tf_pwd;
 @property (nonatomic, assign) ZLLoginType loginType;
 @property (nonatomic, strong) UIButton *signUp;
-@property (nonatomic, strong) UIButton *otherAccount;
+//@property (nonatomic, strong) UIButton *otherAccount;
 @property (nonatomic, strong) UIButton *portraitBtn;
 
 @end

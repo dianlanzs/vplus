@@ -27,9 +27,13 @@
     [cell setupCell];
     return cell;
 }
-- (UILabel *)regionTitle {
+- (UILabel *)regionLb {
     if (!_regionLb) {
-        _regionLb = [UILabel labelWithText:@"     CAM_" withFont:[UIFont systemFontOfSize:17.f] color:[UIColor blackColor] aligment:NSTextAlignmentLeft];
+        NSMutableParagraphStyle *paragraphStyle = [[NSMutableParagraphStyle alloc] init];
+          paragraphStyle.firstLineHeadIndent = 32;
+        NSAttributedString *attr_s = [NSAttributedString stringWithText:LS(@"选择摄像头") withFont:[UIFont systemFontOfSize:17.f] color:[UIColor blackColor] aligment:NSTextAlignmentLeft hasUnderline:NO headIndent:20];
+        _regionLb = [UILabel new];
+        [_regionLb setAttributedText:attr_s];
         [_regionLb setBackgroundColor:[UIColor groupTableViewBackgroundColor]];
     }
     return _regionLb;
@@ -45,7 +49,7 @@
 - (void)setupCell {
     
     [self.contentView setBackgroundColor:[UIColor whiteColor]];
-    [self.contentView addSubview:self.regionTitle];
+    [self.contentView addSubview:self.regionLb];
     [self.contentView addSubview:self.mainCollectionView];
     
 //    if (@available(iOS 11.0, *)) {
@@ -54,7 +58,7 @@
 //        [self.contentView setLayoutMargins:UIEdgeInsetsMake(64, 20, 0, 0)];
 //    }
     
-    [self.regionTitle mas_makeConstraints:^(MASConstraintMaker *make) {
+    [self.regionLb mas_makeConstraints:^(MASConstraintMaker *make) {
         make.top.leading.trailing.equalTo(self.contentView);
         make.height.mas_equalTo(40.f);
     }];
@@ -63,7 +67,7 @@
     self.mainCollectionView.delegate = self;
     self.mainCollectionView.dataSource = self;
     [self.mainCollectionView mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.top.equalTo(self.regionTitle.mas_bottom);
+        make.top.equalTo(self.regionLb.mas_bottom);
         make.leading.trailing.equalTo(self.contentView);
         make.bottom.mas_equalTo(self.contentView);
     }];
@@ -263,8 +267,7 @@
        //CGRectGetWidth(self.bounds)CGRectGetWidth(self.contentView.bounds)
         
         NSLog(@"XXXXXXXX%@",NSStringFromCGRect(self.contentView.frame));
-        [_cvLayout setMinimumLineSpacing:0.f];
-        [_cvLayout setMinimumInteritemSpacing:0.f];
+   
         [_cvLayout setScrollDirection:UICollectionViewScrollDirectionVertical];
         
 //        [self.contentView setNeedsLayout];

@@ -13,12 +13,11 @@
 
 #import "RTSpinKitView.h"
 #import "AppDelegate.h"
+#import "KMReqest.h"
 @interface QRDoneViewController ()<PopupDelegate>
 
 @property (nonatomic, strong) UIView *QRResultView;
 
-
-@property (nonatomic, strong) Device *aDevice;
 @property (nonatomic, strong) UITextField *tf;
 
 
@@ -77,6 +76,7 @@
 
 
 - (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 #pragma mark - 保存按钮点击事件，连接设备
@@ -105,18 +105,6 @@
 #pragma mark - Required!!
 
 //扫描成功后 添加设备对象
-- (Device *)aDevice {
-    
-    if (!_aDevice) {
-        
-        _aDevice = [[Device alloc] init];
-        [_aDevice setNvr_id:self.qr_String];
-        [_aDevice setNvr_name:self.changeName.text];
-        [_aDevice setNvr_status:CLOUD_DEVICE_STATE_UNKNOWN];  //db for first oberseve
-    }
-    
-    return _aDevice;
-}
 
 
 
@@ -162,29 +150,15 @@
         _changeName = [[UILabel alloc] init];
         
         NSAttributedString *aString = [NSAttributedString attrText:@"正在查找设备请等待...." withFont:[UIFont systemFontOfSize:17.f] color:[UIColor blackColor] aligment:NSTextAlignmentCenter];
-        
-        
-        
-        
-        
-        
-        
-        
         _specLable.attributedText = aString;
         _addBtn = [[BButton alloc] initWithFrame:CGRectZero color:[UIColor grayColor]];
         [_addBtn setTitle:@"添加设备" forState:UIControlStateNormal];
         [_addBtn setEnabled:NO];
-        
         [_addBtn addTarget:self action:@selector(toHome:) forControlEvents:UIControlEventTouchUpInside];
-        
-        
         [_QRResultView addSubview:_indicator];
         [_QRResultView addSubview:_specLable];
-        
         [_QRResultView addSubview:_changeName];
         //        [_QRResultView addSubview:self.tf];
-        
-        
         [_QRResultView addSubview:_addBtn];
         
         //设置约束
@@ -193,18 +167,13 @@
             make.leading.equalTo(_QRResultView).offset(12.0f);
             make.trailing.equalTo(_QRResultView).offset(- 12.0f);
             make.height.equalTo(@60.0f);
-            
         }];
         
         [_specLable mas_makeConstraints:^(MASConstraintMaker *make) {
             make.top.equalTo(_indicator.mas_bottom).offset(20.0f);
             make.leading.equalTo(_QRResultView).offset(12.0f);
             make.trailing.equalTo(_QRResultView).offset(- 12.0f);
-            
-            
         }];
-        
-        
         [_changeName mas_makeConstraints:^(MASConstraintMaker *make) {
             make.top.equalTo(_specLable.mas_bottom).offset(20.0f);
             make.leading.equalTo(_QRResultView).offset(12.0f);
@@ -227,12 +196,8 @@
             make.leading.equalTo(_QRResultView).offset(12.0f);
             make.trailing.equalTo(_QRResultView).offset(- 12.0f);
         }];
-        
-        
     }
-    
     return _QRResultView;
-    
 }
 - (void)popupWillAppear:(Popup *)popup {
     [popup.successBtn setEnabled:NO];
@@ -244,43 +209,80 @@
     if ([stringArray[0] length]) {
         [_changeName setAttributedText:[NSAttributedString underlineAttrText:[NSString stringWithFormat:@"%@",stringArray[0]] withFont:[UIFont systemFontOfSize:17.f] color:[UIColor blueColor] aligment:NSTextAlignmentCenter]];
     }
-    
-    
 }
 - (void)toHome:(id)sender {
-    
-    
-    if ( [[Device objectsWhere:[NSString stringWithFormat:@"nvr_id = '%@'",self.qr_String]] firstObject]) {
+    if ( [[USER.user_devices objectsWhere:[NSString stringWithFormat:@"nvr_id = '%@'",self.qr_String]] firstObject]) {
         [MBProgressHUD showPromptWithText:@"该设备已经被添加到列表"];
     }else {
+        NSString * searchDevicePath = [NSString stringWithFormat:@"searchDevice/%@",self.qr_String];
+        [[NetWorkTools new] request:GET urlString:KM_API_URL(searchDevicePath) parameters:nil finished:^(id responseObject, NSError *error) {
+            NSDictionary *dict = [NSDictionary dictionaryWithJSONData:responseObject];
+            NSString *success_s = [NSString stringWithFormat:@"%@",[[dict arrayValueForKey:@"success"] lastObject]];
+            NSString *fail_s = [NSString stringWithFormat:@"%@",[[dict arrayValueForKey:@"error"] lastObject]];
+            
+            
+            if (![dict valueForKey:@"success"]) {
+                if([fail_s isEqualToString:@"(null)"]) {
+                    [MBProgressHUD showError:@"sessionID 过期"];
+                }else {
+                    [MBProgressHUD showError:fail_s];
+                }
+            }else {
+                Popup *popup = [[Popup alloc] initWithTitle:@"更改设备名称"
+                                                   subTitle:@"您想将设备放在何处？比如客厅,门廊,公司，家里..."
+                                      textFieldPlaceholders:@[@"设置设备名称.."]
+                                                cancelTitle:nil
+                                               successTitle:@"确定"
+                                                cancelBlock:^{
+                                                } successBlock:^{
+                                                    
+                                                   
+                                                    
+                                                    Device *db_device =     RLM_R_NVR(self.qr_String);
+                                                    if(db_device) {
+                                                        [RLM beginWriteTransaction];
+                                                        [USER.user_devices addObject:db_device]; ///引用数据库里的对象
+                                                        [RLM commitWriteTransaction];
+
+                                                    }else {
+                                                        Device *aDevice = [Device new];
+                                                        aDevice = [[Device alloc] init];
+                                                        [aDevice setNvr_id:self.qr_String];
+                                                        [aDevice setNvr_name:self.changeName.text];
+                                                        [aDevice setNvr_status:CLOUD_DEVICE_STATE_UNKNOWN];
+                                                        
+                                                        [RLM beginWriteTransaction];
+                                                        [USER.user_devices addObject:aDevice]; ///创建对象到数据库 & 引用数据库这个对象
+                                                        [RLM commitWriteTransaction];
+                                                    }
+                                                    
+                                               
+                                                    
+                                                    [self.navigationController popToRootViewControllerAnimated:YES];
+                                                    [[NSNotificationCenter defaultCenter ] postNotificationName:@"addNew" object:nil userInfo:nil];
+                                                }];
+                
+                
+                [popup setDelegate:self];//回调代理方法
+                [popup setRoundedCorners:YES];
+                
+                
+                [popup setBackgroundBlurType:PopupBackGroundBlurTypeDark];    //背景模糊
+                [popup setIncomingTransition:PopupIncomingTransitionTypeFallWithGravity];
+                [popup showPopup];
+                
+                
+            }
+        }];
         
         
-        //弹出修改设备名称对话框
-        Popup *popup = [[Popup alloc] initWithTitle:@"更改设备名称"
-                                           subTitle:@"您想将设备放在何处？比如客厅,门廊,公司，家里..."
-                              textFieldPlaceholders:@[@"设置设备名称.."]
-                                        cancelTitle:nil
-                                       successTitle:@"Confirm"
-                                        cancelBlock:^{
-                                        } successBlock:^{
-                                            [[NSNotificationCenter defaultCenter ] postNotificationName:@"addNew" object:self.aDevice userInfo:nil];
-                                            [self.navigationController popToRootViewControllerAnimated:YES];
-                                        }];
-        
-        
-        [popup setDelegate:self];//回调代理方法
-        [popup setRoundedCorners:YES];
-        
-        
-        [popup setBackgroundBlurType:PopupBackGroundBlurTypeDark];    //背景模糊
-        [popup setIncomingTransition:PopupIncomingTransitionTypeFallWithGravity];
-        [popup showPopup];
-        
-        
+       
     }
     
 }
-
+- (void)dealloc {
+    NSLog(@"QRDONE 释放了");
+}
 
 //随机数 ，100 - 200 ,含100 ，200
 - (int)getRandomNumber:(int)from to:(int)to {

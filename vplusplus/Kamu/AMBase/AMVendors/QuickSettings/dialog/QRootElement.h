@@ -51,7 +51,7 @@ typedef enum  {
 
 
 @property(nonatomic, assign) NSString *imageNamed;
-@property(nonatomic, strong) id value;
+//@property(nonatomic, strong) id value;
 @property(nonatomic, assign) UITableViewCellAccessoryType accessoryType;
 
 

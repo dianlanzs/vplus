@@ -71,7 +71,7 @@
 
 
 
-- (void) fieldDidEndEditing;
+- (void) fieldDidEndEditing:(UITextField *)tf;
 - (void)handleEditingChanged:(QEntryTableViewCell *)cell;
 
 @end

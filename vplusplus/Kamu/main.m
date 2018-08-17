@@ -33,16 +33,16 @@
 
 
 
-//void sigpipe_handler(int unused){
-//    printf("Caught signal SIGPIPE %d\n",unused);
-//
-//}
+void sigpipe_handler(int unused){
+    printf("Caught signal SIGPIPE %d\n",unused);
 
-
-void signal_callback_handler(int signum){
-    
-    printf("Caught signal SIGPIPE %d\n",signum);
 }
+
+
+//void signal_callback_handler(int signum){
+//
+//    printf("Caught signal SIGPIPE %d\n",signum);
+//}
 
 int main(int argc, char * argv[]) {
     
@@ -54,19 +54,55 @@ int main(int argc, char * argv[]) {
 //        sigaction( SIGPIPE, &sa, 0 );
 //
 
-
-        struct sigaction sa_pipe;
-        sa_pipe.sa_handler = SIG_IGN;
-        sigaction(SIGPIPE, &sa_pipe, NULL);
-
-        sigset_t signal_mask;
-        sigemptyset (&signal_mask);
-        sigaddset (&signal_mask, SIGPIPE);
-        int rc = pthread_sigmask (SIG_BLOCK, &signal_mask, NULL);
-        if (rc != 0)
-        {
-            printf("block sigpipe error/n");
-        }
+//
+//        struct sigaction sa_pipe;
+//        sa_pipe.sa_handler = SIG_IGN;
+//        sigaction(SIGPIPE, &sa_pipe, NULL);
+//
+//        sigset_t signal_mask;
+//        sigemptyset (&signal_mask);
+//        sigaddset (&signal_mask, SIGPIPE);
+//        int rc = pthread_sigmask (SIG_BLOCK, &signal_mask, NULL);
+//        if (rc != 0)
+//        {
+//            printf("block sigpipe error/n");
+//        }
+        
+        
+        
+        
+        struct sigaction sa;
+        
+        sa.sa_handler = SIG_IGN;
+        
+        sigaction( SIGPIPE, &sa, 0 );
+        
+//        sigaction(SIGPIPE, &osa, 0);
+        
+        
+        
+//        signal(SIGPIPE, SIG_IGN);
+//        
+//        sigset_t signal_mask;
+//        sigemptyset (&signal_mask);
+//        sigaddset (&signal_mask, SIGPIPE);
+//        int rc = pthread_sigmask (SIG_BLOCK, &signal_mask, NULL);
+//        if (rc != 0)
+//        {
+//            printf("block sigpipe error\n");
+//        }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         
 //        int value = 1;
 //        // sock 就是设置不发送 `SIGPIPE` 信号的 socket 变量

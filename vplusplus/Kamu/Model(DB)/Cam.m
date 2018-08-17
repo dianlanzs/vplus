@@ -15,10 +15,7 @@
 
 
 + (NSArray *)ignoredProperties {
-    return @[@"cam_cloudMedias",
-             @"cam_pir_sensitivity",
-             @"cam_battery_threshold",
-             @" cam_rotate"];
+    return @[@"cam_cloudMedias"];
 }
 
 - (NSMutableArray *)cam_cloudMedias {
@@ -28,6 +25,9 @@
         _cam_cloudMedias = [NSMutableArray array];
     }
     return _cam_cloudMedias;
+}
++ (NSString *)primaryKey {
+    return @"cam_id";
 }
 @end
 

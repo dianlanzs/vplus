@@ -68,9 +68,6 @@
     _textField.clearButtonMode = UITextFieldViewModeWhileEditing;
     _textField.autoresizingMask = ( UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
     [_textField addTarget:self action:@selector(textFieldEditingChanged:) forControlEvents:UIControlEventEditingChanged];
-    
-    ///zhoulei add
-//    [_textField addTarget:self action:@selector(tf_didEndEditing:) forControlEvents:UIControlEventEditingDidEnd];
     [self.contentView addSubview:_textField];
 }
 
@@ -191,10 +188,6 @@
 }
 
 
-///zhoulei  modify
-//- (void)tf_didEndEditing:(UITextField *)tf {
-//    _entryElement.tf_endEditing(tf);
-//}
 
 - (void)textFieldEditingChanged:(UITextField *)textFieldEditingChanged {
    _entryElement.textValue = _textField.text;
@@ -222,11 +215,12 @@
 - (void)textFieldDidEndEditing:(UITextField *)textField {
     _entryElement.textValue = _textField.text;
     
+    
     if(_entryElement && _entryElement.delegate && [_entryElement.delegate respondsToSelector:@selector(QEntryDidEndEditingElement:andCell:)]){
         [_entryElement.delegate QEntryDidEndEditingElement:_entryElement andCell:self];
     }
-    
-    [_entryElement performSelector:@selector(fieldDidEndEditing)];
+//    [_entryElement performSelector:@selector(fieldDidEndEditing)];
+    [_entryElement fieldDidEndEditing:textField];
 }
 
 - (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string {

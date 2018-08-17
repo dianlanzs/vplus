@@ -64,7 +64,9 @@
     if (_radioElement!= nil)
     {
         _radioElement.selected = _index;
-        [_radioElement fieldDidEndEditing];
+//        [_radioElement fieldDidEndEditing];
+        _radioElement.onSelected();        ///zhoulei modify
+
         tableView.userInteractionEnabled = NO;
 
         [NSTimer scheduledTimerWithTimeInterval:0.3

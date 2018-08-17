@@ -10,6 +10,15 @@
 
 #import "DeviceFooter.h"
 #import "VideoCell.h"
+#import "ZLMaskView.h"
+
+
+
+
+
+
+
+
 
 @class QRResultCell;
 
@@ -20,8 +29,8 @@
 @property (nonatomic, strong) DeviceFooter *footer;
 @property (strong, nonatomic) UICollectionView *QRcv;
 
-@property (nonatomic, strong) UILabel *statusLabel;
-@property (nonatomic, strong) UIView *maskView;
+//@property (nonatomic, strong) UILabel *statusLabel;
+@property (nonatomic, strong) ZLMaskView *maskView;
 @property (nonatomic, strong) Device *nvrModel;
 
 //push 回调
@@ -29,8 +38,8 @@
 @property (nonatomic, copy) void(^add) (QRResultCell *cell, NSIndexPath *itemPath);
 
 //连接中动画
-@property (nonatomic, strong) RTSpinKitView *spinner;
-@property (strong, nonatomic) UILabel *statusLb;
+//@property (nonatomic, strong) RTSpinKitView *spinner;
+//@property (strong, nonatomic) UILabel *statusLb;
 
 
 @property (nonatomic, strong)Popup *p_alarm;

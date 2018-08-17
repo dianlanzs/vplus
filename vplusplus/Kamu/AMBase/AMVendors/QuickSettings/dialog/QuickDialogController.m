@@ -79,15 +79,20 @@
                                                                        root:root]];
 }
 
-- (void)loadView {
-    [super loadView];
-    self.quickDialogTableView = [[QuickDialogTableView alloc] initWithController:self];
-}
 
-- (void)setQuickDialogTableView:(QuickDialogTableView *)tableView
-{
-    _quickDialogTableView = tableView;
-    self.view = tableView;
+///zhoulei modify
+- (void)setQuickDialogTableView:(QuickDialogTableView *)tableView {
+    
+    
+    if(_quickDialogTableView != tableView) {
+        _quickDialogTableView = tableView;
+//       _quickDialogTableView.frame = CGRectMake(15, 64, AM_SCREEN_WIDTH - 30, AM_SCREEN_HEIGHT - 64);
+//        self.view = tableView;
+        [self.view addSubview:_quickDialogTableView];
+        [_quickDialogTableView mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.edges.mas_equalTo(UIEdgeInsetsZero);
+        }];
+    }
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
@@ -127,7 +132,24 @@
 }
 
 
+///zhouelei  modify
+//- (void)loadView {
+//    [super loadView];
+//}
+- (void)viewDidLoad {
+    [super viewDidLoad];
 
+    
+    /// view 出现之前  添加table view
+    [ self setQuickDialogTableView:[[QuickDialogTableView alloc] initWithController:self]];
+//    self.quickDialogTableView = [[QuickDialogTableView alloc] initWithController:self];
+}
+
+//- (void)viewWillAppear:(BOOL)animated {
+//    [super viewWillAppear:animated];
+//    self.quickDialogTableView = [[QuickDialogTableView alloc] initWithController:self];
+//
+//}
 
 //zhoulei
 //- (BOOL)QEntryShouldReturnForElement:(QEntryElement *)element andCell:(QEntryTableViewCell *)cell{
@@ -139,7 +161,7 @@
 //}
 
 - (void)viewWillAppear:(BOOL)animated {
-    
+
     
     //zhoulei
 //    [[self.root.sections[0] elements] enumerateObjectsUsingBlock:^(QRootElement *  _Nonnull elm, NSUInteger idx, BOOL * _Nonnull stop) {
@@ -151,6 +173,8 @@
 //    }];
 //
     
+    [self.view setBackgroundColor:[UIColor groupTableViewBackgroundColor]];
+
     
     
     
@@ -158,12 +182,7 @@
     
     
     
-    
-    
-    
-    
-    
-    
+
     _viewOnScreen = YES;
     [self.quickDialogTableView deselectRows];
     [super viewWillAppear:animated];

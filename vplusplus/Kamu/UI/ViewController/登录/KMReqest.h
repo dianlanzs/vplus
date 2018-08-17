@@ -12,7 +12,7 @@
 
 
 //#ifdef KAMU
-static NSString * const TEST_HOST = @"https://192.168.1.158";
+static NSString * const TEST_HOST = @"https://192.168.1.103";
 static NSString * const TEST_PORT = @"8443";
 
 static NSString * const KM_HOST = @"https://cloud.ygtek.cn";

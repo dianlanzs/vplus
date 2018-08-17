@@ -418,7 +418,7 @@
     [self setShowing:YES];
 
 }
-- (void)hideControl {
+- (void)hideControl:(UIButton *)sender {
     [super hideControl];
     self.bottomProgressView.alpha = 1;
 

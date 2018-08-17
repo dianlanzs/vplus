@@ -16,6 +16,7 @@
 @implementation AMRequestManager
 
 
+
 + (instancetype)defaultManager{
     
     static AMRequestManager *sharedInstance = nil;
@@ -30,7 +31,7 @@
         sharedInstance =[[self alloc] initWithBaseURL:url];  //只初始化一次父类配置
         
         
-        
+        sharedInstance.requestSerializer.timeoutInterval = 30.0;
         //默认提交请求的数据是二进制(http URL email = dianlanzs@163.com & password = 123)的,返回格式是JSON,  如果提交数据是JSON的,需要将请求格式设置为AFJSONRequestSerializer
         sharedInstance.requestSerializer = [AFJSONRequestSerializer serializer];  /// JSON body {email:dianlanzs@163.com ,passwoard:123 }
         
@@ -40,9 +41,30 @@
         // 当请求的返回数据不是JSON,XML,PList,UIImage之外,使用AFHTTPResponseSerializer
         // 例如返回一个html,text...实际上就是AFN没有对响应数据做任何处理的情况
         
+        NSString *cookie =  [[NSUserDefaults standardUserDefaults] valueForKey:@"USER_COOKIES"];
+        [sharedInstance.requestSerializer setValue:cookie forHTTPHeaderField:@"Cookie"];//s%3Ax302WxgH3foRnIXenL6R2wTMowTQDRqc.Z4uOFteX6%2BH3UGf0My06azqbPZrPZtPEriYrN%2F4Be3s
   
+//connect.sid=s%3ArgNW1GE4PYf_LOTjp3V4h8ZmSFZBTlhB.2yAXrxKcysLUwffaMuE2%2BCHtendJ0XjQ5KGxNF72TCw
         
-
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         
         ///zhoulei modify  AFHTTPResponseSerializer - > AFJSONResponseSerializer！！
         sharedInstance.responseSerializer = [AFHTTPResponseSerializer serializer];//AFHTTPResponseSerializer申明返回的结果是 data 二进制 类型

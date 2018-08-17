@@ -16,7 +16,6 @@
 #import "QTextElement.h"
 #import "QAppearance.h"
 #import "QElement+Appearance.h"
-
 @implementation QTextElement
 
 @synthesize text = _text;
@@ -61,11 +60,24 @@
     if (_text.length == 0){
         return [super getRowHeightForTableView:tableView];
     }
-    CGSize constraint = CGSizeMake(tableView.frame.size.width-(tableView.root.grouped ? 40.f : 20.f), 20000);
-    CGSize  size= [_text sizeWithFont:self.appearance.valueFont constrainedToSize:constraint lineBreakMode:NSLineBreakByWordWrapping];
-	CGFloat predictedHeight = size.height + 40.0f;
-    if (self.title!=nil)
-        predictedHeight+=30;
+    CGSize constraint = CGSizeMake(tableView.frame.size.width - (tableView.root.grouped ? 40.f : 20.f), 20000);
+    ///zhoulei modify
+    CGRect sizeRect = [_text boundingRectWithSize:constraint
+                                        options:NSStringDrawingUsesFontLeading | NSStringDrawingUsesLineFragmentOrigin
+                                    attributes:@{NSFontAttributeName:self.appearance.valueFont,
+                                              NSForegroundColorAttributeName:[UIColor blackColor]
+                    } context:nil];
+    
+    //self.appearance.valueFont = <UICTFont: 0x10471dc50> font-family: ".SFUIText-Semibold"; font-weight: normal; font-style: normal; font-size: 17.00pt
+
+//    CGSize  size = [_text sizeWithFont:self.appearance.valueFont constrainedToSize:constraint lineBreakMode:NSLineBreakByWordWrapping];
+	CGFloat predictedHeight = sizeRect.size.height + 40.0f;
+    
+    
+    
+    if (self.title!=nil){
+        predictedHeight += 30;
+    }
 	return (_height >= predictedHeight) ? _height : predictedHeight;
 }
 

@@ -30,9 +30,9 @@
 - (QuickDialogController *)controller {
     return _controller;
 }
-
+/// zhoulei modify
 - (QuickDialogTableView *)initWithController:(QuickDialogController *)controller {
-    self = [super initWithFrame:CGRectMake(0, 0, 0, 0) style:controller.root.grouped ? UITableViewStyleGrouped : UITableViewStylePlain];
+    self = [super initWithFrame:CGRectZero style:controller.root.grouped ? UITableViewStyleGrouped : UITableViewStylePlain];
     if (self!=nil){
         self.controller = controller;
         self.deselectRowWhenViewAppears = YES;
@@ -71,9 +71,13 @@
 - (void)applyAppearanceForRoot:(QRootElement *)element {
     if (element.appearance.tableGroupedBackgroundColor !=nil){
         
-        self.backgroundColor = element.grouped 
-                ? element.appearance.tableGroupedBackgroundColor
-                : element.appearance.tableBackgroundColor;
+      
+        
+        if(element.grouped) {
+            self.backgroundColor =   element.appearance.tableGroupedBackgroundColor;
+        }else {
+            self.backgroundColor =  element.appearance.tableBackgroundColor;
+        }
 
         self.backgroundView = element.appearance.tableBackgroundView;
     }

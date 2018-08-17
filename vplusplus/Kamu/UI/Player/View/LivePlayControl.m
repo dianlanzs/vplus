@@ -69,7 +69,7 @@
         [_speakerBtn_vertical setContentColor:[UIColor whiteColor]];
         [_speakerBtn_vertical setForegroundAnimateToColor:[UIColor blueColor]];
         [_speakerBtn_vertical.imageView setImage:[UIImage imageNamed:@"button_micophone_normal"]];
-        [_speakerBtn_vertical setContentEdgeInsets:UIEdgeInsetsMake(5, 0, 5, 0)];
+        [_speakerBtn_vertical setContentEdgeInsets:UIEdgeInsetsMake(0, 0, 0, 0)];
         [self setActionForSpeaker:(UIButton *)_speakerBtn_vertical];
         
         [_speakerBtn_vertical setRestoreSelectedState:YES];
@@ -150,26 +150,47 @@
 }
 
 
-- (void)resetControl {
+- (void)resetControl:(UIButton *)sender {
     [super resetControl];
     [self.muteBtn setSelected:YES];
 }
 
 - (void)hideControl {
     
-    if (self.isFullScreen) {
-        [self.speakerBtn_vertical setHidden:YES];
-    }
-    [super hideControl];
-    [self setShowing:NO];
+  
+    [UIView animateWithDuration:0.3 animations:^{
+        if (self.isFullScreen) {
+            [self.speakerBtn_vertical setHidden:YES];
+        }
+        [super hideControl];
+       
+    } completion:^(BOOL finished) {
+        //        [self autoFadeOutControlView];
+         [self setShowing:NO];
+    }];
+    
 }
 
 - (void)showControl {
-    if (self.isFullScreen) {
-        [self.speakerBtn_vertical setHidden:NO];
-    }
-    [super showControl];
-    [self setShowing:YES];
+    
+    [UIView animateWithDuration:0.3 animations:^{
+        if (self.isFullScreen) {
+            if(!self.lockBtn.isSelected) {
+                [self.speakerBtn_vertical setHidden:NO];
+            }else {
+                [self.speakerBtn_vertical setHidden:YES];
+            }
+        }
+        
+        
+        
+        [super showControl];
+     
+    } completion:^(BOOL finished) {
+//        [self autoFadeOutControlView];
+           [self setShowing:YES];
+    }];
+ 
 }
 
 - (void)setState:(ZLPlayerState)state {

@@ -29,100 +29,39 @@
 
 @implementation PersonalController
 
-- (QSection *)section0 {
-    _section0 = [self.root.sections objectAtIndex:0];
-    return _section0;
-}
 
-- (UILabel *)nameLabel {
-    if (!_nameLabel) {
-        _nameLabel = [UILabel labelWithText:USER.user_email withFont:[UIFont systemFontOfSize:21] color:[UIColor blackColor] aligment:NSTextAlignmentCenter];
-    }
-    
-    return _nameLabel;
-}
-- (BButton *)logoutBtn {
-    
-    if (!_logoutBtn) {
-        _logoutBtn = [[BButton alloc] initWithFrame:CGRectZero color:[UIColor redColor]];
-        [_logoutBtn setTitle:@"退出登录" forState:UIControlStateNormal];
-        [_logoutBtn addTarget:self action:@selector(userLogout:) forControlEvents:UIControlEventTouchUpInside];
-    }
-    return _logoutBtn;
-}
-- (void)userLogout:(id)sender {
-    self.userLogout(USER);
-}
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     [self.view setBackgroundColor:[UIColor groupTableViewBackgroundColor]];
     
-    ///HEADER
-    self.customHeader = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(self.view.bounds), 300)];
-    [self.customHeader setUserInteractionEnabled:YES];
-    [self.customHeader setImage:[UIImage imageNamed:@"ucDefault"]]; ///USER
-    [self.customHeader addSubview:self.portraitBtn];
-    [self.customHeader addSubview:self.nameLabel];
 
-    UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(clickImage)];
-    [self.customHeader addGestureRecognizer:tapGesture];
-    [self.portraitBtn mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.center.equalTo(self.customHeader);
-        make.size.mas_equalTo(CGSizeMake(100, 100));
-    }];
-    [self.nameLabel mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.top.equalTo(self.portraitBtn.mas_bottom).offset(20.f);
-        make.leading.trailing.equalTo(self.customHeader).offset(15.f);
-    }];
     
-    [self.root.sections[0] setHeaderView:self.customHeader];
+    [self.quickDialogTableView setTableHeaderView:self.customHeader ];
+    [self.quickDialogTableView setTableFooterView:self.customFooter ];
     
-    
-    
-    
-    
-    
-    /// FOOTER
-    self.customFooter = [[UIView alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(self.view.bounds), 200)];
-    [self.customFooter addSubview:self.logoutBtn];
-    [self.logoutBtn mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.top.equalTo(self.customFooter).offset(20.f);
-        make.leading.equalTo(self.customFooter).offset(20.f);
-        make.trailing.equalTo(self.customFooter).offset(-20.f);
-
-        make.height.mas_equalTo(40.f);
-    }];
-    [self.root.sections[0] setFooterView:self.customFooter];
-   
-
- 
-    
-   
-
-
-
     ///disable tableview offset automitc bug
     if (@available(iOS 11.0, *)) {
         self.quickDialogTableView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
     } else {
         self. automaticallyAdjustsScrollViewInsets = NO; ///deprated in ios 11
     }
-
 }
 
-- (void)clickImage {
-    [self readPhotosWithTag:1001];
 
-}
+
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     
-    ///set nav clear
+    ///set navgation bar clear color
     [self.navigationController.navigationBar setBackgroundImage:[UIImage new] forBarMetrics:UIBarMetricsDefault];
     [self.navigationController.navigationBar setShadowImage:[UIImage new]];
     self.navigationController.navigationBar.translucent = YES;
+
 }
+
+
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
  
@@ -140,21 +79,7 @@
     // Dispose of any resources that can be recreated.
 }
 
-- (UIButton *)portraitBtn {
-    if (!_portraitBtn) {
-        _portraitBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-        [_portraitBtn setContentMode:UIViewContentModeScaleAspectFill];
-        [_portraitBtn setImage:[UIImage imageWithData:USER.user_portrait] forState:UIControlStateNormal];
-        [_portraitBtn.layer setBorderColor:[UIColor groupTableViewBackgroundColor].CGColor];
-        [_portraitBtn addTarget:self action:@selector(changePortrait:) forControlEvents:UIControlEventTouchUpInside];
-        [_portraitBtn.layer setBorderWidth:1.f];
-        [_portraitBtn.layer setCornerRadius:50.f];
-        [_portraitBtn.layer setMasksToBounds:YES];
-        [_portraitBtn setBackgroundColor:[UIColor lightTextColor]];
 
-    }
-    return _portraitBtn;
-}
 - (void)changePortrait:(id)sender {
     
     [self readPhotosWithTag:1000];
@@ -163,7 +88,7 @@
 
 - (void)readPhotosWithTag:(NSInteger)tag {
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil message:nil preferredStyle:UIAlertControllerStyleActionSheet];
-    [alert addAction:[UIAlertAction actionWithTitle:@"从相册选择" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action){
+    [alert addAction:[UIAlertAction actionWithTitle:LS(@"从相册选择") style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action){
         UIImagePickerController *pickerImage = [[UIImagePickerController alloc]init];
         [pickerImage.view setTag:tag];
         
@@ -174,7 +99,7 @@
     }]];
     
     
-    [alert addAction:[UIAlertAction actionWithTitle:@"拍照" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action){
+    [alert addAction:[UIAlertAction actionWithTitle:LS(@"拍照") style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action){
         UIImagePickerController *pickerImage = [[UIImagePickerController alloc]init];
         [pickerImage.view setTag:tag];
 
@@ -186,7 +111,7 @@
     
     
     
-    [alert addAction:[UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:LS(@"取消" ) style:UIAlertActionStyleCancel handler:nil]];
     [self presentViewController:alert animated:YES completion:nil];
 
 }
@@ -214,6 +139,97 @@
     
 }
 
+
+
+
+#pragma mark - getter
+- (UIButton *)portraitBtn {
+    if (!_portraitBtn) {
+        _portraitBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        [_portraitBtn setContentMode:UIViewContentModeScaleAspectFill];
+        [_portraitBtn setImage:[UIImage imageWithData:USER.user_portrait] forState:UIControlStateNormal];
+        [_portraitBtn.layer setBorderColor:[UIColor groupTableViewBackgroundColor].CGColor];
+        [_portraitBtn addTarget:self action:@selector(changePortrait:) forControlEvents:UIControlEventTouchUpInside];
+        [_portraitBtn.layer setBorderWidth:1.f];
+        [_portraitBtn.layer setCornerRadius:50.f];
+        [_portraitBtn.layer setMasksToBounds:YES];
+        [_portraitBtn setBackgroundColor:[UIColor lightTextColor]];
+        
+    }
+    return _portraitBtn;
+}
+- (QSection *)section0 {
+    _section0 = [self.root.sections objectAtIndex:0];
+    return _section0;
+}
+
+- (UILabel *)nameLabel {
+    if (!_nameLabel) {
+        _nameLabel = [UILabel labelWithText:USER.user_email withFont:[UIFont systemFontOfSize:21] color:[UIColor blackColor] aligment:NSTextAlignmentCenter];
+    }
+    
+    return _nameLabel;
+}
+- (BButton *)logoutBtn {
+    
+    if (!_logoutBtn) {
+        _logoutBtn = [[BButton alloc] initWithFrame:CGRectZero color:[UIColor redColor]];
+        [_logoutBtn setTitle:LS(@"退出登录") forState:UIControlStateNormal];
+        [_logoutBtn addTarget:self action:@selector(userLogout:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    return _logoutBtn;
+}
+- (void)userLogout:(id)sender {
+    self.userLogout(USER);
+}
+- (UIImageView *)customHeader {
+    if(!_customHeader) {
+        
+        ///HEADER  ,headview 是 UIView
+        _customHeader = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(self.view.bounds), AM_SCREEN_HEIGHT * 0.4)];
+        [_customHeader setUserInteractionEnabled:YES];
+        [_customHeader setImage:[UIImage imageNamed:@"ucDefault"]]; ///USER
+        [_customHeader addSubview:self.portraitBtn];
+        [_customHeader addSubview:self.nameLabel];
+        
+        
+        
+        UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(clickImage)];
+        [_customHeader addGestureRecognizer:tapGesture];
+        
+        
+        [self.portraitBtn mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.center.equalTo(_customHeader);
+            make.size.mas_equalTo(CGSizeMake(100, 100));
+        }];
+        [self.nameLabel mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.top.equalTo(self.portraitBtn.mas_bottom).offset(20.f);
+            make.leading.trailing.equalTo(_customHeader).offset(15.f);
+        }];
+    }
+    
+    return _customHeader;
+}
+
+- (void)clickImage {
+    [self readPhotosWithTag:1001];
+    
+}
+- (UIView *)customFooter {
+    if(!_customFooter) {
+        /// FOOTER
+        _customFooter = [[UIView alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(self.view.bounds), 150)];
+        [_customFooter addSubview:self.logoutBtn];
+        [self.logoutBtn mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.top.equalTo(_customFooter).offset(20.f);
+            make.leading.equalTo(_customFooter).offset(20.f);
+            make.trailing.equalTo(_customFooter).offset(-20.f);
+            make.height.mas_equalTo(40.f);
+        }];
+    }
+    
+    return _customFooter;
+}
 @end
 //        if (UIImagePNGRepresentation(selectedPhoto) == nil){
 //            user.userPhoto = UIImageJPEGRepresentation(selectedPhoto, 1.0);

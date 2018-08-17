@@ -16,10 +16,33 @@
 - (instancetype)init {
     if (self = [super init] ) {
         [self addNotifications];
+        [self setFont:[UIFont systemFontOfSize:15.f]];
+        self.autocapitalizationType = UITextAutocapitalizationTypeNone;  ///capitalization ,大写
+        self.clearButtonMode = UITextFieldViewModeWhileEditing;
     }
     
     return self;
 }
+
+/// drawing and positioning overrides
+- (CGRect)leftViewRectForBounds:(CGRect)bounds {
+    
+    ///override  父类方法 ，必须先还原  保持父类 feature ,!调用 super
+    CGRect iconRect = [super leftViewRectForBounds:bounds]; iconRect.origin.x += 10;
+    //像右边偏15
+    return iconRect;
+    
+}
+    
+  
+- (void)setIcon:(UIImage *)icon {
+    if (icon != _icon) {
+        _icon = icon;
+        self.leftView = [[UIImageView alloc] initWithImage:icon];
+        self.leftViewMode = UITextFieldViewModeAlways;
+    }
+}
+
 - (void)awakeFromNib {
     [super awakeFromNib];
     [self addNotifications];
@@ -62,12 +85,14 @@
     //目标视图UITextField
     
    
-    UIView *bottomWiget = [[UIView alloc] initWithFrame:CGRectZero];
-    for (UIView *subview in self.superview.subviews) {
-        if (bottomWiget.y < subview.y) {
-            [bottomWiget setFrame:subview.frame];
+    UIView *bottomWiget = [UIView new];
+    [self.superview.subviews enumerateObjectsUsingBlock:^(__kindof UIView * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        if (bottomWiget.y < obj.y  ) {
+            [bottomWiget setFrame:obj.frame];
         }
-    }
+    }];
+
+    
 
     int y = bottomWiget.frame.origin.y + bottomWiget.frame.size.height - (self.superview.frame.size.height - keyboardSize.height);
     
@@ -111,4 +136,5 @@
     [textField resignFirstResponder];
     return YES;
 }
+
 @end

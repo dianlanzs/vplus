@@ -23,18 +23,18 @@ open class DayCell: UICollectionViewCell {
     func setup(date: Date, style: DayStyleConfiguration) {
         let formatter = DateFormatter()
 
-        formatter.dateFormat = "dd"
+        formatter.dateFormat = "dd" ///01 - 31
         dateLabel.text = formatter.string(from: date)
         dateLabel.font = style.dateTextFont ?? dateLabel.font
         dateLabel.textColor = style.dateTextColor ?? dateLabel.textColor
 
-        formatter.dateFormat = "EEE"
-        weekDayLabel.text = formatter.string(from: date).uppercased()
+        formatter.dateFormat = "EEE"///星期的英文缩写
+        weekDayLabel.text = NSLocalizedString(formatter.string(from: date).uppercased(), comment: "")
         weekDayLabel.font = style.weekDayTextFont ?? weekDayLabel.font
         weekDayLabel.textColor = style.weekDayTextColor ?? weekDayLabel.textColor
 
-        formatter.dateFormat = "MMMM"
-        monthLabel.text = formatter.string(from: date).uppercased()
+        formatter.dateFormat = "MMMM"///英文月份的缩写
+        monthLabel.text = NSLocalizedString(formatter.string(from: date).uppercased(), comment: "")
         monthLabel.font = style.monthTextFont ?? monthLabel.font
         monthLabel.textColor = style.monthTextColor ?? monthLabel.textColor
 

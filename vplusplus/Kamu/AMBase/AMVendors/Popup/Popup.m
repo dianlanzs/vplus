@@ -859,9 +859,9 @@ BOOL isBlurSet = YES;
 
 - (NSArray *)arrayForStringOfTextfields {
     
-    NSString *textField1String = nil;
-    NSString *textField2String = nil;
-    NSString *textField3String = nil;
+    NSString *textField1String = @"";
+    NSString *textField2String = @"";
+    NSString *textField3String = @"";
     
     
     for (int i = 0; i < [pTextFieldArray count]; i++) {

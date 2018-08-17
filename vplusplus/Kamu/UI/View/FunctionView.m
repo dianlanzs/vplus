@@ -59,6 +59,9 @@ CGFloat cornerRadius = 2.f;
             make.leading.mas_equalTo(self.wifi.mas_trailing).offset(10.f);
             make.centerY.equalTo(self);
         }];
+   
+        [self.signalLb setHidden:YES];
+        
         
         [self.wifi mas_makeConstraints:^(MASConstraintMaker *make) {
             make.leading.mas_equalTo(self.batteryLabel.mas_trailing).offset(padding);
@@ -127,6 +130,7 @@ CGFloat cornerRadius = 2.f;
 - (UIImageView *)lightingLogo {
     if (!_lightingLogo) {
         _lightingLogo = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"bar_lighting"]];
+        [_lightingLogo setHidden:YES];
     }
     return _lightingLogo;
 }
@@ -153,7 +157,7 @@ CGFloat cornerRadius = 2.f;
 
 - (void)setWifiProgress:(NSInteger)progressValue {
     
-    if (progressValue >= 70 && progressValue <= 100) {
+    if (progressValue >= 70 ) {//&& progressValue <= 100
         for (UIImageView *imv in self.wifi.subviews) {
             if ([imv isKindOfClass:[UIImageView class]]) {
             [imv setTintColor:[UIColor greenColor]];
@@ -298,7 +302,7 @@ CGFloat cornerRadius = 2.f;
     self.batteryLabel.textAlignment = NSTextAlignmentLeft;
     self. batteryLabel.font = [UIFont systemFontOfSize:14.f];
     [self addSubview:self.batteryLabel];
-    
+    [self.batteryLabel setHidden:YES];
 }
 
 - (void)setBatteryProgress:(NSInteger)progressValue{
@@ -309,26 +313,30 @@ CGFloat cornerRadius = 2.f;
         [self.lightingLogo setHidden:NO];
     }else {
         [self.lightingLogo setHidden:YES];
-
     }
     [UIView animateWithDuration:1 animations:^{
         CGRect frame = self.batteryView.frame;
-        float percent = eQulity / 100.f;
-        frame.size.width = percent * (batteryW - lineW * 4); //battery include width of stroke line
-        self.batteryView.frame  = frame;
-        self.batteryLabel.text = [[NSString stringWithFormat:@"%lu",(long)eQulity] stringByAppendingString:@"%"];
-
-        if (eQulity < 20) {
-            self.batteryView.backgroundColor = [UIColor redColor];
-        }else{
+        if(eQulity < 100) {
+            float percent = eQulity / 100.f;
+            frame.size.width = percent * (batteryW - lineW * 4); //battery include width of stroke line
+            self.batteryView.frame  = frame;
+            //        self.batteryLabel.text = [[NSString stringWithFormat:@"%lu",(long)eQulity] stringByAppendingString:@"%"];
+            if (eQulity < 20) {
+                self.batteryView.backgroundColor = [UIColor redColor];
+            }else{
+                self.batteryView.backgroundColor = [UIColor greenColor];
+            }
+        }else {
+            ///c , bug  > 100
+            frame.size.width = batteryW - lineW * 4; //battery include width of stroke line
+            self.batteryView.frame  = frame;
             self.batteryView.backgroundColor = [UIColor greenColor];
         }
+ 
     }];
-    
-        [self.batteryLabel sizeToFit];
+//        [self.batteryLabel sizeToFit];
         [self setNeedsLayout];
     //    [self layoutIfNeeded];
-    
     //    [self setNeedsDisplay]
 }
 

@@ -23,9 +23,11 @@
 @property  NSString * _Nullable cam_version;
 
 
-@property  int cam_pir_sensitivity;
-@property  int cam_battery_threshold;
+@property  float cam_pir_sensitivity;
+@property  float cam_battery_threshold;
 @property  int cam_rotate;
+@property  NSString * _Nullable cam_videoQulity;
+
 
 
 

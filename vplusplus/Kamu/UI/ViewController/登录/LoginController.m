@@ -15,13 +15,14 @@
 
 @implementation LoginController
 
-
+- (void)dealloc {
+    NSLog(@"LOgin COntroller 释放了");
+}
 - (instancetype)init {
     if (self = [super init]) {
         
         ///先创建 vc 先创建 loginview ，VC才能访问自己的loginview
         [self.view addSubview:self.loginView]; /// loadViewIfRequied === > self.loginview == nil
-        NSLog(@"🏆LOGIN-VIEW %@",self.loginView);
         [self.loginView setLoginType:ZLLoginType_prior];
         self.transitioningDelegate = self;
     }

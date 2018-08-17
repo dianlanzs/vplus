@@ -35,17 +35,31 @@
 #import "LoginController.h"
 #import "DataBuilder.h"
 
+#import "IOTCAPIs.h"
 static NSString *appKey = @"ab43e34db3569dc318b8fc47";
 static NSString *channel = @"AppStore";
 static BOOL isProduction = NO;
+static BOOL isJpushFinished = NO;
 
+static int jpushSetting_count = 0;
+
+
+//static void (^ aliasRecursion)(NSSet *,NSString *) = ^(NSSet *tags,NSString *alias){
+//    [JPUSHService setTags:tags alias:alias fetchCompletionHandle:^(int iResCode, NSSet *iTags, NSString *iAlias) {
+//
+//
+//        ///2hours  内 不能对 相同 jpush_regID 设置相同 tag ,或者alias!
+//        NSLog(@"%@ 用户已登录 - %d",iAlias,iResCode);
+//
+//    }];
+//};
 
 @interface AppDelegate ()<JPUSHRegisterDelegate>
 
 
 @property (nonatomic, copy) NSDictionary *dict;
 @property (nonatomic, copy) NSDictionary *triggerLaunchOptions;
-
+//@property (nonatomic, copy) void(^aliasRecursion)(NSSet *tags,NSString *alias);÷
 @property (nonatomic, strong) NSMutableArray *navigationControllers;
 @property (nonatomic, strong) NSString *token;
 
@@ -65,78 +79,114 @@ static BOOL isProduction = NO;
 //    
 //}
 
-///锁屏触发事件
+///锁屏触发事件 --必须要设置密码
 - (void)applicationProtectedDataWillBecomeUnavailable:(UIApplication *)application{
-    NSLog(@"Lock screen.");
+    [MBProgressHUD showPromptWithText:@"LOCK_SCREEN"];
+//
+//        for (Device *close_device in USER.user_devices) {
+//            cloud_close_device((void *)close_device.nvr_h); ///释放 设备 句柄
+//        }
+//    exit(0);
+    
 }
 ///解锁事件
 - (void) applicationProtectedDataDidBecomeAvailable:(UIApplication *)application {
-//    [[NSNotificationCenter defaultCenter] postNotificationName:UN_LOCK_SCREEN_NOTIFY
-//                                                        object:nil];
-    NSLog(@"UnLock screen.");
-    cloud_notify_network_changed_block();
-
+    [MBProgressHUD showPromptWithText:@"UNLOCK_SCREEN"];
+//    cloud_notify_network_changed_block();
+//    for (Device *open_device in USER.user_devices) {
+//        cloud_open_device([open_device.nvr_id UTF8String]);
+//    }
 }
 -(void)dealloc{
     [[NSNotificationCenter defaultCenter]removeObserver:self name:@"netWorkChangeEventNotification" object:nil];
 }
-
--(void)sendNotation:(NSDictionary *)launchOptions {
+///同步 设置用户 推送 alias
+- (BOOL)action:(UIButton *)sender uploadJpushUser:(User *)user isLogin:(BOOL)isLogin {
+//    [MBProgressHUD showPromptWithText:@"上传 Jpush  user......"];
+    if(isLogin) {
+        NSString *appInfo = [NSString stringWithFormat:@"%@:%@",[[NSUserDefaults standardUserDefaults] valueForKey:@"JPUSH_REGISTER_ID"],user.user_id];
+        NSLog(@" ---------- 登录设置 APP_INFO:%s -------------",[appInfo UTF8String]);
+        cloud_set_appinfo([appInfo UTF8String]);
+        [self setUser:user];
+        [self.window setRootViewController:self.drawerController];
+        [self setLoginController:nil];
+        [RLM transactionWithBlock:^{
+            [user setUser_isLogin:YES];
+            user.user_loginDate = (int)[[NSDate date] timeIntervalSince1970];
+        }];
+        [(HyLoginButton *)sender succeedAnimationWithCompletion:^{
+            [MBProgressHUD showSuccess:[NSString stringWithFormat:@"%@ %@",sender.titleLabel.text,LS(@"成功")]];
+        }];
+        
+        NSLog(@"🔫LOGIN_USER%@",user);
+    }else {
+        [MBProgressHUD showSpinningWithMessage:LS(@"退出中...")]; ///主线程在做耗时操作 ing ??? 连接成功后快
+        
+       [ self.user threadReslove:^(RLMObject *reslovedObj) {
+            ///必须等 连接上 在 退出 ，同步线程？？ 主线程上做耗时操作 阻塞 UI  ，，异步 close!!  REALM  涉及跨线程操作对象
+           NSLog(@"%@",[(User *)reslovedObj user_devices]);
+            for (Device *close_device in [(User *)reslovedObj user_devices]) {
+                if(close_device.nvr_h != 0) {
+                    cloud_close_device((void *)close_device.nvr_h); ///释放 设备 句柄
+                }
+            }
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.window setRootViewController:self.loginController];
+                [self setDrawerController:nil];
+//                [RLM transactionWithBlock:^{
+//                    [RLM deleteObjects:[Cam allObjects]]; ///删除所有cams ,导致 --- Login 没有任何cam covers!!
+//                }];
+                [RLM transactionWithBlock:^{
+                    [user setUser_isLogin:NO];
+                    user.user_logoutDate = (int)[[NSDate date] timeIntervalSince1970];
+                }];
+                [MBProgressHUD showSuccess:LS(@"退出成功")];
+            });
+        }];
+    }
     
-//    NSDictionary *userInfo = [launchOptions objectForKey: UIApplicationLaunchOptionsRemoteNotificationKey];
-//    if (userInfo) {
-//        [(AMNavigationController *)self.tabBarController.selectedViewController jumpToViewctroller:userInfo];
-//
-//    }
+    
+    [JPUSHService setTags:[NSSet setWithObjects:@"LOG_IN_OUT", nil] alias:isLogin ? [NSString stringWithFormat:@"%@",user.user_id] : @"" fetchCompletionHandle:^(int iResCode, NSSet *iTags, NSString *iAlias) {
+        if (iResCode == 0 || jpushSetting_count == 2) {
+//             [MBProgressHUD showSuccess:[NSString stringWithFormat:@"%@设置——%d成功",iAlias,jpushSetting_count]];
+///           return YES; cuz  callback  没有返回值！！ 报错
+        }else {
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(6 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                [self action: sender uploadJpushUser:user isLogin:isLogin];
+                [MBProgressHUD showError:[NSString stringWithFormat:@" -- 重设 %d ---",jpushSetting_count]];
+                jpushSetting_count++;
+            });
+        }
+    }];
+    
+    return isJpushFinished;  /// 是 NO ,callback 是异步 的 所以 一进来 立马 返回 NO！！，需要再call  一次！！
 }
+/// LOGIN
 - (LoginController *)loginController {
     if (!_loginController) {
         _loginController = [[LoginController alloc] init]; // ------> view did load
-        
-        WeakObj(self); /// _loginController 创建 loginview
-        [_loginController.loginView setUserLogin:^(User *user) {
-            [ws setUser:user];
-            [ws.window setRootViewController:ws.drawerController];
-            [ws setLoginController:nil];
-            [JPUSHService setTags:nil alias:[NSString stringWithFormat:@"%@",user.user_id ] fetchCompletionHandle:^(int iResCode, NSSet *iTags, NSString *iAlias) {
-                NSLog(@"%@已登录 - %d",iAlias,iResCode);
-            }];
+        WS(self);
+        [_loginController.loginView setUserLogin:^(HyLoginButton *sender, User *loginUser) {
+            [ws action:sender uploadJpushUser:loginUser isLogin:YES];
         }];
-        
-        NSLog(@"🎟LOGIN-VIEW %@",_loginController.loginView);
-
-        
     }
     return _loginController;
 }
+
+///LOGOUT
 - (MMDrawerController *)drawerController {
     if (!_drawerController) {
-        
-        MainViewController * mainController = [[MainViewController alloc] init];
-        
-        
         QRootElement *userModel = [[DataBuilder new] createForUserSettings:self.user];
         PersonalController * personalController = [[PersonalController alloc] initWithRoot:userModel];
-        WeakObj(self);
         [personalController setUserLogout:^(User *user) {
-            [ws.window setRootViewController:self.loginController];
-            [ws setDrawerController:nil];
-            [RLM transactionWithBlock:^{
-                ws.user.user_isLogin = NO;
-                ws.user.user_lastLoginTime = (int)[[NSDate date] timeIntervalSince1970];
-            }];
-            NSLog(@"============%d",USER.user_lastLoginTime);
-            
-            [JPUSHService setTags:nil alias:nil fetchCompletionHandle:^(int iResCode, NSSet *iTags, NSString *iAlias) {
-                NSLog(@"%@退出登录",user);
-            }];
+            [self action:nil uploadJpushUser:user isLogin:NO];
         }];
         
         AMNavigationController * personalNav = [[AMNavigationController alloc] initWithRootViewController:personalController];
-        AMNavigationController * mainNav = [[AMNavigationController alloc] initWithRootViewController:mainController];
+        AMNavigationController * mainNav = [[AMNavigationController alloc] initWithRootViewController:[MainViewController new]];
         _drawerController = [[MMDrawerController alloc] initWithCenterViewController:mainNav leftDrawerViewController:personalNav];
         [_drawerController setShowsShadow:YES];
-        [_drawerController setMaximumRightDrawerWidth:200.0];
+        [_drawerController setMaximumLeftDrawerWidth:AM_SCREEN_WIDTH * 0.8];
         [_drawerController setStatusBarViewBackgroundColor:[UIColor redColor]];
         [_drawerController setOpenDrawerGestureModeMask:MMOpenDrawerGestureModeNone];
         [_drawerController setCloseDrawerGestureModeMask:MMOpenDrawerGestureModeNone];
@@ -144,65 +194,82 @@ static BOOL isProduction = NO;
     
     return _drawerController;
 }
+- (void)languageChange:(id)sender {
+    if(self.drawerController) {
+        [self setDrawerController:nil];
+        [self.window setRootViewController:self.drawerController];
+    }else {
+        [self setLoginController:nil];
+        [self.window setRootViewController:self.loginController];
+    }
+}
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     
     cloud_init();
-    
-    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    
-    
+    ///初始化语言
+     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(languageChange:) name:ZZAppLanguageDidChangeNotification object:nil];
+    [self configJpushWith:launchOptions];
+   
     /*
-     //没有登录过 ，---> 模态 展现登录控制器
-     if (![[NSUserDefaults standardUserDefaults] boolForKey:@"Login"]) {//everLaunched
-     [self.window setRootViewController:self.loginController];
-     } else {
-     //        [[NSUserDefaults standardUserDefaults] setBool:NO forKey:@"firstLaunch"];
-     [self.window setRootViewController:self.drawerController];    //登录过  ---> 配置 navigations
-     }
-     */
-    [self setTriggerLaunchOptions:launchOptions];
-    if (!self.user.user_isLogin) {
-        [self.window setRootViewController:self.loginController];
-    } else {
-        [self.window setRootViewController:self.drawerController];
+    if(![[NSUserDefaults standardUserDefaults] boolForKey:@"firstLaunch"]){
+        [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"firstLaunch"];
+
+    }else{
+        //不是第一次启动了
     }
+    */
     
+    RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
+    /*
+     //Provided schema version 0 is less than last set version 1.
+
+     - Property 'Cam.cam_pir_sensitivity' has been added.  set vesion == 2.0
+     - Property 'Cam.cam_battery_threshold'
+     */
+    [config setSchemaVersion:3];///修改了数据库 需要递增 版本 而且必须是整数
+    config.migrationBlock = ^(RLMMigration *migration, uint64_t oldSchemaVersion) {
+        // 设置模块，如果 Realm 的架构版本低于上面所定义的版本， 那么这段代码就会自动调用 我们目前还未执行过迁移，因此 oldSchemaVersion == 0
+//        if (oldSchemaVersion < 3) {
+//        }
+        ;
+    };
+    
+    [RLMRealmConfiguration setDefaultConfiguration:config];
+
+   
+    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    if (self.user.user_isLogin) {
+        NSString *appInfo = [NSString stringWithFormat:@"%@:%@",[[NSUserDefaults standardUserDefaults] valueForKey:@"JPUSH_REGISTER_ID"],self.user.user_id];
+        NSLog(@" ---------- 登录设置 APP_INFO:%s -------------",[appInfo UTF8String]);
+        cloud_set_appinfo([appInfo UTF8String]);
+        [self.window setRootViewController:self.drawerController];
+    } else {
+        [self.window setRootViewController:self.loginController];
+    }
     [self.window makeKeyAndVisible];
     [self setMRButtonAppearance];
     [self.manager.reachabilityManager startMonitoring];
-
-  
-    
-    
-    
-    
-    //Steve
-//    self.y_data = new Byte[1920 * 1080 * 1]; //数组容量  ptr[m]
-//    self.u_data = new Byte[1920 * 1080 * 1/4]; //数组容量  ptr[m]
-//    self.v_data = new Byte[1920 * 1080 * 1/4]; //数组容量  ptr[m]
-
-  
-    //模拟 服务器请求 token
-    //    if (!self.token) {
-    //         [self.window setRootViewController:self.loginController];
-    //    } else {
-    //        [self.window setRootViewController:self.tabBarController];
-    //        self.token = @"haveToken && valid";
-    //    }
-    //
-   
-//    [self.window setRootViewController:self.tabBarController];    //登录过  ---> 配置 navigations
     [self setMRButtonAppearance];
+    
+    
+    
+    
+    
+    
+    
+    
+    
     return YES;
 }
 
 
 - (void)configJpushWith:(NSDictionary *)launchOptions {
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(networkDidLogin:) name:kJPFNetworkDidLoginNotification object:nil];
     
     ///Jpush Message Notification
     //    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(networkDidReceiveMessage:) name:kJPFNetworkDidReceiveMessageNotification object:nil];
-    
+ 
+    ///登录 jpush 服务器 通知
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(networkDidLogin:) name:kJPFNetworkDidLoginNotification object:nil];
     
     ///初始化APNs
     JPUSHRegisterEntity * entity = [[JPUSHRegisterEntity alloc] init];
@@ -220,19 +287,18 @@ static BOOL isProduction = NO;
 }
 
 
-//token 回调
+///APNs token  callback
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
 //    [self configTutkPushWith:deviceToken];
-    [JPUSHService registerDeviceToken:deviceToken];// Required - 上报DeviceToken给极光服务器
+    // Required - 上报DeviceToken给极光服务器
+    [JPUSHService registerDeviceToken:deviceToken];
 }
 - (void)networkDidLogin:(NSNotification *)notification {
-    
-    NSString *s = [NSString stringWithFormat:@"%@:%@",[JPUSHService registrationID],self.user.user_id];
-    const  char * info =  [s UTF8String];
-    if (info) {
-        cloud_set_appinfo(info);
+    NSLog(@"----登录极光服务器----");
+    if(![[[NSUserDefaults standardUserDefaults] valueForKey:@"JPUSH_REGISTER_ID"] isEqualToString:[JPUSHService registrationID]]){
+        [[NSUserDefaults standardUserDefaults]  setValue:[JPUSHService registrationID] forKey:@"JPUSH_REGISTER_ID"];
+        [[NSUserDefaults standardUserDefaults] synchronize];
     }
-    
 }
 
 
@@ -287,16 +353,16 @@ static BOOL isProduction = NO;
      NSString *title = content.title;
      */
     
-    [self handleRemoteNotification:notification];
+    [self manageRemoteNotification:notification];
 //    if ([UIApplication sharedApplication].applicationState != UIApplicationStateActive) {
-//        completionHandler(UNNotificationPresentationOptionBadge|UNNotificationPresentationOptionSound|UNNotificationPresentationOptionAlert);
+    completionHandler(UNNotificationPresentationOptionBadge|UNNotificationPresentationOptionSound|UNNotificationPresentationOptionAlert);
 //    }
 }
 
-///前台、后台，杀死 -- 点击推送
+///前台、后台，杀死 -- 点击推送走这个方法
 - (void)jpushNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(UNNotificationResponse *)response withCompletionHandler:(void (^)())completionHandler {
-    [self handleRemoteNotification:response.notification];
-    completionHandler();  
+    [self manageRemoteNotification:response.notification];
+    completionHandler();
 }
 // log NSSet with UTF8  if not ,log will be  Uxxx
 - (NSString *)logDic:(NSDictionary *)dic {
@@ -313,7 +379,7 @@ static BOOL isProduction = NO;
 }
 
 
-- (void)handleRemoteNotification:(UNNotification *)notification {
+- (void)manageRemoteNotification:(UNNotification *)notification {
     
     
     UNNotificationRequest *request = notification.request;
@@ -323,14 +389,18 @@ static BOOL isProduction = NO;
     if([notification.request.trigger isKindOfClass:[UNPushNotificationTrigger class]]) {
         [JPUSHService handleRemoteNotification:userInfo]; //上报 Jpush 推送信息
         
-        UIAlertController * alertController = [UIAlertController alertControllerWithTitle:@"Alert" message:[self logDic:userInfo] preferredStyle:UIAlertControllerStyleAlert];
-        UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"拒绝" style:UIAlertActionStyleCancel handler:nil];
-        UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"接听" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-            [(AMNavigationController *)self.tabBarController.selectedViewController jumpToViewctroller:userInfo];
-        }];
-        [alertController addAction:cancelAction];
-        [alertController addAction:okAction];
-        [self.tabBarController presentViewController:alertController animated:YES completion:nil];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            UIAlertController * alertController = [UIAlertController alertControllerWithTitle:@"Alert" message:[self logDic:userInfo] preferredStyle:UIAlertControllerStyleAlert];
+            UIAlertAction *refuse = [UIAlertAction actionWithTitle:@"拒绝" style:UIAlertActionStyleCancel handler:nil];
+            UIAlertAction *answer = [UIAlertAction actionWithTitle:@"接听" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                [(AMNavigationController *)self.tabBarController.selectedViewController jumpToViewctroller:userInfo];
+            }];
+            [alertController addAction:refuse];
+            [alertController addAction:answer];
+            [self.tabBarController presentViewController:alertController animated:YES completion:nil];
+        });
+      
         
         
         [UIApplication sharedApplication].applicationIconBadgeNumber = 0;
@@ -567,6 +637,7 @@ static BOOL isProduction = NO;
 - (void)applicationWillResignActive:(UIApplication *)application {
     // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
     // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.
+
 }
 
 
@@ -591,34 +662,47 @@ static BOOL isProduction = NO;
 //        //user pressed home button
 //
 //    }
-        
-        
+    
+    ///异步  会 crash！！
+//    cloud_notify_network_changed();
+
+    cloud_notify_network_changed_block();
+    cloud_restart();
+
 }
 
 
 - (void)applicationWillEnterForeground:(UIApplication *)application {
     // Called as part of the transition from the background to the active state; here you can undo many of the changes made on entering the background.
-//    for (Device *openDevice in DEVICES) {
-//        cloud_open_device([openDevice.nvr_id UTF8String]);
-//    }
+
+    AMNavigationController *am_nav = (AMNavigationController *) self.drawerController.centerViewController;
+    MainViewController *main_vc =  am_nav.viewControllers[0];
+    if(am_nav .topViewController.class == NSClassFromString(@"MainViewController")) {
+        [main_vc.tableView.mj_header beginRefreshing];
+    }else {
+        cloud_connect_device((void *)am_nav.operatingDevice.nvr_h, "admin", "123");
+    }
+    
 //    cloud_init();
+    NSLog(@"✍🏻--------------- APP _WILL_ENTER_FG ---------------");
 }
 
 
 - (void)applicationDidBecomeActive:(UIApplication *)application {
     // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+//    IOTC_Session_Close(0);
+    
+    NSLog(@"✍🏻--------------- APP _BECOM _ACTIVE ---------------");
+
 }
 
 
 - (void)applicationWillTerminate:(UIApplication *)application {
-    // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
-    
-    for (Device *d in self.user.user_devices) {
-        [RLM transactionWithBlock:^{
-            d.nvr_status = CLOUD_DEVICE_STATE_UNKNOWN;
-        }];
-    }
-    
+    // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:
+//    for (Device *close_device in USER.user_devices) {
+//        cloud_close_device((void *)close_device.nvr_h); ///释放 设备 句柄
+//        [close_device setNvr_h:0];
+//    };
 }
 
 
@@ -728,9 +812,7 @@ static BOOL isProduction = NO;
         [vc setTitle:title];  // 如果nav 和 tab  没有设置标题 ， 该设置 可以同时设置 上下 和 vc 的标题！
         //        [vc.navigationItem setTitle:title];
         [navigationControllers addObject:navigationVc];
-        
-        
-        NSLog(@"✅%@,%ld",title,index);
+        NSLog(@"%@,%ld",title,index);
         
     }
     
@@ -833,7 +915,7 @@ static BOOL isProduction = NO;
         NSURL *url = [NSURL URLWithString:@"https://www.baidu.com"];
        _manager = [[AFHTTPSessionManager alloc] initWithBaseURL:url];
       __block   BOOL firstObserved = YES;
-      
+//        WS(self);
         [_manager.reachabilityManager setReachabilityStatusChangeBlock:^(AFNetworkReachabilityStatus status) {
            
             switch (status) {
@@ -844,15 +926,31 @@ static BOOL isProduction = NO;
                 case AFNetworkReachabilityStatusReachableViaWiFi:
                     [MBProgressHUD showPromptWithText:@"当前使用的是wifi模式"];
                     break;
-                case AFNetworkReachabilityStatusNotReachable:
-                    [MBProgressHUD showError:@"断网了"];
+                    case AFNetworkReachabilityStatusNotReachable: {
+                    [MBProgressHUD showError:@"网络连接已经断开，请检查"];
+                        
+                        
+                 
+                    
+                            
+//                            for (Device *everyD in ws.user.user_devices) {
+//
+//
+//
+//
+//
+////
+//                            }
+                    
+                   
+                    }
                     break;
                 case AFNetworkReachabilityStatusUnknown:
                     [MBProgressHUD showPromptWithText:@"变成了未知网络状态"];
                     break;
             }
             
-            if (firstObserved == NO) {
+            if (!firstObserved) {
                 cloud_notify_network_changed();
             }else {
                 firstObserved = NO;
@@ -866,45 +964,27 @@ static BOOL isProduction = NO;
     return _manager;
 }
 
-
-
-//- (void)setUser:(User *)user {
-//    RLMResults<User *> *users = [User allObjects];
-//    NSLog(@"%@",users);
-//    if (user != _user) {
-//        _user = user;
-//        if (!users.count) {
-//            [self configJpushWith:self.triggerLaunchOptions];
-//        }
-//        if (!_user.user_portrait) {
-//            [RLM transactionWithBlock:^{
-//                _user.user_portrait = UIImageJPEGRepresentation([UIImage imageNamed:@"portrait"], 1.0);
-//
-//            }];
-//        }
-//
-//    }
-//}
-///测试 pre user
+#pragma mark - getter
 - (User *)user {
     if (!_user) {
         _user = [User new];
         RLMResults *users = [User allObjects];
-        if (users.count > 0) {
+        if (users.count) {
             for (User *db_user in [User allObjects]) {
                 if (db_user.user_isLogin) {
                     _user = db_user;
                     return _user;
-                } else if (_user.user_lastLoginTime <= db_user.user_lastLoginTime) {
+                } else if (_user.user_logoutDate <= db_user.user_logoutDate) {
                     _user = db_user;
                 }
-                
+
             }
         }
-        
+
     }
     return _user;
 }
+
 
 //
 //- (User *)loginUser {
@@ -927,4 +1007,18 @@ static BOOL isProduction = NO;
 //
 //    return _loginUser;
 //}
+
+
+/*
+ //Steve
+ //    self.y_data = new Byte[1920 * 1080 * 1]; //数组容量  ptr[m]
+ //    self.u_data = new Byte[1920 * 1080 * 1/4]; //数组容量  ptr[m]
+ //    self.v_data = new Byte[1920 * 1080 * 1/4]; //数组容量  ptr[m]
+ //    [self.window setRootViewController:self.tabBarController];    //登录过  ---> 配置 navigations
+ */
+
+
+
+
+
 @end

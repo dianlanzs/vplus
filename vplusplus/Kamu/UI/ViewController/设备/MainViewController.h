@@ -7,11 +7,12 @@
 //
 
 #import <UIKit/UIKit.h>
-#include <signal.h>
+#import "MJRefreshNormalHeader.h"
 
 
 @interface MainViewController : AMViewController
-@property (nonatomic, strong) UIRefreshControl *pullRefresh;
+//@property (nonatomic, strong) UIRefreshControl *pullRefresh;
+@property (nonatomic, strong) UITableView *tableView;
 
 - (void)deleteNvr:(NSIndexPath *)path;
 

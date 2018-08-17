@@ -63,9 +63,6 @@
     [self.view setBackgroundColor:[UIColor redColor]];
     
 }
-//- (void)dealloc {
-////    [[NSNotificationCenter defaultCenter] removeObserver:self name:@"CLOUD_DEVICE_STATE" object:nil];
-//}
 - (void)setNavgation {
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"nav_back"] style:UIBarButtonItemStylePlain target:self action:@selector(back:)];
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"button_settings"] style:UIBarButtonItemStylePlain target:self action:@selector(camSetting:)];
@@ -87,25 +84,35 @@
 }
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    [self vp]; //config vp UI
+  
+    NSString *cam_id = self.navigationController.operatingCam.cam_id;
+    NSString *cam_name = self.navigationController.operatingCam.cam_name;
+    
+    self.navigationItem.title = cam_name ? [cam_name uppercaseString] : [cam_id uppercaseString];
+    NSLog(@"%@%@ --- %@",cam_id,cam_name,self.navigationItem.title);
+    NSString *str1 = [cam_id substringWithRange:NSMakeRange(0, 2)];
+    if([str1 isEqualToString:@"gw"]) {
+        [self.vp.funcBar setHidden:YES];
+        self.vp.frame = CGRectMake(0,  0 , AM_SCREEN_WIDTH, AM_SCREEN_WIDTH * 0.5625);
+    }else {
+        self.vp.frame = CGRectMake(0,  FunctionbarH , AM_SCREEN_WIDTH, AM_SCREEN_WIDTH * 0.5625);
+    }
+   
+}
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:YES];
+//    [self vp]; //config vp UI
     if (self.navigationController.operatingDevice.nvr_status  == CLOUD_DEVICE_STATE_CONNECTED) {
         [self.vp lv_start];
     }
     
-    self.navigationItem.title = self.navigationController.operatingCam .cam_name? [self.navigationController.operatingCam.cam_name uppercaseString] : [self.navigationController.operatingCam.cam_id uppercaseString];
-}
-
-
-
-
-- (void)viewDidAppear:(BOOL)animated {
-    [super viewDidAppear:YES];
 }
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
     if (self.navigationController.operatingDevice.nvr_status == CLOUD_DEVICE_STATE_CONNECTED) {
         [self.vp lv_stop];
         cloud_set_data_callback((void *)self.navigationController.operatingDevice.nvr_h, nil, nil);
+        cloud_set_event_callback((void *)self.navigationController.operatingDevice.nvr_h, nil, nil);
     }
 }
 
