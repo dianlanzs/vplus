@@ -19,7 +19,7 @@
 #define COLLECTION_VIEW_H (ITEM_H * 2 + ITEM_INTER_SPACING)
 
 
-#define BUTTON_H 40
+#define BUTTON_H (ITEM_H * 0.4)
 #define LABEL_H 30
 
 @interface VideoCell : UICollectionViewCell
@@ -27,7 +27,7 @@
 //设置数据 model
 @property (nonatomic, strong) Cam *cam;
 
-@property (nonatomic, strong) UIButton *playBtn;
+@property (nonatomic, strong) UIImageView *playLogo;
 @property (nonatomic, strong) UIImageView *playableView;
 @property (nonatomic, strong) UILabel *camLabel;
 //@property (nonatomic, assign) int nvr_status;

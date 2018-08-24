@@ -14,8 +14,9 @@ typedef NS_ENUM(NSInteger,ZLLoginType){
     ZLLoginType_register = 0,
     ZLLoginType_prior,
     ZLLoginType_dismiss,
+    ZLLoginType_lanMode,
 };
-typedef void(^loginFinshed)(User *,NSString *,NSError * );
+typedef void(^loginFinshed)(User *,NSString * );
 
 
 @protocol ZLLoginViewDelegate <NSObject>
@@ -41,5 +42,8 @@ typedef void(^loginFinshed)(User *,NSString *,NSError * );
 @property (nonatomic, strong) UIButton *signUp;
 //@property (nonatomic, strong) UIButton *otherAccount;
 @property (nonatomic, strong) UIButton *portraitBtn;
+
+@property (nonatomic, strong) UISwitch *switch_btn;
+@property (nonatomic, strong) UILabel *lb_lan;
 
 @end

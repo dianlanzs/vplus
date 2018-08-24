@@ -60,8 +60,7 @@
 
 - (UITableViewCell *)getCellForTableView:(QuickDialogTableView *)tableView controller:(QuickDialogController *)controller {
     QFloatTableViewCell *cell = [[QFloatTableViewCell alloc] initWithFrame:CGRectZero];
-    [cell applyAppearanceForElement:self];///zhoulei modify QFloatTableViewCell like QEntryCell apply Appearence
-
+    [cell applyAppearanceForElement:self];///QD modify add QFloatTableViewCell  applyAppearanceForElement
     
     cell.textLabel.text = _title;
     cell.detailTextLabel.text = [_value description];
@@ -77,7 +76,7 @@
     cell.selectionStyle = self.sections!= nil || self.controllerAction!=nil ? UITableViewCellSelectionStyleBlue: UITableViewCellSelectionStyleNone;
     
     
-    ///zhoulei modify
+    ///QD Float Element  modify
     self.cell = cell;
     return cell;
 }

@@ -14,6 +14,6 @@
 //@property (nonatomic, strong) UIRefreshControl *pullRefresh;
 @property (nonatomic, strong) UITableView *tableView;
 
-- (void)deleteNvr:(NSIndexPath *)path;
-
+- (void)deleteNvr:(Device *)deleteDevice;
+- (void)updateDevices ;
 @end

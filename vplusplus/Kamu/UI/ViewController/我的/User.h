@@ -34,5 +34,5 @@ RLM_ARRAY_TYPE(Device);
 
 @property (nonatomic, assign) BOOL user_isLogin;
 
-
+- (User *)matchingWithLogin:(BOOL)isLogin;
 @end

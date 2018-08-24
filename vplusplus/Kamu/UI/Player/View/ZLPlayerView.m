@@ -274,7 +274,7 @@ typedef NS_ENUM(NSInteger, PanDirection){
 
 - (void)onDeviceOrientationChange {
     UIDeviceOrientation  deviceOri = [UIDevice currentDevice].orientation;// 是机器硬件的当前旋转方向   这个你只能取值 不能设置  但是通过kvc 这个可以设置 ,强制旋转
-    NSLog(@"设备旋转了--- %zd",deviceOri);
+    NSLog(@"设备旋转了--- %ld",(long)deviceOri);
     if (deviceOri == UIDeviceOrientationUnknown || deviceOri == UIInterfaceOrientationPortraitUpsideDown || deviceOri ==  UIDeviceOrientationFaceUp ||deviceOri == UIDeviceOrientationFaceDown ) {
         return;
     }else {
@@ -311,7 +311,7 @@ typedef NS_ENUM(NSInteger, PanDirection){
 - (void)checking {
     
     self.chekingFlag += 5;
-    NSLog(@"隔5s计时：----⏰%zd",self.chekingFlag);
+    NSLog(@"隔5s计时：----⏰%ld",(long)self.chekingFlag);
     if (self.timer.isValid) {  ///  for sync: reloved timer dealay 2s  --- invalid timer 同步 不调用 这里code
         
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
@@ -333,7 +333,7 @@ typedef NS_ENUM(NSInteger, PanDirection){
                     else if (self.chekingFlag >= 20) {///超时
                         if([self.functionControl isKindOfClass:[LivePlayControl class]] ) {
                             [self.timer invalidate];
-                            [MBProgressHUD showError:[NSString stringWithFormat:@"timeout = 15 -- Flag =%zd",self.chekingFlag]];
+                            [MBProgressHUD showError:[NSString stringWithFormat:@"timeout = 15 , flag =%ld",(long)self.chekingFlag]];
                             [self.functionControl setState:ZLPlayerStateReplay];
                         }
                     }
@@ -490,9 +490,11 @@ typedef NS_ENUM(NSInteger, PanDirection){
     [self.functionControl zl_playerDraggedEnd];
 //    [self.commonControl  autoFadeOutControlView];
 }
-- (NSData *)takeSnapshot {
-    GLKView *glk_view = (GLKView *)self.glvc.view;
-    return  UIImageJPEGRepresentation([glk_view snapshot], 0.5f);
+- (NSData *)snapshot {
+    
+    GLKView *v = (GLKView *)self.glvc.view;
+//    return  UIImageJPEGRepresentation([(GLKView *)self.glvc.view snapshot], 0.5f);
+    return UIImagePNGRepresentation([v snapshot]);
 }
 
 #pragma mark - 控制层 代理
@@ -509,7 +511,7 @@ typedef NS_ENUM(NSInteger, PanDirection){
     }
 }
 
-//返回
+///返回
 - (void)zl_controlView:(UIView *)controlView backAction:(UIButton *)sender {
     if (self.functionControl.fullScreen) {
         [self toOrientation:UIInterfaceOrientationPortrait];
@@ -781,9 +783,16 @@ int device_event_callback_camInfo(cloud_device_handle handle,CLOUD_CB_TYPE type,
             [cs.funcBar setBatteryProgress:info -> batttery];
             [cs.funcBar setWifiProgress:info -> wifi];
             NSLog(@"BATTERY %d --WIFI %d",info -> batttery,info -> wifi);
-            [RLM transactionWithBlock:^{
-                [cs.vc.navigationController.operatingCam setCam_version:[NSString stringWithUTF8String:info->verison]];
-            }];
+            
+            
+            NSString *cam_version = [NSString stringWithUTF8String:info->verison];
+            NSString *cam_dbVersion = cs.vc.navigationController.operatingCam.cam_version;
+            if (![cam_dbVersion isEqualToString:cam_version]) {
+                [RLM transactionWithBlock:^{
+                    [cs.vc.navigationController.operatingCam setCam_version:[NSString stringWithUTF8String:info->verison]];
+                }];
+            }
+          
         });
     }
     return 0;

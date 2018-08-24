@@ -9,7 +9,8 @@
 #import "RLMObject+ThreadReslove.h"
 
 @implementation RLMObject (ThreadReslove)
-- (void)threadReslove:(func)op {
+- (void)asyncThreadReslove:(func)op {
+    
     RLMThreadSafeReference *objRef = [RLMThreadSafeReference  referenceWithThreadConfined:self];
     dispatch_async(dispatch_get_global_queue(0, 0), ^{
         @autoreleasepool {

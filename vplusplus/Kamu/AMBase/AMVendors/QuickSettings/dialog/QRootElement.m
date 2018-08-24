@@ -36,7 +36,7 @@
 @synthesize presentationMode = _presentationMode;
 @synthesize preselectedElementIndex = _preselectedElementIndex;
 
-//zhoulei
+//QD setImageNamed
 //-(void)setImageNamed:(NSString *)name {
 //    if(name != nil) {
 //        self.image = [UIImage imageNamed:name];
@@ -112,7 +112,7 @@
 }
 
 
-///zhoulei modify
+///QD QRootElemt modify
 /*
 - (UITableViewCell *)getCellForTableView:(QuickDialogTableView *)tableView controller:(QuickDialogController *)controller {
     QTableViewCell *cell = (QTableViewCell *) [super getCellForTableView:tableView controller:controller];
@@ -131,7 +131,7 @@
     cell.selectionStyle = UITableViewCellSelectionStyleBlue;
     if (_title!= nil) {
         cell.textLabel.text = [NSString stringWithFormat:@"%@", _title];
-        cell.accessoryType = (self.sections!= nil) ; ///zhoulei modify
+        cell.accessoryType = (self.sections!= nil) ; ///QD RootElemt accessoryType  modify
         cell.detailTextLabel.text = [self.value description]; ///-- translate to string 
     }
 

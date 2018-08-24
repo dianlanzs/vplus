@@ -71,10 +71,15 @@
     [self zl_playerBackAction];
 }
 - (void)zl_playerBackAction {
+ 
     [RLM transactionWithBlock:^{
-        [self.navigationController.operatingCam setCam_cover:[self.vp takeSnapshot]];//database
+        [self.navigationController.operatingCam setCam_cover:[self.vp snapshot]];//database
     }];
-    [self.navigationController popViewControllerAnimated:YES];
+//    NSLog(@"%lu",(unsigned long)[[self.vp snapshot] length]);
+//    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [self.navigationController popViewControllerAnimated:YES];
+//    });
+    
 
 }
 - (void)camSetting:(id)sender {

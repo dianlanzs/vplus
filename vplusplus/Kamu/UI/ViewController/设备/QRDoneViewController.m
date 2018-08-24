@@ -20,25 +20,21 @@
 
 @property (nonatomic, strong) UITextField *tf;
 
-
-@property (nonatomic, strong) AppDelegate *appDelegate;
-
 @property (nonatomic, strong) RTSpinKitView *spinner;
 @property (nonatomic, strong) UIImageView *indicator;
 @property (nonatomic, strong) BButton *addBtn;
 @property (nonatomic, strong) UILabel *specLable;
 @property (nonatomic, strong) UILabel *changeName;
 
+
+
+
+@property (nonatomic, strong) Device *scanedDevice;
+
 @end
 
 @implementation QRDoneViewController
-- (AppDelegate *)appDelegate {
-    
-    if (!_appDelegate) {
-        _appDelegate =  (AppDelegate *)[UIApplication sharedApplication].delegate;
-    }
-    return _appDelegate;
-}
+
 //先调用这个方法----> 再调用init方法  //push 设置 之前
 - (instancetype)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
     
@@ -58,7 +54,7 @@
     [self.view addSubview:self.QRResultView];
         self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"nav_back"] style:UIBarButtonItemStylePlain target:self action:@selector(back:)];
     
-    [self connectDevice];
+    [self searchDevice];
     
 }
 - (void)back:(id)sender {
@@ -80,35 +76,46 @@
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 #pragma mark - 保存按钮点击事件，连接设备
-- (void)connectDevice {
-   
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+- (void)searchDevice {
+    if ( [[USER.user_devices objectsWhere:[NSString stringWithFormat:@"nvr_id = '%@'",self.qr_String]] firstObject]) {
+        [MBProgressHUD showPromptWithText:@"该设备已经被添加到列表"];
+        return;
+    }
+    if ([USER.user_id isEqualToString:@"-1"]) {
+        [self searchSuccess];
+        return;
+    }
+    NSString * searchDevicePath = [NSString stringWithFormat:@"searchDevice/%@",self.qr_String];
+    [[NetWorkTools new] request:GET urlString:KM_API_URL(searchDevicePath) parameters:nil finished:^(id responseDict, NSString *errorMsg) {
         
-        [_indicator setImage:[[UIImage imageNamed:@"icon_succeed"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal]];
-        [_indicator setContentMode:UIViewContentModeScaleAspectFit];
-        
-        [_specLable setAttributedText:[NSAttributedString attrText:@"我们已找到您的设备，在继续下一步前，建议您更改设备名称！" withFont:[UIFont systemFontOfSize:17.f] color:[UIColor blackColor] aligment:NSTextAlignmentLeft]];
-        [_specLable sizeToFit];
-        [_changeName setAttributedText:[NSAttributedString underlineAttrText:[NSString stringWithFormat:@"%@",self.qr_String] withFont:[UIFont systemFontOfSize:17.f] color:[UIColor blueColor] aligment:NSTextAlignmentCenter]];
-        [_spinner stopAnimating];
-        
-        [_addBtn setEnabled:YES];
-        [_addBtn setColor:[UIColor colorWithHex:@"0066ff"]];
-
-    });
+        if (responseDict) {
+            [self searchSuccess];
+        }else {
+            [self searchFail];
+        }
+    }];
     
 }
+- (void)searchSuccess {
+    [self.indicator setImage:[[UIImage imageNamed:@"icon_succeed"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal]];
+    [self.indicator setContentMode:UIViewContentModeScaleAspectFit];
+    
+    [self.specLable setAttributedText:[NSAttributedString attrText:@"我们已找到您的设备，在继续下一步前，建议您更改设备名称！" withFont:[UIFont systemFontOfSize:17.f] color:[UIColor blackColor] aligment:NSTextAlignmentCenter]];
+    [self.specLable sizeToFit];
+    [self.changeName setAttributedText:[NSAttributedString underlineAttrText:[NSString stringWithFormat:@"%@",self.qr_String] withFont:[UIFont systemFontOfSize:17.f] color:[UIColor blueColor] aligment:NSTextAlignmentCenter]];
+    [self.spinner stopAnimating];
+    
+    [self.addBtn setEnabled:YES];
+    [self.addBtn setColor:[UIColor colorWithHex:@"0066ff"]];
+}
+- (void)searchFail {
+    [self.indicator setImage:[[UIImage imageNamed:@"icon_failed"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal]];
+    [self.specLable setAttributedText:[NSAttributedString attrText:@"添加失败 ，设备已经被别人添加到服务器" withFont:[UIFont systemFontOfSize:17.f] color:[UIColor blackColor] aligment:NSTextAlignmentCenter]];
+    [self.spinner stopAnimating];
 
+}
 
-
-
-#pragma mark - Required!!
-
-//扫描成功后 添加设备对象
-
-
-
-
+#pragma mark - getter
 //扫描结果 View
 - (UIView *)QRResultView {
     
@@ -154,7 +161,7 @@
         _addBtn = [[BButton alloc] initWithFrame:CGRectZero color:[UIColor grayColor]];
         [_addBtn setTitle:@"添加设备" forState:UIControlStateNormal];
         [_addBtn setEnabled:NO];
-        [_addBtn addTarget:self action:@selector(toHome:) forControlEvents:UIControlEventTouchUpInside];
+        [_addBtn addTarget:self action:@selector(add:) forControlEvents:UIControlEventTouchUpInside];
         [_QRResultView addSubview:_indicator];
         [_QRResultView addSubview:_specLable];
         [_QRResultView addSubview:_changeName];
@@ -210,75 +217,63 @@
         [_changeName setAttributedText:[NSAttributedString underlineAttrText:[NSString stringWithFormat:@"%@",stringArray[0]] withFont:[UIFont systemFontOfSize:17.f] color:[UIColor blueColor] aligment:NSTextAlignmentCenter]];
     }
 }
-- (void)toHome:(id)sender {
-    if ( [[USER.user_devices objectsWhere:[NSString stringWithFormat:@"nvr_id = '%@'",self.qr_String]] firstObject]) {
-        [MBProgressHUD showPromptWithText:@"该设备已经被添加到列表"];
-    }else {
-        NSString * searchDevicePath = [NSString stringWithFormat:@"searchDevice/%@",self.qr_String];
-        [[NetWorkTools new] request:GET urlString:KM_API_URL(searchDevicePath) parameters:nil finished:^(id responseObject, NSError *error) {
-            NSDictionary *dict = [NSDictionary dictionaryWithJSONData:responseObject];
-            NSString *success_s = [NSString stringWithFormat:@"%@",[[dict arrayValueForKey:@"success"] lastObject]];
-            NSString *fail_s = [NSString stringWithFormat:@"%@",[[dict arrayValueForKey:@"error"] lastObject]];
-            
-            
-            if (![dict valueForKey:@"success"]) {
-                if([fail_s isEqualToString:@"(null)"]) {
-                    [MBProgressHUD showError:@"sessionID 过期"];
-                }else {
-                    [MBProgressHUD showError:fail_s];
-                }
-            }else {
-                Popup *popup = [[Popup alloc] initWithTitle:@"更改设备名称"
-                                                   subTitle:@"您想将设备放在何处？比如客厅,门廊,公司，家里..."
-                                      textFieldPlaceholders:@[@"设置设备名称.."]
-                                                cancelTitle:nil
-                                               successTitle:@"确定"
-                                                cancelBlock:^{
-                                                } successBlock:^{
-                                                    
-                                                   
-                                                    
-                                                    Device *db_device =     RLM_R_NVR(self.qr_String);
-                                                    if(db_device) {
-                                                        [RLM beginWriteTransaction];
-                                                        [USER.user_devices addObject:db_device]; ///引用数据库里的对象
-                                                        [RLM commitWriteTransaction];
+- (void)add:(id)sender {
+    [self addLocalDevice];
+}
 
-                                                    }else {
-                                                        Device *aDevice = [Device new];
-                                                        aDevice = [[Device alloc] init];
-                                                        [aDevice setNvr_id:self.qr_String];
-                                                        [aDevice setNvr_name:self.changeName.text];
-                                                        [aDevice setNvr_status:CLOUD_DEVICE_STATE_UNKNOWN];
-                                                        
-                                                        [RLM beginWriteTransaction];
-                                                        [USER.user_devices addObject:aDevice]; ///创建对象到数据库 & 引用数据库这个对象
-                                                        [RLM commitWriteTransaction];
-                                                    }
-                                                    
-                                               
-                                                    
-                                                    [self.navigationController popToRootViewControllerAnimated:YES];
-                                                    [[NSNotificationCenter defaultCenter ] postNotificationName:@"addNew" object:nil userInfo:nil];
-                                                }];
-                
-                
-                [popup setDelegate:self];//回调代理方法
-                [popup setRoundedCorners:YES];
-                
-                
-                [popup setBackgroundBlurType:PopupBackGroundBlurTypeDark];    //背景模糊
-                [popup setIncomingTransition:PopupIncomingTransitionTypeFallWithGravity];
-                [popup showPopup];
-                
-                
-            }
-        }];
+
+
+
+
+
+- (Device *)scanedDevice {
+    if (!_scanedDevice) {
         
+        _scanedDevice = [[Device alloc] init];
+        [_scanedDevice setNvr_id:self.qr_String];
+        [_scanedDevice setNvr_isCloud:NO];
+        [_scanedDevice setNvr_name:self.changeName.text];
         
-       
     }
     
+    return _scanedDevice;
+}
+- (void)addLocalDevice {
+    
+    
+ 
+    
+    Popup *popup = [[Popup alloc] initWithTitle:@"更改设备名称"
+                                       subTitle:@"您想将设备放在何处？比如客厅,门廊,公司，家里..."
+                          textFieldPlaceholders:@[@"设置设备名称.."]
+                                    cancelTitle:nil
+                                   successTitle:@"确定"
+                                    cancelBlock:^{
+                                    } successBlock:^{
+                                        Device *db_device = RLM_R_NVR(self.qr_String);
+                                        if(db_device) {
+                                            [RLM beginWriteTransaction];
+                                            [USER.user_devices addObject:db_device]; ///引用数据库里的对象
+                                            [RLM commitWriteTransaction];
+                                            
+                                        }else {
+                                            [RLM beginWriteTransaction];
+                                            [USER.user_devices addObject:self.scanedDevice]; ///创建对象到数据库 & 引用数据库这个对象
+                                            [RLM commitWriteTransaction];
+                                        }
+                                        [self.navigationController popToRootViewControllerAnimated:YES];
+                                        [[NSNotificationCenter defaultCenter ] postNotificationName:@"addNew" object:nil userInfo:nil];
+                                        
+                                    }];
+    
+    
+    [popup setDelegate:self];//回调代理方法
+    [popup setRoundedCorners:YES];
+    
+    
+    [popup setBackgroundBlurType:PopupBackGroundBlurTypeDark];    //背景模糊
+    [popup setIncomingTransition:PopupIncomingTransitionTypeFallWithGravity];
+    [popup showPopup];
 }
 - (void)dealloc {
     NSLog(@"QRDONE 释放了");
@@ -289,5 +284,35 @@
     return (int)(from + (arc4random() % (to - from + 1)));
 }
 
+/*
+ [MBProgressHUD showSpinningWithMessage:@"...."];
+ cloud_set_status_callback((void *)self.scanedDevice.nvr_h,my_scanedDevice_status_callback,(__bridge void *)self);
+ cloud_connect_device((void *)self.scanedDevice.nvr_h,"admin" , "123");
+ */
+/*
+ int my_scanedDevice_status_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *param,void *context) {
+ 
+ QRDoneViewController *c_self = (__bridge QRDoneViewController *)context;
+ 
+ dispatch_async(dispatch_get_main_queue(), ^{
+ if (type == CLOUD_CB_STATE && [c_self.scanedDevice syncedCloud]) {
+ cloud_device_state_t state = *((cloud_device_state_t *)param);
+ [MBProgressHUD showSuccess:@"服务到器添成功"];
+ [c_self.scanedDevice setNvr_status:state];
+ [c_self addDevice];
+ }else {
+ [MBProgressHUD showError:@"服务器添加失败"];
+ }
+ });
+ 
+ return 0;
+ }
+ */
 
+/*
+ long h =  (long) cloud_open_device([self.qr_String UTF8String]);
+ if (h) {
+ [_scanedDevice setNvr_h:h];
+ }
+ */
 @end

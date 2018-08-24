@@ -11,7 +11,7 @@
 
 
 
-
+static NSDictionary *errorDictionary = nil ;
 
 @interface NetWorkTools () 
 
@@ -19,8 +19,23 @@
 
 @implementation NetWorkTools
 
-
-- (void)request:(AMRequestMethod)method urlString:(NSString *)urlString parameters:(id)parameters finished:(void (^)(id responseObject,NSError *error))finished{
+//- (instancetype)init {
+//    if (self = [super init]) {
+//        errorDictionary = @{
+//                            /* code        :        errorWithDomain */
+//                            /* ==================================== */
+//
+//                            @(-10001)      :        @"Crash",
+//                            @(-10002)      :        @"DisConnect",
+//                            @(-10003)      :        @"Unknow",
+//
+//                            /* ==================================== */
+//                            };
+//    }
+//
+//    return self;
+//}
+- (void)request:(AMRequestMethod)method urlString:(NSString *)urlString parameters:(id)parameters finished:(AMRequestFinished)finished{
     NSLog(@"---------------------------------请求的URL%@---------------------------------",urlString);
 
     self.method = method;
@@ -34,7 +49,7 @@
     
     AMRequestManager *mgr = [AMRequestManager defaultManager];
     [[mgr dataTaskWithHTTPMethod:methodName URLString:urlString  parameters:parameters uploadProgress:nil downloadProgress:nil success:^(NSURLSessionDataTask *task, id responseObject) {
-        finished(responseObject,nil);
+        
 //        NSHTTPURLResponse *r = (  NSHTTPURLResponse *) task.response;
         NSArray *cookies = [[NSHTTPCookieStorage sharedHTTPCookieStorage]cookiesForURL:[NSURL URLWithString:urlString]];
 //        NSArray *cookies = [NSHTTPCookie cookiesWithResponseHeaderFields:r.allHeaderFields forURL:[NSURL URLWithString:urlString]];
@@ -52,9 +67,30 @@
             [[NSUserDefaults standardUserDefaults] setObject:ssid_response forKey:@"USER_COOKIES"];
             NSLog(@"SSID!=================================");
         }
+        
+        
+        NSDictionary *dictModel = [NSDictionary dictionaryWithJSONData:responseObject];
+        NSString *errorMsg = [[dictModel arrayValueForKey:@"error"] objectAtIndex:0];
+//        User *response_user =  [User mj_objectWithKeyValues:dict];
+        ///官方推荐的domain命名是：com.company.framework_or_app.ErrorDomain
+//        NSError *error = [NSError errorWithDomain:@"cn.ygtek.kamu.ErrorDomain"
+//                                             code:1
+//                                         userInfo:@{NSLocalizedDescriptionKey:LS(errorMsg)
+//
+//                                                    }];
+        if (errorMsg) {
+            finished(nil,errorMsg);
+            [errorMsg isEqualToString:@"(null)"] ? [MBProgressHUD showError:@"sessionID 过期"] :  [MBProgressHUD showError:errorMsg];
+
+        }else {
+            finished(dictModel,nil);
+        }
+      
+     
     
     } failure:^(NSURLSessionDataTask *task, NSError *error) {
-        finished(nil,error);
+        finished(nil,error.localizedDescription);
+        [MBProgressHUD showError:error.localizedDescription];
     }] resume];
     
     

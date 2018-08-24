@@ -251,7 +251,7 @@ static NSString  *rootControllerName = @"NvrSettingsController";
     
     
     QRootElement *userRoot = [[QRootElement alloc] init];
-    userRoot.grouped = NO;
+    userRoot.grouped = YES;
     userRoot.controllerName = @"PersonalController";
     userRoot.title = LS(@"个人中心");
 //    [userRoot setObject:userModel];
@@ -313,21 +313,24 @@ static NSString  *rootControllerName = @"NvrSettingsController";
     [zh_hansElm setOnSelected:^{
         if (zh_hansElm.accessoryType == UITableViewCellAccessoryCheckmark) {
             [wzh_hansElm setKeepSelected:NO];
+            return ;
         }
         [NSBundle setCusLanguage:@"zh-Hans"];
     }];
     [enElm setOnSelected:^{
         if (enElm.accessoryType == UITableViewCellAccessoryCheckmark) {
             [wenElm setKeepSelected:NO];
+            return ;
         }
         [NSBundle setCusLanguage:@"en"];
     }];
     
-    NSString *s = [[NSUserDefaults standardUserDefaults] valueForKey:AppLanguageKey];
-    if ([s isEqualToString:@"en"]) {
+    NSString *nsLang= [[NSUserDefaults standardUserDefaults] valueForKey:AppLanguageKey]; //@"en"
+//    NSString *nsLang = [[[NSUserDefaults standardUserDefaults] objectForKey:@"AppleLanguages"]  objectAtIndex:0]; //、、@"en-CN" 、、@"zh-Hans-CN"
+    if ([nsLang isEqualToString:@"en"]) {
         [languageRoot setValue:@"English"];
         [enElm setAccessoryType:UITableViewCellAccessoryCheckmark];
-    }else if ([s isEqualToString:@"zh-Hans"]) {
+    }else if ([nsLang isEqualToString:@"zh-Hans"]) {
         [languageRoot setValue:@"简体中文"];
         [zh_hansElm setAccessoryType:UITableViewCellAccessoryCheckmark];
     }
@@ -354,14 +357,21 @@ static NSString  *rootControllerName = @"NvrSettingsController";
 
     return helpElm;
 }
+
+
+
+
 - (QElement *)wipeCacheElm:(User *)user {
-    return [[QTextElement alloc] initWithText:LS(@"清理缓存")];
+    QLabelElement *wipeCacheElm = [[QLabelElement alloc] initWithTitle:LS(@"清理缓存") Value:nil];
+    return wipeCacheElm;
 }
 - (QElement *)qNaElm:(User *)user {
-    return [[QTextElement alloc] initWithText:LS(@"常见问题")];
+    QLabelElement *qNaElm = [[QLabelElement alloc] initWithTitle:LS(@"常见问题") Value:nil];
+    return qNaElm;
 }
 - (QElement *)aboutElm:(User *)user {
-    return [[QTextElement alloc] initWithText:LS(@"关于")];
+    QLabelElement *aboutElm = [[QLabelElement alloc] initWithTitle:LS(@"关于") Value:nil];
+    return aboutElm;
 }
 
 

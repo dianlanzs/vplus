@@ -30,7 +30,7 @@
 - (QuickDialogController *)controller {
     return _controller;
 }
-/// zhoulei modify
+///QD init Controller
 - (QuickDialogTableView *)initWithController:(QuickDialogController *)controller {
     self = [super initWithFrame:CGRectZero style:controller.root.grouped ? UITableViewStyleGrouped : UITableViewStylePlain];
     if (self!=nil){

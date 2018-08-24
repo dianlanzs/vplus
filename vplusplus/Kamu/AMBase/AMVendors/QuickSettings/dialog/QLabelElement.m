@@ -60,28 +60,19 @@
     QTableViewCell *cell = (QTableViewCell *) [super getCellForTableView:tableView controller:controller];
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
     cell.textLabel.text = self.title;
-    cell.detailTextLabel.text = [self.value description]; ///zhoulei mark  show the the ending text
+    cell.detailTextLabel.text = [self.value description]; ///QD LabelElemet Modeify  mark  show the the ending text
     cell.imageView.image = self.image;
-    
-    
-    
-    
-    
-    ////zhou lei modify M
     if (self.accessoryType != UITableViewCellAccessoryNone) {
         cell.accessoryType = _accessoryType;
     } else {
-        
         if (self.controllerAction != nil) {
             cell.accessoryType  = UITableViewCellAccessoryDetailDisclosureButton;
         }else {
-            
             if (self.sections != nil || self.controllerAction != nil) {
                 cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
             }else {
                 cell.accessoryType = UITableViewCellAccessoryNone;
             }
-            
         }
     }
     

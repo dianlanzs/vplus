@@ -46,7 +46,7 @@
 @dynamic visibleIndex;
 @synthesize object = _object;
 
-///zhoulei mark
+///QD Qsection
 - (QElement *)getVisibleElementForIndex:(NSInteger)index
 {
     for (QElement * q in self.elements)
@@ -99,7 +99,7 @@
     _headerImage = imageName;
     self.headerView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:_headerImage]];
 
-    ///zhoulei modify--------
+    ///QD section Header modify--------
 //    UIImageView *imv_cover = [[UIImageView alloc] initWithImage:[UIImage imageNamed:_headerImage]];
 //    [imv_cover setFrame:self.headerView.bounds];
 //    [self.headerView addSubview:imv_cover];
@@ -109,7 +109,6 @@
     
 //    self.headerView.contentMode = UIViewContentModeCenter;
     
-    ///zhoulei modify
     self.headerView.contentMode =  UIViewContentModeScaleToFill;
 }
 

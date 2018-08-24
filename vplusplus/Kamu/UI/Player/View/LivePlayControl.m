@@ -69,7 +69,7 @@
         [_speakerBtn_vertical setContentColor:[UIColor whiteColor]];
         [_speakerBtn_vertical setForegroundAnimateToColor:[UIColor blueColor]];
         [_speakerBtn_vertical.imageView setImage:[UIImage imageNamed:@"button_micophone_normal"]];
-        [_speakerBtn_vertical setContentEdgeInsets:UIEdgeInsetsMake(0, 0, 0, 0)];
+        [_speakerBtn_vertical setContentEdgeInsets:UIEdgeInsetsMake(5, 0, 5, 0)];
         [self setActionForSpeaker:(UIButton *)_speakerBtn_vertical];
         
         [_speakerBtn_vertical setRestoreSelectedState:YES];

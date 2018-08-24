@@ -10,5 +10,5 @@
 
 typedef void(^func)(RLMObject *reslovedObj);
 @interface RLMObject (ThreadReslove)
-- (void)threadReslove:(func)op;
+- (void)asyncThreadReslove:(func)op;
 @end

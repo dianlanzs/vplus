@@ -28,6 +28,8 @@ RLM_ARRAY_TYPE(Cam)
 /* 定义 RLMArray<Cam> 类型 ,RLM_ARRAY_TYPE 宏创建了一个协议，从而允许您使用 RLMArray<Cam> 这种语法。如果这条宏没有放置在模型接口定义的底部，那么这个模型类就必须前置声明。*/
 
 @interface Device : RLMObject
+@property (nonatomic, assign) BOOL nvr_isCloud;
+
 
 @property (nonatomic, assign) long nvr_h;
 @property (nonatomic, assign) void * _Nullable nvr_data;
@@ -54,7 +56,7 @@ RLM_ARRAY_TYPE(Cam)
 @property (nonatomic, assign) int nvr_owner;
 /*RLMArray 属性会确保其内部的插入次序不会被打乱。
 注意，目前暂时不支持对包含原始类型的 RLMArray 进行查询。 */
-
+- (void)checkingIsCloud;
 @end
 
 //这个宏表示支持RLMArray<Cam>该属性、、        @throw RLMException(@"Property '%@' requires a protocol defining the contained type - example: RLMArray<Person>.", _name);

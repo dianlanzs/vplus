@@ -63,7 +63,7 @@
     _controller = controller;
     
    
-    QTableViewCell *cell= [self getOrCreateEmptyCell:tableView];///MARK: zhoulei mark
+    QTableViewCell *cell= [self getOrCreateEmptyCell:tableView];///QD: getCellForTableView
 
 
     [cell applyAppearanceForElement:self];
@@ -110,7 +110,11 @@
 }
 
 - (CGFloat)getRowHeightForTableView:(QuickDialogTableView *)tableView {
-    return _height > 0 ? _height : 44;
+    if (self.height > 0) {
+        return self.height;
+    }else {
+        return 44;
+    }
 }
 
 - (NSUInteger) visibleIndex

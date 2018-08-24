@@ -74,12 +74,12 @@
     [super selected:tableView controller:controller indexPath:indexPath];
 
 }
-///zhoulei modify --QEntryElement  Entry CELL 触发的 ,只能在 cell 里获取   EntryElm Model
+///QD fieldDidEndEditing --QEntryElement  Entry CELL 触发的 ,只能在 cell 里获取   EntryElm Model
 - (void) fieldDidEndEditing:(UITextField *)tf{
 //    [self performAction];
     NSLog(@"%@",self);
     if(self.tf_endEditing) {
-        self.tf_endEditing(tf); ///zhoulei modify  ------ must judge condition , otherwise cuz crash!
+        self.tf_endEditing(tf); 
     }
 }
 

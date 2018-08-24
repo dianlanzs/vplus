@@ -15,7 +15,7 @@
 @property (nonatomic, strong) RLMArray<Device *> *devices;
 
 
-
+- (void)updateDevices;
 - (void)backPrevious:(id)sender;
 
 - (void)pushViewController:(UIViewController *)vc deviceModel:(Device *)deviceModel camModel:(Cam *)camModel;

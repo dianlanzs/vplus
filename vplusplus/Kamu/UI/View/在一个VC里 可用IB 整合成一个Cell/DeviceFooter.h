@@ -20,5 +20,7 @@
 
 
 @property (nonatomic, strong) UIButton *meidiasBtn;
+@property (nonatomic, strong) UIImageView *syncedIcon;
+@property (nonatomic, strong) UILabel *syncLable;
 
 @end

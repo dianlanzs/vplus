@@ -28,7 +28,7 @@
     BOOL _hiddenToolbar;
 }
 
-//zhoulei_add
+/// QD EntryElemt add
 @property (nonatomic, copy) void(^tf_endEditing)(UITextField *);
 
 

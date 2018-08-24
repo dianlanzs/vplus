@@ -268,6 +268,12 @@
 		B897FBFE20906EC400F88F79 /* Device.m in Sources */ = {isa = PBXBuildFile; fileRef = B897FBF020906EC300F88F79 /* Device.m */; };
 		B897FC0220906EC400F88F79 /* MediaEntity.m in Sources */ = {isa = PBXBuildFile; fileRef = B897FBF820906EC300F88F79 /* MediaEntity.m */; };
 		B897FC0420906EC400F88F79 /* VPPRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = B897FBFC20906EC300F88F79 /* VPPRequest.m */; };
+		B89B4272212F9F17005141CC /* warning_round@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = B89B4271212F9F16005141CC /* warning_round@2x.png */; };
+		B89B4274212F9F2D005141CC /* synced@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = B89B4273212F9F2D005141CC /* synced@2x.png */; };
+		B89B4276212FBA4B005141CC /* warning@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = B89B4275212FBA4B005141CC /* warning@2x.png */; };
+		B89B4279212FCCC3005141CC /* UIView+rotate.m in Sources */ = {isa = PBXBuildFile; fileRef = B89B4278212FCCC3005141CC /* UIView+rotate.m */; };
+		B89B427B212FD1A6005141CC /* syncing@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = B89B427A212FD1A5005141CC /* syncing@2x.png */; };
+		B89B427D21300AED005141CC /* icon_failed.png in Resources */ = {isa = PBXBuildFile; fileRef = B89B427C21300AEC005141CC /* icon_failed.png */; };
 		B89FC8841FC412CB00862AD1 /* AddDevice.xib in Resources */ = {isa = PBXBuildFile; fileRef = B89FC8821FC412CB00862AD1 /* AddDevice.xib */; };
 		B8A3335220E0C57600427E0E /* ASValuePopUpView.m in Sources */ = {isa = PBXBuildFile; fileRef = B8A3334F20E0C57500427E0E /* ASValuePopUpView.m */; };
 		B8A3335320E0C57600427E0E /* ASValueTrackingSlider.m in Sources */ = {isa = PBXBuildFile; fileRef = B8A3335120E0C57500427E0E /* ASValueTrackingSlider.m */; };
@@ -910,6 +916,13 @@
 		B897FBF820906EC300F88F79 /* MediaEntity.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MediaEntity.m; sourceTree = "<group>"; };
 		B897FBFB20906EC300F88F79 /* VPPRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VPPRequest.h; sourceTree = "<group>"; };
 		B897FBFC20906EC300F88F79 /* VPPRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VPPRequest.m; sourceTree = "<group>"; };
+		B89B4271212F9F16005141CC /* warning_round@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "warning_round@2x.png"; sourceTree = "<group>"; };
+		B89B4273212F9F2D005141CC /* synced@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "synced@2x.png"; sourceTree = "<group>"; };
+		B89B4275212FBA4B005141CC /* warning@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "warning@2x.png"; sourceTree = "<group>"; };
+		B89B4277212FCCC3005141CC /* UIView+rotate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "UIView+rotate.h"; sourceTree = "<group>"; };
+		B89B4278212FCCC3005141CC /* UIView+rotate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "UIView+rotate.m"; sourceTree = "<group>"; };
+		B89B427A212FD1A5005141CC /* syncing@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "syncing@2x.png"; sourceTree = "<group>"; };
+		B89B427C21300AEC005141CC /* icon_failed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon_failed.png; sourceTree = "<group>"; };
 		B89FC8821FC412CB00862AD1 /* AddDevice.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = AddDevice.xib; sourceTree = "<group>"; };
 		B89FC8891FC4268A00862AD1 /* AMCommonDef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AMCommonDef.h; sourceTree = "<group>"; };
 		B8A3334E20E0C57500427E0E /* ASValuePopUpView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ASValuePopUpView.h; sourceTree = "<group>"; };
@@ -2148,6 +2161,8 @@
 				B8825A6D1FCFB10400531271 /* UINavigationItem+Custom.m */,
 				B8825A6E1FCFB10400531271 /* UIView+Frame.h */,
 				B8825A6F1FCFB10400531271 /* UIView+Frame.m */,
+				B89B4277212FCCC3005141CC /* UIView+rotate.h */,
+				B89B4278212FCCC3005141CC /* UIView+rotate.m */,
 			);
 			path = AMCategory;
 			sourceTree = "<group>";
@@ -2283,6 +2298,10 @@
 		B8B26C0A1FC467BD006D4061 /* Button */ = {
 			isa = PBXGroup;
 			children = (
+				B89B427A212FD1A5005141CC /* syncing@2x.png */,
+				B89B4273212F9F2D005141CC /* synced@2x.png */,
+				B89B4275212FBA4B005141CC /* warning@2x.png */,
+				B89B4271212F9F16005141CC /* warning_round@2x.png */,
 				B8A7DD622105C2270046901A /* btn_torch@2x.png */,
 				B881A77C20B2AE3D009B56CB /* wifi_0_10@2x.png */,
 				B881A77D20B2AE3D009B56CB /* wifi_10_40@2x.png */,
@@ -2334,6 +2353,7 @@
 				B8C3B717207F57CC007A1589 /* wave70x117@2x.png */,
 				B8C3B714207F57BE007A1589 /* black_bg_ip5@2x.png */,
 				B8AE6A5620173428005C69DA /* icon_fail@2x.png */,
+				B89B427C21300AEC005141CC /* icon_failed.png */,
 				B8AE6A532017341F005C69DA /* icon_succeed@2x.png */,
 				B8B26C3B1FC67D4C006D4061 /* Checkmark.png */,
 				B8B26C3C1FC67D4C006D4061 /* Checkmark@2x.png */,
@@ -2657,6 +2677,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B89B4272212F9F17005141CC /* warning_round@2x.png in Resources */,
 				B87B399B1FBECA7300290B3F /* ipc_unselected@2x.png in Resources */,
 				B85C21132043A10D0065D557 /* button_nvr_normal@2x.png in Resources */,
 				B881A78120B2AE3F009B56CB /* wifi_40_70@2x.png in Resources */,
@@ -2729,7 +2750,9 @@
 				B80F4B6020070B8100CBA88A /* iconfont.ttf in Resources */,
 				B87CEF692004A9B80083ACB6 /* qr_spec@2x.png in Resources */,
 				B8C3B702206CDDB2007A1589 /* state_disconnect@2x.png in Resources */,
+				B89B4276212FBA4B005141CC /* warning@2x.png in Resources */,
 				B8B26C131FC46809006D4061 /* button_sound@2x.png in Resources */,
+				B89B427D21300AED005141CC /* icon_failed.png in Resources */,
 				B8D2A5A21FDF8ACB00BB33F3 /* icon_add@2x.png in Resources */,
 				B88218E320A93834001C1223 /* button_nonSelected@2x.png in Resources */,
 				B8C419D72119BE7900445121 /* 3@2x.png in Resources */,
@@ -2746,6 +2769,7 @@
 				B852DDDD20A2A95300FEDC5E /* youtube_play_center@2x.png in Resources */,
 				B837C20F201B33C4003B993D /* loginform.json in Resources */,
 				B8E04EEA1FCEB5670086E456 /* OnlineDeviceCell.xib in Resources */,
+				B89B4274212F9F2D005141CC /* synced@2x.png in Resources */,
 				B8A64B5B2028690A00D9C621 /* authority@2x.png in Resources */,
 				B815B8C1200E1AEF00431D14 /* 4@2x.png in Resources */,
 				B837C20D201B33C4003B993D /* jsonremote.json in Resources */,
@@ -2764,6 +2788,7 @@
 				B837C213201B33C4003B993D /* sample.json in Resources */,
 				B87B39A61FBECB5A00290B3F /* tabbar_unselected_bg@2x.png in Resources */,
 				B8A64B5F202A9DAB00D9C621 /* nav_close@2x.png in Resources */,
+				B89B427B212FD1A6005141CC /* syncing@2x.png in Resources */,
 				B8B26C441FC67D4C006D4061 /* Checkmark@2x.png in Resources */,
 				B8E051A3212514BA002B344C /* InfoPlist.strings in Resources */,
 			);
@@ -3046,6 +3071,7 @@
 				B837C21D201B3E9F003B993D /* PeriodPickerValueParser.m in Sources */,
 				B837C18F201B33C3003B993D /* QBindingEvaluator.m in Sources */,
 				B81018722004BF50007B17C3 /* LibraryController.m in Sources */,
+				B89B4279212FCCC3005141CC /* UIView+rotate.m in Sources */,
 				B837C1F3201B33C3003B993D /* QColorPickerElement.m in Sources */,
 				B88C6B911FF1028200217E94 /* AddCamsViewController.m in Sources */,
 				B80C085320FDD9340043C97D /* ZLLoginView.m in Sources */,
@@ -3284,6 +3310,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				COMPRESS_PNG_FILES = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -3340,6 +3367,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				COMPRESS_PNG_FILES = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;

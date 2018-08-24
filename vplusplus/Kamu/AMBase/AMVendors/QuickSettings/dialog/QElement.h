@@ -39,7 +39,7 @@
     NSString * _controllerAction;
 }
 
-///zhoulei modify
+///QD  QElemtent  modify
 @property (nonatomic, strong) QTableViewCell *cell;
 @property(nonatomic, strong) id value;
 @property(nonatomic, copy) void (^onValueChanged)(id);

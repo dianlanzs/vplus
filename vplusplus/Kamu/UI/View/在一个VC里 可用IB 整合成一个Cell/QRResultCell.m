@@ -1,4 +1,4 @@
-                                                                                       //
+                                                                                        //
 //  QRResultCell.m
 //  Kamu
 //
@@ -23,8 +23,8 @@
 #import "DataBuilder.h"
 
 
-
-
+#import "KMReqest.h"
+#import "UIView+rotate.h"
 
 @interface QRResultCell()<UICollectionViewDelegate,UICollectionViewDataSource>
 
@@ -40,24 +40,30 @@
 @property (nonatomic, strong) RLMNotificationToken *device_token;
 @end
 
-
+// NSString *reuseID = [NSString stringWithFormat:@"%@",@"reuseId"]; //// if rid = indexpath every time cell reuse!!
+static NSString *reuseID = @"reuseId";
 @implementation QRResultCell
 ///对方添加 删除 cam 会掉线！
 int my_device_status_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *param,void *context) {
-
-    QRResultCell *cell = (__bridge QRResultCell *)context;
-    dispatch_async(dispatch_get_main_queue(), ^{
     
-        if(cell.nvrModel.nvr_id) {
-            if (type == CLOUD_CB_STATE) {
-                cloud_device_state_t state = *((cloud_device_state_t *)param);
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    NSLog(@"设备状态改变 修改状态 %@",[NSThread currentThread]);
+    QRResultCell *c_self = (__bridge QRResultCell *)context;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        
+        if(c_self.nvrModel.nvr_id && type == CLOUD_CB_STATE) {
+            cloud_device_state_t state = *((cloud_device_state_t *)param);
+            
+            
+               
+                [c_self.nvrModel asyncThreadReslove:^(RLMObject *reslovedObj) {
                     [RLM beginWriteTransaction];
-                    cell.nvrModel.nvr_status = state;
+                    [(Device *)reslovedObj setNvr_status:state];
                     [RLM commitWriteTransaction];
-                });
-            }
+                }];
+            
+         
+//            dispatch_async(dispatch_get_main_queue(), ^{
+//
+//            });
         }
         
     });
@@ -127,23 +133,23 @@ int my_device_status_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, voi
 }
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
-    NSString *reuseID = [NSString stringWithFormat:@"%@",indexPath];
-    [self.QRcv registerClass:[VideoCell class] forCellWithReuseIdentifier:reuseID ];
-    VideoCell *videoCell = [self.QRcv dequeueReusableCellWithReuseIdentifier:reuseID forIndexPath:indexPath];
+   
+    NSString *uniq_tag = [NSString stringWithFormat:@"%zd/%zd",(long)indexPath.section,(long)indexPath.item]; ///释放
+    [self.QRcv registerClass:[VideoCell class] forCellWithReuseIdentifier:uniq_tag];
+    VideoCell *videoCell = [self.QRcv dequeueReusableCellWithReuseIdentifier:uniq_tag forIndexPath:indexPath];
+    NSLog(@" 第%@个 video cell🏆%@ ",indexPath,videoCell);
     
+    // For each reuse identifier that the collection view will use, register either a class or a nib from which to instantiate a cell.
+    // If a nib is registered, it must contain exactly 1 top level object which is a UICollectionViewCell.
+    // If a class is registered, it will be instantiated via alloc/initWithFrame:
     
     if (indexPath.item < self.nvrModel.nvr_cams.count) {
-
         [videoCell setCam:self.nvrModel.nvr_cams[indexPath.item]];
         dispatch_async(dispatch_get_main_queue(), ^{
             [RLM beginWriteTransaction];
             videoCell.cam.cam_index = (int)indexPath.item;
             [RLM commitWriteTransaction];
         }) ;
-       
-
-        
-        
     }else {
         [videoCell setCam:nil];
     }
@@ -168,8 +174,8 @@ int my_device_status_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, voi
     
     [RLM transactionWithBlock:^{
         [self.nvrModel.nvr_cams removeAllObjects];
+
     }];
-    
     
     device_cam_info_t ipc_info[4];
     int camsNum = cloud_device_get_cams((void *)self.nvrModel.nvr_h, 4, ipc_info);
@@ -186,6 +192,8 @@ int my_device_status_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, voi
                 if(db_cam) {
                     [RLM beginWriteTransaction];
                     [self.nvrModel.nvr_cams addObject:db_cam];
+//                    [self.nvrModel.nvr_cams replaceObjectAtIndex:i withObject:db_cam]; /// if other app delete
+
                     [RLM commitWriteTransaction];
                 }else {
                     [RLM beginWriteTransaction];
@@ -205,163 +213,159 @@ int my_device_status_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, voi
 
 ///nextResponder -superview ,cell未加载出来，next responder == nil
 
-- (void)reset_db_Device:(Device *)nvrModel{
-    [RLM transactionWithBlock:^{
-        
-        //        if(nvrModel.nvr_h == 0) {
-        ///  insertSections  方法  不会重复  open!!!!
-        long h =  (long) cloud_open_device([nvrModel.nvr_id UTF8String]);
-        if(h) {/// can open
+- (void)open_db_Device:(Device *)nvrModel{
+    long h =  (long) cloud_open_device([nvrModel.nvr_id UTF8String]);
+    if(h) {
+        [RLM transactionWithBlock:^{
             [nvrModel setNvr_h:h];
-        }
-        //        }
+        }];
+    }
+}
+- (void)reset_db_device_state:(Device *)nvrModel {
+    [RLM transactionWithBlock:^{
         [nvrModel setNvr_status:CLOUD_DEVICE_STATE_UNKNOWN];
-        ///覆盖 DB  nvr_h!!
-        NSLog(@"-------- OPEN _ DEVICE -------- %ld",nvrModel.nvr_h);
     }];
 }
 - (void)setNvrModel:(Device *)nvrModel {
-    
-    if (_nvrModel != nvrModel ) { ///指针虽然不一样 但是设备是一样的！！！！！！！！！！！！ 这里会重复 open 设备！！
-        [self reset_db_Device:nvrModel];
-        _nvrModel = nvrModel;
+    if (nvrModel && _nvrModel != nvrModel ) { ///指针虽然不一样 但是设备是一样的！！！！！！！！！！！！ 这里会重复 open 设备！！
+        [self.footer.deviceLb setText:nvrModel.nvr_name];
+        ///---------- DB -------------
         WS (self);
-        NSLog(@"%@",self.device_token);
-        self.device_token = [nvrModel addNotificationBlock:^(BOOL deleted, NSArray<RLMPropertyChange *> * _Nullable changes, NSError * _Nullable error) {
-            //add & delete opration can not trigger notification!! cuz its not oberseve self.resluts
+        _device_token = [nvrModel addNotificationBlock:^(BOOL deleted, NSArray<RLMPropertyChange *> * _Nullable changes, NSError * _Nullable error) {
             if (deleted) {
                 NSLog(@"%@",[NSThread currentThread]);
                 [MBProgressHUD showSuccess:@"REALM 监听 删除成功"];
             }else {
                 for (RLMPropertyChange *property in changes) {
-                    ///1. status changed
-                    UINavigationController *nav = ws.vc.navigationController;
-                    UIViewController *visibleController = nav.visibleViewController;
+                    NSLog(@"--------------- %@ DEVICE CHANGED %@ : value = %@ ---------------",ws.nvrModel,property.name, property.value);
                     if ([property.name isEqualToString:@"nvr_status"] ) {
-                        NSLog(@"---------------DEVICE CHANGED STATUS:%@ ---------------",property.value);
-                     
-                        if ([property.value intValue] == CLOUD_DEVICE_STATE_CONNECTED) {
+                        cloud_device_state_t currentState = [property.value intValue];
+                        cloud_device_state_t previousState = [property.previousValue intValue];
+            
+                        
+                        
+                        if (currentState != CLOUD_DEVICE_STATE_UNKNOWN && previousState != CLOUD_DEVICE_STATE_CONNECTED && ![USER.user_id isEqualToString:@"-1"]) {
                             
-                            /// __imp_ = (__imp_ = "The Realm is already in a write transaction")
-                            dispatch_async(dispatch_get_main_queue(), ^{
-                                [ws upadteCams];
-                            });
-                          
-                            //1. Home page state
-                            [ws.maskView setHidden:YES];
-                            //2. playable button state
-                            for (VideoCell *connect_c in ws.QRcv.visibleCells) {
-                                [connect_c.playBtn setHidden:NO];
-                            }
-                            //3. operating state
-                            NSLog(@"检测NVR 是否无效 %d",[ws.nvrModel isInvalidated]);
-                            
-                            if(nav.viewControllers.count > 1) {
-                                
-                                
-                                if([ws.nvrModel.nvr_id isEqualToString:nav.operatingDevice.nvr_id]) { ///nav.operatingDevice，栈顶设备没被更新 还是 损坏的设备！！！！！！！！！！！！！！！！！！！！！！！！！！！！
-                                    ws.vc.navigationController.operatingDevice = ws.nvrModel;
-//                                    [MBProgressHUD showStatus:CLOUD_DEVICE_STATE_CONNECTED];
-                                    ///LP
-                                    if ([visibleController isKindOfClass:[PlayVideoController class]]) {
-                                        [((PlayVideoController *)visibleController).vp lv_start];
+                            ///连接之后返回的状态---- maybe  随时 会被删除  ，在每次连接状态后 check 是否 是云端设备  --  !weak_nvrModel.nvr_isCloud &&
+//                            [self.footer.syncLable setText:@"(checking...)"];
+                            [self.footer.syncedIcon setImage:[UIImage imageNamed:@"syncing"]];
+                            [self.footer.syncedIcon setHidden:NO];
+                            [self.footer.syncedIcon rotateWithDuration:2.f repeatCount:MAXFLOAT timingMode:TimingModeEaseInEaseOut];
+                            [[NetWorkTools new] request:GET urlString:KM_API_URL(@"profile") parameters:nil finished:^(id responseDict, NSString *errorMsg) {
+                                User *response_user =  [User mj_objectWithKeyValues:responseDict];
+                                if(response_user && [response_user.user_id isEqualToString:USER.user_id]) {
+                                    for (Device *response_device in response_user.user_devices) {
+                                        if ([response_device.nvr_id isEqualToString:self.nvrModel.nvr_id]) {
+                                            [ws.footer.syncedIcon setImage:[UIImage imageNamed:@"synced"]];
+//                                            [self.footer.syncLable setText:@"(R)"];
+///                                            [weak_nvrModel setNvr_isCloud:YES];   访问的还 是nvrModel
+                                            [ws.nvrModel setNvr_isCloud:YES];
+                                        }
                                     }
-                                    ///PB
-                                    else if ([visibleController isKindOfClass:[PlaybackViewController class]]) {
-                                        [((PlaybackViewController *)visibleController).vp pb_start];
+                                    if ([self.footer.syncedIcon.image isEqual:[UIImage imageNamed:@"syncing"]]) {
+                                        [ws.footer.syncedIcon setImage:[UIImage imageNamed:@"warning"]];
+//                                        [self.footer.syncLable setText:@"(L)"];
+                                        [ws.nvrModel setNvr_isCloud:NO];
                                     }
+                                    [ws.footer.syncedIcon.layer removeAnimationForKey:@"transform"];
+//                                    [ws.footer.syncedIcon.layer removeAllAnimations];
+
+                                }else {
+                                    [self.footer.syncLable setText:@"(cheking fail!)"];
                                 }
-                                 
-                            }
-                        }  else {
-                            [ws.maskView.spinner stopAnimating];
-                            [ws.maskView setHidden:NO];
-                            ws.maskView.blurEffectView.effect = nil;
-                            [UIView animateWithDuration:1.5f delay:0.f usingSpringWithDamping:1.f initialSpringVelocity:0 options:UIViewAnimationOptionCurveEaseOut animations:^{
-                                ws.maskView.blurEffectView.effect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleDark];
-                                /// uiview（blur effect ) 是透明的
-                            } completion:^(BOOL finished) {
-                                ;
                             }];
-                            
-                            for (VideoCell *disconnect_c in ws.QRcv.visibleCells) {
-                                [disconnect_c.playBtn setHidden:YES];
-                            }
-                            
-                            if ([ws.nvrModel.nvr_id isEqualToString:nav.operatingDevice.nvr_id] &&  nav.viewControllers.count > 1) {
-                                nav.operatingDevice = ws.nvrModel;
-                                
-                                ///断线提醒
-//                                if([visibleController isKindOfClass:[PlayVideoController class]]) {
-//                                 ZLPlayerView *vp =   [(PlayVideoController *)visibleController vp];
-//                                }
-                            
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                MBProgressHUD *hud =   [MBProgressHUD showStatus:CLOUD_DEVICE_STATE_DISCONNECTED];
-                                [hud.actionBtn setHidden:NO];
-                                [hud.actionBtn addTarget:ws.vc.navigationController action:@selector(reconnect:) forControlEvents:UIControlEventTouchUpInside];
-                            }
-                            
-                            
-                            if ([property.value intValue] ==  CLOUD_DEVICE_STATE_DISCONNECTED) {
-                                [ws.maskView.statusLabel setText:LS(@"断开连接")];
-                            }else if ([property.value intValue] == CLOUD_DEVICE_STATE_AUTHENTICATE_ERR) {
-                                [ws.maskView.statusLabel setText:LS(@"授权错误")];
-                            }else if ([property.value intValue] == CLOUD_DEVICE_STATE_OTHER_ERR) {
-                                [ws.maskView.statusLabel setText:LS(@"其他错误")];
-                            }else if ([property.value intValue] == CLOUD_DEVICE_STATE_UNKNOWN) {
-                                [ws.maskView.statusLabel setText:LS(@"正在获取设备状态...")];
-                                [ws.maskView.spinner startAnimating];
-                            }
-                            
-//                            else if ([property.value intValue] == CLOUD_DEVICE_STATE_UNINITILIZED) {
-//                                [ws.maskView.statusLabel setText:@"网络连接断开！！请检查网络"];
-//                                [ws.maskView.spinner stopAnimating];
-//
-//                            }
                         }
                         
+                        
+                        
+                        
+                        currentState == CLOUD_DEVICE_STATE_CONNECTED ? [self deviceConnected] : [self deviceDisconnected:currentState previousState:previousState];
+                        [[NSNotificationCenter defaultCenter] postNotificationName:@"STATUS" object:property.value];
                     }
-                    /**
-                     The value of the property after the change occurred. This will always be `nil`
-                     for `RLMArray` properties.
-                     */
                     else if ([property.name isEqualToString:@"nvr_cams"]) {
                         [ws.QRcv reloadData];
-//                        NSLog(@"-------------------- QRCV RELOAD CAM表 --------------------- %@",[Cam allObjects]);
                     }
-                    ///3. name changed
                     else if ([property.name isEqualToString:@"nvr_name"]) {
                         [ws.footer.deviceLb setText:property.value];
                     }
                 }
             }
         }];
+        
+               ///---------- TUTK -------------
+        [self open_db_Device:nvrModel];
         cloud_set_status_callback((void *)nvrModel.nvr_h,my_device_status_callback,(__bridge void *)self);
-        [self.footer.deviceLb setText:nvrModel.nvr_name];
-        [self.nvrModel threadReslove:^(RLMObject *reslovedObj) {
-            Device *reslovedDevice = (Device *) reslovedObj;
-            cloud_connect_device((void *)reslovedDevice.nvr_h, "admin", "123"); ///connect 就是添加操作
-        }];
+        cloud_connect_device((void *)nvrModel.nvr_h, "admin", "123");///connect 就是添加操作 , 同步Logo 旋转
+        [self reset_db_device_state:nvrModel];
+      
+        _nvrModel = nvrModel; /// if _nvrModel has value , reuseid cell will override it
+
     }
 }
+- (void)deviceConnected {
+  UINavigationController *nav = self.vc.navigationController;
+    /// __imp_ = (__imp_ = "The Realm is already in a write transaction")
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self upadteCams];
+    });
+    [self.maskView setHidden:YES];
+    if(nav.viewControllers.count > 1) {
+        if([self.nvrModel.nvr_id isEqualToString:nav.operatingDevice.nvr_id]) { ///nav.operatingDevice，栈顶设备没被更新 还是 损坏的设备！！！！！！！！！！！！！！！！！！！！！！！！！！！！
+            self.vc.navigationController.operatingDevice = self.nvrModel;
+            if ([nav.visibleViewController isKindOfClass:[PlayVideoController class]]) {
+                [((PlayVideoController *)nav.visibleViewController).vp lv_start];
+            } else if ([nav.visibleViewController isKindOfClass:[PlaybackViewController class]]) {
+                [((PlaybackViewController *)nav.visibleViewController).vp pb_start];
+            }
+        }
+        
+    }
+}
+
+- (void)deviceDisconnected:(cloud_device_state_t)currentState previousState:(cloud_device_state_t)previousState {
+    UINavigationController *nav = self.vc.navigationController;
+    [self.maskView.spinner stopAnimating];
+    [self.maskView setHidden:NO];
+    self.maskView.blurEffectView.effect = nil;
+    [UIView animateWithDuration:1.5f delay:0.f usingSpringWithDamping:1.f initialSpringVelocity:0 options:UIViewAnimationOptionCurveEaseOut animations:^{
+        self.maskView.blurEffectView.effect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleDark];
+        /// uiview（blur effect ) 是透明的
+    } completion:nil];
+    if (nav.viewControllers.count > 1) {
+        
+        if ([self.nvrModel.nvr_id isEqualToString:nav.operatingDevice.nvr_id]) {
+            nav.operatingDevice = self.nvrModel;
+            MBProgressHUD *hud =   [MBProgressHUD showStatus:CLOUD_DEVICE_STATE_DISCONNECTED];
+            [hud.actionBtn setHidden:NO];
+            [hud.actionBtn addTarget:self.vc.navigationController action:@selector(reconnect:) forControlEvents:UIControlEventTouchUpInside];
+        }
+       
+    }
+    if (currentState ==  CLOUD_DEVICE_STATE_DISCONNECTED) {
+        [self.maskView.statusLabel setText:LS(@"断开连接")];
+    }else if (currentState == CLOUD_DEVICE_STATE_AUTHENTICATE_ERR) {
+        [self.maskView.statusLabel setText:LS(@"授权错误")];
+    }else if (currentState == CLOUD_DEVICE_STATE_OTHER_ERR) {
+        [self.maskView.statusLabel setText:LS(@"其他错误")];
+    }else if (currentState == CLOUD_DEVICE_STATE_UNKNOWN) {
+        [self.maskView.statusLabel setText:LS(@"正在获取设备状态...")];
+        [self.maskView.spinner startAnimating];
+
+        if (![USER.user_id isEqualToString:@"-1"]) {
+//            [self.footer.syncLable setText:@"(adding..)"];
+//            [self.footer.syncedIcon setImage:[UIImage imageNamed:@"syncing"]];
+//            [self.footer.syncedIcon rotateWithDuration:2.f repeatCount:MAXFLOAT timingMode:TimingModeEaseInEaseOut];
+            [self.footer.syncedIcon setHidden:YES];
+        }
+        
+    }
+    
+}
+
+
+
+
+
 
 - (void)setPath:(NSIndexPath *)path {
     if(_path != path) {
@@ -457,7 +461,7 @@ int my_device_status_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, voi
             [ws.vc.navigationController pushViewController:nvrSettingsVc deviceModel:ws.nvrModel camModel:nil];
             nvrSettingsVc .deleteNvr = ^{
                 Popup *p = [[Popup alloc] initWithTitle:LS(@"提示") subTitle:LS(@"请确认是否需要删除该设备？") cancelTitle:LS(@"取消") successTitle:LS(@"确认") cancelBlock:nil successBlock:^{
-                    [(MainViewController *)ws.vc deleteNvr:[NSIndexPath indexPathForRow:0 inSection:ws.path.section]];///nvrModel.nvr_index
+                    [(MainViewController *)ws.vc deleteNvr:ws.nvrModel];///nvrModel.nvr_index
                 }];
                 
                 [p setIncomingTransition:PopupIncomingTransitionTypeFallWithGravity];

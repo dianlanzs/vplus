@@ -92,18 +92,16 @@ static int jpushSetting_count = 0;
 ///解锁事件
 - (void) applicationProtectedDataDidBecomeAvailable:(UIApplication *)application {
     [MBProgressHUD showPromptWithText:@"UNLOCK_SCREEN"];
-//    cloud_notify_network_changed_block();
-//    for (Device *open_device in USER.user_devices) {
-//        cloud_open_device([open_device.nvr_id UTF8String]);
-//    }
 }
 -(void)dealloc{
     [[NSNotificationCenter defaultCenter]removeObserver:self name:@"netWorkChangeEventNotification" object:nil];
 }
 ///同步 设置用户 推送 alias
-- (BOOL)action:(UIButton *)sender uploadJpushUser:(User *)user isLogin:(BOOL)isLogin {
+- (BOOL)action:(UIButton *)sender uploadJpushUser:(User *)user isLogin:(NSString *)isLogin {
 //    [MBProgressHUD showPromptWithText:@"上传 Jpush  user......"];
-    if(isLogin) {
+    NSString *alias = @"";
+    if([isLogin isEqualToString:@"LOG-IN"]) {
+        alias = [NSString stringWithFormat:@"%@",user.user_id];
         NSString *appInfo = [NSString stringWithFormat:@"%@:%@",[[NSUserDefaults standardUserDefaults] valueForKey:@"JPUSH_REGISTER_ID"],user.user_id];
         NSLog(@" ---------- 登录设置 APP_INFO:%s -------------",[appInfo UTF8String]);
         cloud_set_appinfo([appInfo UTF8String]);
@@ -119,10 +117,12 @@ static int jpushSetting_count = 0;
         }];
         
         NSLog(@"🔫LOGIN_USER%@",user);
-    }else {
+    }
+    
+    else if([isLogin isEqualToString:@"LOG-OUT"]){
         [MBProgressHUD showSpinningWithMessage:LS(@"退出中...")]; ///主线程在做耗时操作 ing ??? 连接成功后快
         
-       [ self.user threadReslove:^(RLMObject *reslovedObj) {
+       [ self.user asyncThreadReslove:^(RLMObject *reslovedObj) {
             ///必须等 连接上 在 退出 ，同步线程？？ 主线程上做耗时操作 阻塞 UI  ，，异步 close!!  REALM  涉及跨线程操作对象
            NSLog(@"%@",[(User *)reslovedObj user_devices]);
             for (Device *close_device in [(User *)reslovedObj user_devices]) {
@@ -146,13 +146,21 @@ static int jpushSetting_count = 0;
     }
     
     
-    [JPUSHService setTags:[NSSet setWithObjects:@"LOG_IN_OUT", nil] alias:isLogin ? [NSString stringWithFormat:@"%@",user.user_id] : @"" fetchCompletionHandle:^(int iResCode, NSSet *iTags, NSString *iAlias) {
-        if (iResCode == 0 || jpushSetting_count == 2) {
-//             [MBProgressHUD showSuccess:[NSString stringWithFormat:@"%@设置——%d成功",iAlias,jpushSetting_count]];
+    
+    [JPUSHService setTags:[NSSet setWithObjects:@"LOG_IN_OUT", nil] alias:alias fetchCompletionHandle:^(int iResCode, NSSet *iTags, NSString *iAlias) {
+        if (iResCode == 0 || jpushSetting_count == 3) {
+            
+            if (jpushSetting_count == 3) {
+                 [MBProgressHUD showError:[NSString stringWithFormat:@"上传失败    %d",jpushSetting_count]];
+                 jpushSetting_count = 0;
+            }else {
+                [MBProgressHUD showSuccess:[NSString stringWithFormat:@"上传成功 %d",jpushSetting_count]];
+            }
+            
 ///           return YES; cuz  callback  没有返回值！！ 报错
         }else {
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(6 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                [self action: sender uploadJpushUser:user isLogin:isLogin];
+                [self action: sender uploadJpushUser:user isLogin:@""];
                 [MBProgressHUD showError:[NSString stringWithFormat:@" -- 重设 %d ---",jpushSetting_count]];
                 jpushSetting_count++;
             });
@@ -167,7 +175,7 @@ static int jpushSetting_count = 0;
         _loginController = [[LoginController alloc] init]; // ------> view did load
         WS(self);
         [_loginController.loginView setUserLogin:^(HyLoginButton *sender, User *loginUser) {
-            [ws action:sender uploadJpushUser:loginUser isLogin:YES];
+            [ws action:sender uploadJpushUser:loginUser isLogin:@"LOG-IN"];
         }];
     }
     return _loginController;
@@ -179,7 +187,7 @@ static int jpushSetting_count = 0;
         QRootElement *userModel = [[DataBuilder new] createForUserSettings:self.user];
         PersonalController * personalController = [[PersonalController alloc] initWithRoot:userModel];
         [personalController setUserLogout:^(User *user) {
-            [self action:nil uploadJpushUser:user isLogin:NO];
+            [self action:nil uploadJpushUser:user isLogin:@"LOG-OUT"];
         }];
         
         AMNavigationController * personalNav = [[AMNavigationController alloc] initWithRootViewController:personalController];
@@ -194,7 +202,7 @@ static int jpushSetting_count = 0;
     
     return _drawerController;
 }
-- (void)languageChange:(id)sender {
+- (void)appLanguageChange:(id)sender {
     if(self.drawerController) {
         [self setDrawerController:nil];
         [self.window setRootViewController:self.drawerController];
@@ -206,8 +214,9 @@ static int jpushSetting_count = 0;
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     
     cloud_init();
-    ///初始化语言
-     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(languageChange:) name:ZZAppLanguageDidChangeNotification object:nil];
+    ///初始化语言 ,获取用户偏好 ，退出时候的 设置
+    [NSBundle setCusLanguage:[[NSUserDefaults standardUserDefaults] valueForKey:AppLanguageKey]];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appLanguageChange:) name:ZZAppLanguageDidChangeNotification object:nil];
     [self configJpushWith:launchOptions];
    
     /*
@@ -418,9 +427,9 @@ static int jpushSetting_count = 0;
     NSLog(@"client:%@",vp_pushReq.params);
     
     __block typeof(vp_pushReq) w_vp_pushReq = vp_pushReq;
-    vp_pushReq.finished = ^(id responseObject, NSError *error) {
-        if (!error) {
-            NSLog(@"%@  SUCCESS:%@ -- ERROR:%@",[[w_vp_pushReq params] valueForKey:@"cmd"],[[NSString alloc] initWithData:responseObject encoding:NSUTF8StringEncoding],error); //调用的是最后一次  block ，只有一个任务
+    vp_pushReq.finished = ^(id responseObject, NSString *errorMsg) {
+        if (!errorMsg) {
+            NSLog(@"%@  SUCCESS:%@ -- ERROR:%@",[[w_vp_pushReq params] valueForKey:@"cmd"],[[NSString alloc] initWithData:responseObject encoding:NSUTF8StringEncoding],errorMsg); //调用的是最后一次  block ，只有一个任务
             
             VPPRequest *vp_pushReq2 = [[VPPRequest alloc] init];
             for (Device *nvr in [Device allObjects]) {
@@ -435,9 +444,9 @@ static int jpushSetting_count = 0;
                 NSLog(@"mapping:%@",vp_pushReq2.params);
                 
                 __block typeof(vp_pushReq2) w_vp_pushReq2 = vp_pushReq2;
-                vp_pushReq2.finished = ^(id responseObject, NSError *error) {
-                    if (!error) {
-                        NSLog(@"%@  SUCCESS:%@ -- ERROR:%@",[[w_vp_pushReq2 params] valueForKey:@"cmd"],[[NSString alloc] initWithData:responseObject encoding:NSUTF8StringEncoding],error); //调用的是最后一次  block ，只有一个任务
+                vp_pushReq2.finished = ^(id responseObject, NSString *errorMsg) {
+                    if (!errorMsg) {
+                        NSLog(@"%@  SUCCESS:%@ -- ERROR:%@",[[w_vp_pushReq2 params] valueForKey:@"cmd"],[[NSString alloc] initWithData:responseObject encoding:NSUTF8StringEncoding],errorMsg); //调用的是最后一次  block ，只有一个任务
                         
                         VPPRequest *  vp_pushReq3 = [[VPPRequest alloc] init];
                         [vp_pushReq3 configURLPrams:@{@"token":token}];
@@ -446,9 +455,9 @@ static int jpushSetting_count = 0;
                         vp_pushReq3.taskIdentifier = @"map_sync";
                         
                         __block typeof(vp_pushReq3) w_vp_pushReq3 = vp_pushReq3;
-                        vp_pushReq3.finished = ^(id responseObject, NSError *error) {
-                            if (!error) {
-                                NSLog(@"%@  SUCCESS:%@ -- ERROR:%@",[[w_vp_pushReq3 params] valueForKey:@"cmd"],[[NSString alloc] initWithData:responseObject encoding:NSUTF8StringEncoding],error); //调用的是最后一次  block ，只有一个任务
+                        vp_pushReq3.finished = ^(id responseObject, NSString *errorMsg) {
+                            if (!errorMsg) {
+                                NSLog(@"%@  SUCCESS:%@ -- ERROR:%@",[[w_vp_pushReq3 params] valueForKey:@"cmd"],[[NSString alloc] initWithData:responseObject encoding:NSUTF8StringEncoding],errorMsg); //调用的是最后一次  block ，只有一个任务
                             }
                             
                         };
@@ -675,13 +684,18 @@ static int jpushSetting_count = 0;
 - (void)applicationWillEnterForeground:(UIApplication *)application {
     // Called as part of the transition from the background to the active state; here you can undo many of the changes made on entering the background.
 
-    AMNavigationController *am_nav = (AMNavigationController *) self.drawerController.centerViewController;
-    MainViewController *main_vc =  am_nav.viewControllers[0];
-    if(am_nav .topViewController.class == NSClassFromString(@"MainViewController")) {
-        [main_vc.tableView.mj_header beginRefreshing];
-    }else {
-        cloud_connect_device((void *)am_nav.operatingDevice.nvr_h, "admin", "123");
+    AMNavigationController *nav = (AMNavigationController *) self.drawerController.centerViewController;
+    MainViewController *main_vc =  nav.viewControllers[0];
+    
+    if (self.user.user_devices.count) {
+        
+        if(nav .topViewController.class == NSClassFromString(@"MainViewController")) {
+            [main_vc.tableView.mj_header beginRefreshing];
+        }else {
+            cloud_connect_device((void *)nav.operatingDevice.nvr_h, "admin", "123");
+        }
     }
+   
     
 //    cloud_init();
     NSLog(@"✍🏻--------------- APP _WILL_ENTER_FG ---------------");

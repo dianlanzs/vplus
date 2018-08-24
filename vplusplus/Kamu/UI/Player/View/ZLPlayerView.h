@@ -91,7 +91,7 @@ typedef NS_ENUM(NSInteger, ControlType) {
 
 
 int device_data_callback(cloud_device_handle handle,CLOUD_CB_TYPE type, void *param,void *context);
-- (NSData *)takeSnapshot;
+- (NSData *)snapshot;
 - (instancetype)initWithModel: (ZLPlayerModel *)vp_model control:(CommonPlayerControl *)control controller:(UIViewController *)vc;
 - (void)reconnect;
 - (void)lv_stop;

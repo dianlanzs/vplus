@@ -7,7 +7,7 @@
 //
 
 #import "DeviceFooter.h"
-
+#define ICON_CLOUD
 @implementation DeviceFooter
 
 
@@ -26,6 +26,15 @@
         [_deviceLb.layer setBorderWidth:1.f];
         */
         [_deviceLb setFont:[UIFont boldSystemFontOfSize:21.f]];
+        
+        
+        _syncedIcon = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"warning"]];
+        _syncLable = [UILabel labelWithText:@"" withFont:[UIFont systemFontOfSize:14] color:[UIColor blackColor] aligment:NSTextAlignmentLeft];
+        
+        
+        
+        
+        
         
         //settings
         _settingsBtn = [UIButton buttonWithType:UIButtonTypeCustom];
@@ -52,8 +61,7 @@
         [self addSubview:_meidiasBtn];
         [self addSubview:_deviceLb];
         
-        
-        
+
         
         [_deviceLb mas_makeConstraints:^(MASConstraintMaker *make) {
             make.centerY.equalTo(self);
@@ -61,16 +69,42 @@
             make.leading.equalTo(self).offset(20);
         }];
         
+     
+#ifdef ICON_CLOUD
+        [self addSubview:_syncedIcon];
+        [_syncedIcon mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.centerY.equalTo(self);
+            make.leading.equalTo(_deviceLb.mas_trailing).offset(5);
+        }];
+#else
+        [self addSubview:_syncLable];
+        [_syncLable mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.centerY.equalTo(self).offset(0);
+            make.leading.equalTo(_deviceLb.mas_trailing).offset(5);
+            
+            
+        }];
+#endif
+        
+
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         [_settingsBtn mas_makeConstraints:^(MASConstraintMaker *make) {
             make.centerY.equalTo(self);
-            make.size.mas_equalTo(CGSizeMake(100, 40.f));
             make.trailing.equalTo(self).offset(-20);
 
         }];
         
         [_meidiasBtn mas_makeConstraints:^(MASConstraintMaker *make) {
             make.centerY.equalTo(self);
-            make.size.mas_equalTo(CGSizeMake(100, 40.f));
             make.trailing.equalTo(_settingsBtn.mas_leading).offset(-10);
 
         }];

@@ -75,13 +75,6 @@
 }
 ///添加  设备  ///添加device 表 会有2个 的bug
 - (void)addNew:(NSNotification *)notification {
-    
-    
-    
-//    [RLM transactionWithBlock:^{
-//        [USER.user_devices addObjects:[Device allObjects]];
-//    }];
-    
     if (USER.user_devices.count > 0) {
         [self deviceInterface];
     }
@@ -93,12 +86,6 @@
     
     
     [MBProgressHUD showSuccess:[NSString stringWithFormat:@"添加了第%zd个设备",USER.user_devices.count]];
-    NSLog(@"🎟 USER表  ADD DEVICE %@",USER.user_devices);
-    
-    for (Device *p_device in [Device allObjects]) {
-        NSLog(@"🎟 DEVICE 表 ADD DEVICE %p",p_device);
-    }
-    
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.tableView beginUpdates];
         [self.tableView insertSections:[NSIndexSet indexSetWithIndex:USER.user_devices.count - 1] withRowAnimation:UITableViewRowAnimationTop];
@@ -111,59 +98,57 @@
 //
 }
 ///删除  设备
-- (void)deleteNvr:(NSIndexPath *)path {
+- (void)deleteNvr:(Device *)deleteDevice {
     
-  
-    Device *deleteDevice = [USER.user_devices objectAtIndex:path.section];
+    
+//    Device *deleteDevice = [USER.user_devices objectAtIndex:path.section];
     NSString * deletePath = [NSString stringWithFormat:@"drop/%@",deleteDevice.nvr_id];
-    NSLog(@"------------删除设备%@------------",deleteDevice.nvr_id);
-    
-    
-    
-    
-   [[[NetWorkTools alloc] init] request:GET urlString:KM_API_URL(deletePath) parameters:nil finished:^(id responseObject, NSError *error) {//删除server
-       NSDictionary *dict = [NSDictionary dictionaryWithJSONData:responseObject];
-       NSString *success_s = [NSString stringWithFormat:@"%@",[[dict arrayValueForKey:@"success"] lastObject]];
-       NSString *fail_s = [NSString stringWithFormat:@"%@",[[dict arrayValueForKey:@"error"] lastObject]];
-
-
-       if (![dict valueForKey:@"success"]) {
-           if([fail_s isEqualToString:@"(null)"]) {
-               [MBProgressHUD showError:@"sessionID 过期"];
-           }else {
-               [MBProgressHUD showError:fail_s];
-           }
-       }else {
-         
-           cloud_set_status_callback((void *)deleteDevice.nvr_h,nil,nil); /// state callback set nil!!
-           cloud_forget_device((void *)deleteDevice.nvr_h);
-           cloud_close_device( (void *)deleteDevice.nvr_h);
-           [RLM transactionWithBlock:^{
-               for (Cam *del_c in deleteDevice.nvr_cams) {
-                   Device *cam_gw = del_c.nvrs[0];
-                   if([cam_gw.nvr_id isEqualToString:deleteDevice.nvr_id] ) {
-                       [RLM deleteObject:del_c];
-                   }
-               }
-                [RLM deleteObject:deleteDevice];
-           }];
-           
-           
-           
-           NSLog(@"🤪 USER 表 ：DELETE DEVICE %@",USER.user_devices);
-           NSLog(@"🤪 DEVICE 表 ：DELETE DEVICE %@",[Device allObjects]);
-           NSLog(@"🤪 CAM 表 ：DELETE DEVICE %@",[Cam allObjects]);
-
-           [MBProgressHUD showSuccess:success_s];
-           [self.navigationController popViewControllerAnimated:YES];
-           [self.tableView deleteSections:[NSIndexSet indexSetWithIndex:path.section] withRowAnimation:UITableViewRowAnimationTop];
-           if (USER.user_devices.count == 0) {
-               [self emptyInterface];
-           }
-       }
+    if ([USER.user_id isEqualToString:@"-1"] || !deleteDevice.nvr_isCloud) {
+        [self delete:deleteDevice];
+        return;
+    }
+    [[[NetWorkTools alloc] init] request:GET urlString:KM_API_URL(deletePath) parameters:nil finished:^(id responseDict, NSString *errorMsg) {//删除server
+        //            NSString *success_s = [NSString stringWithFormat:@"%@",[[responseDict arrayValueForKey:@"success"] lastObject]];
+        if (responseDict) {
+            [self delete:deleteDevice];
+        }
     }];
-}
     
+    
+}
+
+- (void)delete:(Device *)deleteDevice {
+    
+    int deleteIndex = deleteDevice.nvr_index;
+    
+    cloud_set_status_callback((void *)deleteDevice.nvr_h,nil,nil); /// state callback set nil!!
+    cloud_forget_device((void *)deleteDevice.nvr_h);
+    cloud_close_device( (void *)deleteDevice.nvr_h);
+    
+    
+    [RLM transactionWithBlock:^{
+        for (Cam *del_c in deleteDevice.nvr_cams) {
+            Device *gw_cam = del_c.nvrs[0];
+            if([gw_cam.nvr_id isEqualToString:deleteDevice.nvr_id] ) {
+                [RLM deleteObject:del_c];
+            }
+        }
+        [RLM deleteObject:deleteDevice];
+    }];
+    
+    
+    
+    NSLog(@"🤪 USER 表 ：DELETE DEVICE %@",USER.user_devices);
+    NSLog(@"🤪 DEVICE 表 ：DELETE DEVICE %@",[Device allObjects]);
+    NSLog(@"🤪 CAM 表 ：DELETE DEVICE %@",[Cam allObjects]);
+    
+//    [MBProgressHUD showSuccess:success_s];
+    [self.navigationController popViewControllerAnimated:YES];
+    [self.tableView deleteSections:[NSIndexSet indexSetWithIndex:deleteIndex] withRowAnimation:UITableViewRowAnimationTop];
+    if (USER.user_devices.count == 0) {
+        [self emptyInterface];
+    }
+}
 - (void)setRightBarButtonItem {
     self.navigationItem.rightBarButtonItem = [UIBarButtonItem barItemWithimage:[UIImage imageNamed:@"nav_add"]  highImage:nil target:self action:@selector(addNvr:) title:LS(@"添加新设备")];
 }
@@ -212,7 +197,7 @@
 #pragma mark - Table view 数据源回调方法
 //swipe  删除会调用 numberOfSection  ，和 numberOfRows 方法
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    NSLog(@"SECTIONS :--%zd--",USER.user_devices.count);
+    NSLog(@"SECTIONS :--%zd--",(long)USER.user_devices.count);
     return USER.user_devices.count;
 }
 
@@ -223,9 +208,13 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     NSLog(@"-- CELL FOR ROW --");
+    NSString *uniq_tag = [NSString  stringWithFormat:@"%zd/%zd",(long)indexPath.section,(long)indexPath.row];
     Device *db_device = USER.user_devices[indexPath.section];
     if (db_device.nvr_type == CLOUD_DEVICE_TYPE_GW) {
-        QRResultCell *nvrCell = [[QRResultCell alloc] init];
+        QRResultCell *nvrCell = [tableView dequeueReusableCellWithIdentifier:uniq_tag];
+        if (!nvrCell) {
+            nvrCell = [[QRResultCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:uniq_tag];
+        }
         [nvrCell setNvrModel:db_device];
         [nvrCell setPath:indexPath];
         return nvrCell;
@@ -274,15 +263,9 @@
         _tableView.tableFooterView = [UIView new]; //去除分隔线
         [_tableView setShowsVerticalScrollIndicator:NO];
         [_tableView setRowHeight:COLLECTION_VIEW_H + FOOTER_H];
-        
-        //
-        //        [_tableView setEstimatedRowHeight:200.f];
-        //        [_tableView setRowHeight:UITableViewAutomaticDimension];
-        
-        
-       
         WS(self);
         _tableView.mj_header = [MJRefreshNormalHeader headerWithRefreshingBlock:^{
+//            [ws updateDevices];
             NSInteger idx = 0;
             for (Device *state_device in USER.user_devices) {
                 
@@ -290,12 +273,9 @@
                 if (state_device.nvr_status == CLOUD_DEVICE_STATE_CONNECTED) {
                     [state_cell upadteCams];
                 }else {
-                    
-                    
                     if (state_device.nvr_status == CLOUD_DEVICE_STATE_UNKNOWN) {
                         [MBProgressHUD showPromptWithText:LS(@"正在连接请耐心等设备状态返回...")];
                     }
-                    
                     else if(state_device.nvr_status == CLOUD_DEVICE_STATE_DISCONNECTED) {
                         [MBProgressHUD showPromptWithText:[NSString stringWithFormat:@"连接设备 %zd",state_device.nvr_h]];
                         cloud_connect_device((void *)state_device.nvr_h, "admin", "123");
@@ -303,18 +283,12 @@
                             [state_device setNvr_status:CLOUD_DEVICE_STATE_UNKNOWN];
                         }];
                     }
-                    
 //                    else if (state_device.nvr_status == CLOUD_DEVICE_STATE_UNINITILIZED) {
 //                        return ;
 //                    }
-                    
-                    
-                    
                 }
-                
                 idx++;
             }
-            
             [ws.tableView.mj_header endRefreshing];
             //disconnected 刷新 的情况  ，cuz设置了标志 ，第一次endRefreshing 了 ，，所以第二次 endRereshing 不起作用！
         }];
@@ -325,10 +299,12 @@
     }
     
     return _tableView;
-    
 }
 
-
+- (void)updateDevices {
+    
+ 
+}
 //- (void) handleRefresh:(UIRefreshControl *)sender{
 //
 //
@@ -346,8 +322,8 @@
         addButton.imageView.image = [[UIImage imageNamed:@"add2"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
         [addButton addTarget:self action:@selector(addNvr:) forControlEvents:UIControlEventTouchUpInside];
         //富文本
-        UILabel *titleLabel = [UILabel labelWithText:LS(@"欢迎进入Kamu新界面！") withFont:[UIFont boldSystemFontOfSize:25.0f] color:[UIColor darkGrayColor] aligment:NSTextAlignmentCenter];
-        UILabel *describeLabel = [UILabel labelWithText:LS(@"点击此处'➕'按钮，扫描设备底部二维码，添加一个摄像机设备") withFont:[UIFont systemFontOfSize:18.0f] color:[UIColor lightGrayColor] aligment:NSTextAlignmentCenter];
+        UILabel *titleLabel = [UILabel labelWithText:LS(@"欢迎进入Kamu新界面！") withFont:[UIFont boldSystemFontOfSize:21.0f] color:[UIColor darkGrayColor] aligment:NSTextAlignmentCenter];
+        UILabel *describeLabel = [UILabel labelWithText:LS(@"点击此处'➕'按钮，扫描设备底部二维码，添加设备") withFont:[UIFont systemFontOfSize:18.0f] color:[UIColor lightGrayColor] aligment:NSTextAlignmentCenter];
         
         //添加控件
         [_emptyView addSubview:addButton];
@@ -362,7 +338,7 @@
         
         [titleLabel mas_makeConstraints:^(MASConstraintMaker *make) {
             make.leading.equalTo(_emptyView).offset(15);
-            make.trailing.equalTo(_emptyView).offset(15);
+            make.trailing.equalTo(_emptyView).offset(-15);
             make.bottom.equalTo(describeLabel.mas_top).offset(- 20);
         }];
         [describeLabel mas_makeConstraints:^(MASConstraintMaker *make) {

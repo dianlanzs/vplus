@@ -10,7 +10,7 @@
 #import "UIBarButtonItem+Item.h"
 
 
-
+#import "KMReqest.h"
 
 #import "AppDelegate.h"
 
@@ -97,7 +97,17 @@
 #pragma mark - 视图生命周期
 
 
-
+- (void)updateDevices {
+    
+    [[NetWorkTools new] request:GET urlString:KM_API_URL(@"profile") parameters:nil finished:^(id responseDict, NSString *errorMsg) {
+        User *response_user =  [User mj_objectWithKeyValues:responseDict];
+        if(response_user && [response_user.user_id isEqualToString:USER.user_id]) {
+            [response_user matchingWithLogin:NO];
+        }
+    }];
+    
+    
+}
 
 
 - (void)viewDidLoad {

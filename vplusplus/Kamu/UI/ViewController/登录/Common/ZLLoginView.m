@@ -9,44 +9,60 @@
 #import "ZLLoginView.h"
 #import "KMReqest.h"
 
+
+
 @implementation ZLLoginView
+
+- (instancetype)initWithFrame:(CGRect)frame {
+    self = [super initWithFrame:frame];
+    if (self) {
+        [self addSubview:self.dismissBtn];
+        [self addSubview:self.welcomLb ];
+        [self addSubview:self.portraitBtn];
+        [self addSubview:self.tf_account];
+        
+        [self addSubview:self.lb_lan];
+        [self addSubview:self.switch_btn];
+        
+        [self addSubview:self.tf_pwd];
+        //    [self addSubview:self.loginBtn];
+        [self addSubview:self.signUp];
+        //    [self addSubview:self.otherAccount];
+        [self addSubview:self.loginBtn];
+    }
+    
+    return self;
+}
 
 - (void)setLoginType:(ZLLoginType)loginType {
     
     _loginType = loginType;
-    [self addSubview:_dismissBtn];
-    [self addSubview:self.welcomLb ];
-    [self addSubview:self.portraitBtn];
-    [self addSubview:self.tf_account];
-    [self addSubview:self.tf_pwd];
-//    [self addSubview:self.loginBtn];
-    [self addSubview:self.signUp];
-//    [self addSubview:self.otherAccount];
-    [self addSubview:self.loginBtn];
+   
     if (loginType == ZLLoginType_register ) {  // || loginType == ZLLoginType_otherAccount
         
         [self.dismissBtn setHidden:NO];
         [self.portraitBtn setHidden:YES];
+        [self.lb_lan setHidden:YES];
+        [self.switch_btn setHidden:YES];
         [self.signUp setHidden:YES];
 //        [self.otherAccount setHidden:YES];
         [self.tf_account setEnabled:YES];
+        [self.welcomLb setHidden:NO];
+        [self.loginBtn setTitle: LS(@"注册账户") forState:UIControlStateNormal];
         
-        if (loginType == ZLLoginType_register) {
-            [self.welcomLb setHidden:NO];
-            [self.loginBtn setTitle: LS(@"注册账户") forState:UIControlStateNormal];
-            
-            [self.welcomLb  mas_remakeConstraints:^(MASConstraintMaker *make) {
-                make.leading.equalTo(self).offset(15.f);
-                make.trailing.equalTo(self).offset(-15.f);
-                make.top.equalTo(self).offset(70.f);
-            }];
-            [self.tf_account mas_remakeConstraints:^(MASConstraintMaker *make) {
-                make.top.equalTo(self.welcomLb ).offset(70.f);
-                make.leading.equalTo(self).offset(15.f);
-                make.trailing.equalTo(self).offset(-15.f);
-                make.height.mas_equalTo(40.f);
-            }];
-        }
+        
+        
+        [self.welcomLb  mas_remakeConstraints:^(MASConstraintMaker *make) {
+            make.leading.equalTo(self).offset(15.f);
+            make.trailing.equalTo(self).offset(-15.f);
+            make.top.equalTo(self).offset(70.f);
+        }];
+        [self.tf_account mas_remakeConstraints:^(MASConstraintMaker *make) {
+            make.top.equalTo(self.welcomLb ).offset(70.f);
+            make.leading.equalTo(self).offset(15.f);
+            make.trailing.equalTo(self).offset(-15.f);
+            make.height.mas_equalTo(40.f);
+        }];
         /*
         else if (loginType == ZLLoginType_otherAccount) {
             [self.welcomLb  setHidden:YES];
@@ -74,6 +90,9 @@
         [self.dismissBtn setHidden:YES];  ///label . & dismissBtn not belong to loginview , so can't hidden / remove
         [self.welcomLb setHidden:YES];
         [self.portraitBtn setHidden:NO];
+        [self.lb_lan setHidden:NO];
+
+        [self.switch_btn setHidden:NO];
         [self.signUp setHidden:NO];
 //        [self.otherAccount setHidden:NO];
         [self.loginBtn setTitle: LS(@"登录" ) forState:UIControlStateNormal];
@@ -90,9 +109,10 @@
             make.trailing.equalTo(self).offset(-15.f);
             make.height.mas_equalTo(40.f);
         }];
+        
+   
         [self.signUp mas_remakeConstraints:^(MASConstraintMaker *make) {
             make.top.equalTo(self.loginBtn.mas_bottom).offset(20.f);
-
             make.centerX.equalTo(self.loginBtn);
             make.width.mas_equalTo(AM_SCREEN_WIDTH - 80.f);
             make.height.mas_equalTo(40);
@@ -125,13 +145,23 @@
     
     [self.tf_pwd mas_remakeConstraints:^(MASConstraintMaker *make) {
         make.top.equalTo(self.tf_account.mas_bottom).offset(20.f);
-        make.leading.equalTo(self.tf_account);
-        make.trailing.equalTo(self.tf_account);
+        make.leading.equalTo(self).offset(15.f);
+        make.trailing.equalTo(self).offset(-15.f);
         make.height.mas_equalTo(40.f);
     }];
     
+    
+    [self.lb_lan mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.leading.equalTo(self.tf_account).offset(5.f);
+        make.top.equalTo(self.tf_pwd.mas_bottom).offset(20.f);
+    }];
+    [self.switch_btn mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.leading.equalTo(self.lb_lan.mas_trailing).offset(5.f);
+        make.centerY.mas_equalTo(self.lb_lan);
+    }];
+    
     [self.loginBtn mas_remakeConstraints:^(MASConstraintMaker *make) {
-        make.top.equalTo(self.tf_pwd.mas_bottom).offset(40.f);
+        make.top.equalTo(self.switch_btn.mas_bottom).offset(40.f);
         make.centerX.equalTo(self.tf_pwd);
         make.width.mas_equalTo(AM_SCREEN_WIDTH - 80.f);
         make.height.mas_equalTo(40);
@@ -225,6 +255,7 @@
     return _portraitBtn;
 }
 
+
 - (UITextField *)tf_account {
     if (!_tf_account) {
         NSMutableAttributedString *pwd_s = [[NSMutableAttributedString alloc] initWithString:LS(@"邮箱:")];
@@ -248,6 +279,37 @@
     }
     return _tf_account;
 }
+
+- (UISwitch *)switch_btn {
+    if (!_switch_btn) {
+        _switch_btn = [[UISwitch alloc] init];
+        [_switch_btn addTarget:self action:@selector(autoFill:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    return _switch_btn;
+}
+- (void)autoFill:(UISwitch *)sender {
+    if (sender.isOn) {
+        [self.tf_account setText:@"admin@ygtek.cn"];
+        [self.tf_pwd setText:nil];
+        [self.lb_lan setTextColor:[UIColor blackColor]];
+    }else {
+        [self.tf_account setText: USER.user_email];
+        [self.lb_lan setTextColor:[UIColor lightGrayColor]];
+        [self setLoginType:ZLLoginType_prior];
+
+    }
+}
+
+
+
+
+- (UILabel *)lb_lan {
+    if (!_lb_lan) {
+        _lb_lan = [UILabel labelWithText:LS(@"设置成局域网模式") withFont:[UIFont systemFontOfSize:14.f] color:[UIColor lightGrayColor] aligment:NSTextAlignmentRight];
+    }
+    return _lb_lan;
+}
+
 
 - (ZLTextField *)tf_pwd {
     
@@ -295,131 +357,102 @@
 - (void)loginAction:(HyLoginButton *)sender {
     [self.tf_pwd endEditing:YES];
     [self.tf_account endEditing:YES];
-    
     [self.signUp setHidden:YES];
-//    [self.otherAccount setHidden:YES];
-    
-    [self loginWithFirstText:self.tf_account.text secondText:self.tf_pwd.text finished:^(User *user,NSString *errorMsg, NSError *errorFlag) {
-        
-        
-        if (!errorMsg && user.user_id) {
-            self.userLogin(self.loginBtn,user);
-        }
-        
-        else if (errorMsg) {
-           
-            [self.loginBtn failedAnimationWithCompletion:^{
-                 [MBProgressHUD showError:errorMsg];
-                [self.signUp setHidden:NO];
-//                [self.otherAccount setHidden:NO];
-            }];
-        
-        }
+    [self loginWithFirstText:self.tf_account.text secondText:self.tf_pwd.text finished:^(User *user, NSString *errorMsg) {
+        user.user_id ? self.userLogin(self.loginBtn,user):[self.loginBtn failedAnimationWithCompletion:^{
+            [self.signUp setHidden:NO];}];
     }];
 }
+/*
+ for (Cam *local_cam in [Cam allObjects]) {
+ //local no delete  but remote  deleted   crash -- @"Index %zu is out of bounds (must be less than %zu)
+ if(local_cam.nvrs.count == 1) { ///although   num == 0 , but RLMArray  is always exist
+ Device *cam_owner = local_cam.nvrs[0];
+ if([cam_owner.nvr_id isEqualToString:server_device.nvr_id] ){
+ [server_device.nvr_cams addObject:local_cam];
+ 
+ /// 设备名称  --- 会有很多 cam ，只进来一次
+ if (!server_device.nvr_name) {
+ server_device.nvr_name = cam_owner.nvr_name;
+ }
+ ///用户头像
+ if ( !response_user.user_portrait && cam_owner.nvr_users.count == 1 ) {
+ User *local_user = cam_owner.nvr_users[0];
+ if ([local_user.user_id isEqualToString:response_user.user_id]) {
+ NSLog(@"------------设备 只有 1 个 User ---------------");
+ response_user.user_portrait = local_user.user_portrait;
+ }
+ }
+ }
+ }
+ }
+ */
 
-- (void)loginWithFirstText:(NSString *)account secondText:(NSString *)pwd finished:(loginFinshed)finished {
-    if ([self isValidateEmail:account]) {
-        
-        [self.loginBtn scaleAnimation];
-        //        __block NetWorkTools *k = [[NetWorkTools alloc] init] request:<#(AMRequestMethod)#> urlString:<#(NSString *)#> parameters:<#(id)#> finished:<#^(id responseObject, NSError *error)finished#>
-        __block  KMReqest *kmReq = [[KMReqest alloc] init];
-        kmReq.finished = ^(id responseObject, NSError *error) {
-            if (!error && responseObject) {
-                
-                if ([kmReq.taskIdentifier  isEqualToString:@"signup"]) {
-                    /// 如果 weakReq 已经释放了 ，思考 ？？ ————strong 也没意义！！ 其实是有意义的
-                    [kmReq requestData:KM_API_URL(@"login")];
-                }else {
-                    
-                    
-                    
-                    NSDictionary *dict = [NSDictionary dictionaryWithJSONData:responseObject];
-                    NSString *errorMsg = [[dict arrayValueForKey:@"error"] objectAtIndex:0];
-                    if(errorMsg) {
-                        finished(nil,errorMsg,error) ;
-                    }else {
-                        User *response_user =  [User mj_objectWithKeyValues:dict];
-                        NSLog(@"🎆 RESPNOSE_USER---:%@  ---ResponseObj : %@",response_user,[responseObject description]);
-                        if(response_user ) {
-                            response_user.user_email = account;
-                            response_user.user_pwd = pwd;
-                            
-                            for (Device *server_device in response_user.user_devices) {
-                                for (Cam *local_cam in [Cam allObjects]) {
-                                    //local no delete  but remote  deleted   crash -- @"Index %zu is out of bounds (must be less than %zu)
-                                    if(local_cam.nvrs.count == 1) { ///although   num == 0 , but RLMArray  is always exist
-                                        Device *cam_owner = local_cam.nvrs[0];
-                                        if([cam_owner.nvr_id isEqualToString:server_device.nvr_id] ){
-                                            [server_device.nvr_cams addObject:local_cam];
-                                            
-                                            /// 设备名称  --- 会有很多 cam ，只进来一次
-                                            if (!server_device.nvr_name) {
-                                                server_device.nvr_name = cam_owner.nvr_name;
-                                            }
-                                            ///用户头像
-                                            if ( !response_user.user_portrait && cam_owner.nvr_users.count == 1 ) {
-                                                User *local_user = cam_owner.nvr_users[0];
-                                                if ([local_user.user_id isEqualToString:response_user.user_id]) {
-                                                    NSLog(@"------------设备 只有 1 个 User ---------------");
-                                                    response_user.user_portrait = local_user.user_portrait;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            
-                            
-                            ///更新主键
-                            [RLM transactionWithBlock:^{
-                                ///全部覆盖
-                                [RLM addOrUpdateObject:response_user];
-                                ///增量更新 ，每个域 都要写
-                                //                                [User createOrUpdateInRealm:RLM withValue:@{@"user_devices": response_user.user_devices}];
-                            }];
-                            
-                            finished(response_user,errorMsg,error) ;
-                        } else {
-                            [self.loginBtn failedAnimationWithCompletion:^{
-                                [MBProgressHUD showError:LS(@"服务器访问错误")];
-                            }];
-                        }
-                    }
-                    
-                    
-                    
-                }
-            }else {
-                NSLog(@"---请求超时%@---",error);
-                [self.loginBtn failedAnimationWithCompletion:^{
-                    [MBProgressHUD showError:error.localizedDescription];
-                }];
-                
-            }
-            
-            kmReq = nil;
-            
-        };
-        
-        [kmReq setMethod:POST];
-        [kmReq configURLPrams:@{@"email":account,
-                                @"password":pwd,
-                                }];
-        
-        
-        if (self.loginType == ZLLoginType_register) {
-            [kmReq setTaskIdentifier:@"signup"];
-            [kmReq requestData:KM_API_URL(@"signup")];
-        }else if (self.loginType == ZLLoginType_prior ){//self.loginType == ZLLoginType_otherAccount ||
-            [kmReq requestData:KM_API_URL(@"login")];
-        }
-        
+///局域网登录
+- (void)localLogin:(loginFinshed)Completion {
+    User *localUser = [User new];
+    [localUser setUser_id:@"-1"];
+    [RLM transactionWithBlock:^{
+        [RLM addOrUpdateObject:localUser];
+    }];
+    if ([self.tf_account.text isEqualToString:@"admin@ygtek.cn"] && [self.tf_pwd.text isEqualToString:@"123"]) {
+        Completion(localUser,nil);
     }else {
+        [self.loginBtn failedAnimationWithCompletion:^{
+            [MBProgressHUD showError:@"用户名或密码不正确"];
+        }];
+    }
+}
+///远程登录
+- (void)loginWithFirstText:(NSString *)account secondText:(NSString *)pwd finished:(loginFinshed)finished {
+    if (![self isValidateEmail:account]) {
         [MBProgressHUD showPromptWithText:@"邮箱格式不正确"];
+        return;
     }
     
+    [self.loginBtn scaleAnimation];
+    NSString *URL = @"";
+    if (self.loginType == ZLLoginType_prior && self.switch_btn.isOn){//self.loginType == ZLLoginType_otherAccount ||
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [self localLogin:finished];
+              return;
+        });
+    }
+    else if (self.loginType == ZLLoginType_prior && !self.switch_btn.isOn) {
+        URL = KM_API_URL(@"login");
+    }
+    else if (self.loginType == ZLLoginType_register) {
+        URL = KM_API_URL(@"signup");
+    }
+   
+    ///REQEST
+    __block NetWorkTools *loginReq = [NetWorkTools new];
+    [loginReq request:POST
+            urlString:URL parameters:@{ @"email":account,
+                                        @"password":pwd,
+                                        }
+             finished:^(id responseDict, NSString *errorMsg) {
+                 if (responseDict) {
+                     if ([loginReq.URL  isEqualToString:KM_API_URL(@"signup")]) {
+                         [loginReq requestData:KM_API_URL(@"login")];
+                     }else {
+                         User *response_user =  [User mj_objectWithKeyValues:responseDict];
+                         NSLog(@"🎆 RESPNOSE_USER---:%@  ---ResponseObj : %@",response_user,[responseDict description]);
+                         if(response_user ) {
+                             response_user.user_email = account;
+                             response_user.user_pwd = pwd;
+                             finished([response_user matchingWithLogin:YES],errorMsg) ;
+                         } else {
+                             [self.loginBtn failedAnimationWithCompletion:^{
+                                 [MBProgressHUD showError:LS(@"服务器访问错误")];
+                             }];
+                         }
+                     }
+                 }else {
+                     [self.loginBtn failedAnimationWithCompletion:nil];
+                 }
+                 loginReq = nil;/// 如果 weakReq 已经释放了 ，思考 ？？ ————strong 也没意义！！ 其实是有意义的
+             }];
 }
 
 //利用正则表达式验证

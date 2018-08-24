@@ -16,7 +16,6 @@
 #import "QRootElement.h"
 #import "QEntryElement.h"
 
-//zhoulei
 #import "QuickDialogEntryElementDelegate.h"
 @interface QuickDialogController ()<QuickDialogEntryElementDelegate>
 
@@ -80,7 +79,7 @@
 }
 
 
-///zhoulei modify
+///QD  QuickDialogController modify
 - (void)setQuickDialogTableView:(QuickDialogTableView *)tableView {
     
     
@@ -151,7 +150,7 @@
 //
 //}
 
-//zhoulei
+
 //- (BOOL)QEntryShouldReturnForElement:(QEntryElement *)element andCell:(QEntryTableViewCell *)cell{
 //    if ([element.key isEqualToString:@"rename"] ) {
 //      

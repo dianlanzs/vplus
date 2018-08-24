@@ -46,7 +46,7 @@ static const char kBundleKey = 0;
 + (void)setCusLanguage:(NSString *)language {
     id value = nil;
     NSUserDefaults *df = [NSUserDefaults standardUserDefaults];
-    if (language && ![[df valueForKey:AppLanguageKey] isEqualToString:language]) {
+    if (language ) {//&& ![[df valueForKey:AppLanguageKey] isEqualToString:language]
         value = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:language ofType:@"lproj"]];
         NSAssert(value != nil, @"value不能为空,请检查参数是否正确");
         [df setObject:language forKey:AppLanguageKey];

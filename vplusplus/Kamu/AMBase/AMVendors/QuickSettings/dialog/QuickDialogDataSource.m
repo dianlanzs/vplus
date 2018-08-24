@@ -34,7 +34,7 @@
     QSection *section = [_tableView.root getVisibleSectionForIndex:indexPath.section];
     
     
-    ///zhoulei mark important
+    ///QD  dataSource  mark important
     QElement *element = [section getVisibleElementForIndex:indexPath.row];
     element.controller = _tableView.controller;
     

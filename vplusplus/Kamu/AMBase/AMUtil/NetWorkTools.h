@@ -24,7 +24,7 @@ typedef enum : NSUInteger {
 //
 //typedef void(^AMRequestSuccess)(AMResponse *response);
 //typedef void(^AMRequestFailure)(NSError *error);
-typedef void(^AMRequestFinished)(id responseObject,NSError *error);
+typedef void(^AMRequestFinished)(id responseObject,NSString *errorMsg);
 
 
 
@@ -64,7 +64,7 @@ typedef void(^AMRequestFinished)(id responseObject,NSError *error);
 
 
 
-- (void)request:(AMRequestMethod)method urlString:(NSString *)urlString parameters:(id)parameters finished:(void (^)(id responseObject,NSError *error))finished;
+- (void)request:(AMRequestMethod)method urlString:(NSString *)urlString parameters:(id)parameters finished:(AMRequestFinished)finished;
 
 
 

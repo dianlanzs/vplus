@@ -57,7 +57,6 @@
 {
     
     if (_textField!=nil){
-        //zhoulei_brief 清空原有 tf ？？
         [_textField removeTarget:self action:@selector(textFieldEditingChanged:) forControlEvents:UIControlEventEditingChanged];
         [_textField removeFromSuperview];
     }

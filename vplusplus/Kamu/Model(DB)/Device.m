@@ -5,6 +5,8 @@
 #import "Device.h"
 #import "MJExtension.h"
 
+#import "KMReqest.h"
+
 @implementation Device
 
 + (NSArray *)ignoredProperties {
@@ -14,12 +16,10 @@
              @"alarmShowed",
              @"nvr_data",
              @"avDelegate",
-             @"listDelegate"];
+             @"listDelegate",
+             @"nvr_isCloud"];
 }
 
-//- (long)nvr_h {
-//    return (long)cloud_open_device([self.nvr_id UTF8String]);
-//}
 
 ///add 的时候 设置了 type
 - (void)setNvr_id:(NSString *)nvr_id {
@@ -59,6 +59,21 @@
 }
 + (NSDictionary *)linkingObjectsProperties {
     return @{ @"nvr_users": [RLMPropertyDescriptor descriptorWithClass:User.class propertyName:@"user_devices"],};
+}
+
+- (void)checkingIsCloud{
+    
+  __block  BOOL flag = NO;
+    [[NetWorkTools new] request:GET urlString:KM_API_URL(@"profile") parameters:nil finished:^(id responseDict, NSString *errorMsg) {
+        User *response_user =  [User mj_objectWithKeyValues:responseDict];
+        if(response_user && [response_user.user_id isEqualToString:USER.user_id]) {
+            for (Device *response_device in response_user.user_devices) {
+                if ([response_device.nvr_id isEqualToString:self.nvr_id]) {
+                    flag = YES;
+                }
+            }
+        }
+    }];
 }
 @end
 
